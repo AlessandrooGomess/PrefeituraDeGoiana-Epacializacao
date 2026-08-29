@@ -95,6 +95,19 @@ model Medicao {
     percentualExecutado Decimal @map("percentual_executado") @db.Decimal(5, 2)
     observacoesTecnicas String? @map("observacoes_tecnicas") @db.Text
     createdAt DataTime @default(now()) @map("create_at")
-    
+
     @@map("medicoes")
+}
+
+model Foto {
+    id String @id @default(uuid())
+    obraId String @map("obra_id")
+    obra Obra @relation(fields: [obraId], references: [id] onDelete: Cascade)
+    url String
+    tipo TipoFoto @default(EM_ANDAMENTO)
+    descricao String?
+    dataFoto DataTime @default(now()) @map("data_foto")
+    createdAt DataTime @default(now()) @map("created_at")
+
+    @@map("fotos")
 }
