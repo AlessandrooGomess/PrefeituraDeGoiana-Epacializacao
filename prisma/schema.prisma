@@ -41,3 +41,15 @@ model Usuario {
     medicoes Medicao[]
     @@map("usuarios")
 }
+
+model Secretaria {
+    id String @id @default(uuid())
+    nome String
+    sigla String
+    corIdentificacao String? @map("cor_Identificacao")
+    createdAt DataTime @default(now()) @map("create_at)
+
+    obras Obra[]
+
+    @@map("secretarias)
+}
