@@ -84,3 +84,17 @@ model Obra {
 
     @@map("obras")
 }
+
+model Medicao {
+    id String @id @default(uuid())
+    obraId String @map("obra_id")
+    obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+    engenheiroId String @map("engenheiro_id")
+    engenheiro Usuario @relation(fields: [engenheiroId], references [id])
+    dataVistoria DataTime @default(now()) @map("data_vistoria")
+    percentualExecutado Decimal @map("percentual_executado") @db.Decimal(5, 2)
+    observacoesTecnicas String? @map("observacoes_tecnicas") @db.Text
+    createdAt DataTime @default(now()) @map("create_at")
+    
+    @@map("medicoes")
+}
