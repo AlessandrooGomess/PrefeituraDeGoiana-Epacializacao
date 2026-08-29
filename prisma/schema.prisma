@@ -1,10 +1,11 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url = env("DATABASE_URL ")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -26,4 +27,17 @@ enum TipoFoto {
     ANTES
     EM_ANDAMENTO
     CONCLUIDO
+}
+
+model Usuario {
+    id String @id @default(uuid())
+    nome String
+    email String @unique
+    cargo String?
+    role Role @default(CIDADAO)
+    createdAt DataTime @default(now()) @map("create_at")
+
+    obrasFiscalizadas Obra[] @relation("EngenheiroObra)
+    medicoes Medicao[]
+    @@map("usuarios")
 }
