@@ -53,3 +53,34 @@ model Secretaria {
 
     @@map("secretarias)
 }
+
+model Obra {
+    id String @id @default(uuid())
+    titulo String
+    descricao String? @db.Text
+    endereco String
+    bairro String
+    latitude Float
+    longitude Float
+    valorContrato Decimal? @map("valor_contrato") @db.Decimal(12, 2)
+    empresaContratada String? @map("empresa_contratada)
+    numeroOrdemServico String? @map("numero_ordem_servico")
+    dataOrdemServico DataTime? @map("data_ordem_servico")
+    previsaoConclusao DataTime? @map("previsao_conclusao")
+    dataConclusaoReal DataTime? @map("data_conclusao_real")
+    status StatusObra @default(PLANEJADA)
+
+    secretariaId String @map("secretaria_id")
+    secretaria Secretaria @relation(fields: [secretariaId], references: [id])
+
+    engenheiroId String? @map("engenheiro_id")
+    engenheiro Usuario? @relation("EngenheiroObra, fields: [engenheiroId], references: [id])
+
+    medicoes Medicao[]
+    fotos Foto[]
+
+    createdAt DataTime @default(now()) @map("create_at")
+    updatedAt DataTime @updatedAt @map("updated_at")
+
+    @@map("obras")
+}
