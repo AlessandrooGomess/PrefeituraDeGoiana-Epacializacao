@@ -9,105 +9,106 @@ datasource db {
 }
 
 enum Role {
-    ADMIN
-    ENGENHEIRO
-    CIDADAO
+  ADMIN
+  ENGENHEIRO
+  CIDADAO
 }
 
 enum StatusObra {
-    PLANEJADA
-    ORDEM_EMITIDA
-    EM_ANDAMENTO
-    PARALISADA
-    CONCLUIDA
+  PLANEJADA
+  ORDEM_EMITIDA
+  EM_ANDAMENTO
+  PARALISADA
+  CONCLUIDA
 }
 
 enum TipoFoto {
-    RENDER_PROJETO
-    ANTES
-    EM_ANDAMENTO
-    CONCLUIDO
+  RENDER_PROJETO
+  ANTES
+  EM_ANDAMENTO
+  CONCLUIDO
 }
 
 model Usuario {
-    id String @id @default(uuid())
-    nome String
-    email String @unique
-    cargo String?
-    role Role @default(CIDADAO)
-    createdAt DataTime @default(now()) @map("create_at")
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  cargo     String?
+  role      Role     @default(CIDADAO)
+  createdAt DateTime @default(now()) @map("created_at")
 
-    obrasFiscalizadas Obra[] @relation("EngenheiroObra)
-    medicoes Medicao[]
-    @@map("usuarios")
+  obrasFiscalizadas Obra[]    @relation("EngenheiroObra")
+  medicoes          Medicao[]
+
+  @@map("usuarios")
 }
 
 model Secretaria {
-    id String @id @default(uuid())
-    nome String
-    sigla String
-    corIdentificacao String? @map("cor_Identificacao")
-    createdAt DataTime @default(now()) @map("create_at)
+  id               String   @id @default(uuid())
+  nome             String
+  sigla            String
+  corIdentificacao String?  @map("cor_identificacao")
+  createdAt        DateTime @default(now()) @map("created_at")
 
-    obras Obra[]
+  obras Obra[]
 
-    @@map("secretarias)
+  @@map("secretarias")
 }
 
 model Obra {
-    id String @id @default(uuid())
-    titulo String
-    descricao String? @db.Text
-    endereco String
-    bairro String
-    latitude Float
-    longitude Float
-    valorContrato Decimal? @map("valor_contrato") @db.Decimal(12, 2)
-    empresaContratada String? @map("empresa_contratada)
-    numeroOrdemServico String? @map("numero_ordem_servico")
-    dataOrdemServico DataTime? @map("data_ordem_servico")
-    previsaoConclusao DataTime? @map("previsao_conclusao")
-    dataConclusaoReal DataTime? @map("data_conclusao_real")
-    status StatusObra @default(PLANEJADA)
+  id                 String     @id @default(uuid())
+  titulo             String
+  descricao          String?    @db.Text
+  endereco           String
+  bairro             String
+  latitude           Float
+  longitude          Float
+  valorContrato      Decimal?   @map("valor_contrato") @db.Decimal(12, 2)
+  empresaContratada  String?    @map("empresa_contratada")
+  numeroOrdemServico String?    @map("numero_ordem_servico")
+  dataOrdemServico   DateTime?  @map("data_ordem_servico")
+  previsaoConclusao  DateTime?  @map("previsao_conclusao")
+  dataConclusaoReal  DateTime?  @map("data_conclusao_real")
+  status             StatusObra @default(PLANEJADA)
 
-    secretariaId String @map("secretaria_id")
-    secretaria Secretaria @relation(fields: [secretariaId], references: [id])
+  secretariaId String     @map("secretaria_id")
+  secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
 
-    engenheiroId String? @map("engenheiro_id")
-    engenheiro Usuario? @relation("EngenheiroObra, fields: [engenheiroId], references: [id])
+  engenheiroId String?  @map("engenheiro_id")
+  engenheiro   Usuario? @relation("EngenheiroObra", fields: [engenheiroId], references: [id])
 
-    medicoes Medicao[]
-    fotos Foto[]
+  medicoes Medicao[]
+  fotos    Foto[]
 
-    createdAt DataTime @default(now()) @map("create_at")
-    updatedAt DataTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-    @@map("obras")
+  @@map("obras")
 }
 
 model Medicao {
-    id String @id @default(uuid())
-    obraId String @map("obra_id")
-    obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
-    engenheiroId String @map("engenheiro_id")
-    engenheiro Usuario @relation(fields: [engenheiroId], references [id])
-    dataVistoria DataTime @default(now()) @map("data_vistoria")
-    percentualExecutado Decimal @map("percentual_executado") @db.Decimal(5, 2)
-    observacoesTecnicas String? @map("observacoes_tecnicas") @db.Text
-    createdAt DataTime @default(now()) @map("create_at")
+  id                  String   @id @default(uuid())
+  obraId              String   @map("obra_id")
+  obra                Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  engenheiroId        String   @map("engenheiro_id")
+  engenheiro          Usuario  @relation(fields: [engenheiroId], references: [id])
+  dataVistoria        DateTime @default(now()) @map("data_vistoria")
+  percentualExecutado Decimal  @map("percentual_executado") @db.Decimal(5, 2)
+  observacoesTecnicas String?  @map("observacoes_tecnicas") @db.Text
+  createdAt           DateTime @default(now()) @map("created_at")
 
-    @@map("medicoes")
+  @@map("medicoes")
 }
 
 model Foto {
-    id String @id @default(uuid())
-    obraId String @map("obra_id")
-    obra Obra @relation(fields: [obraId], references: [id] onDelete: Cascade)
-    url String
-    tipo TipoFoto @default(EM_ANDAMENTO)
-    descricao String?
-    dataFoto DataTime @default(now()) @map("data_foto")
-    createdAt DataTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  obraId    String   @map("obra_id")
+  obra      Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  url       String
+  tipo      TipoFoto @default(EM_ANDAMENTO)
+  descricao String?
+  dataFoto  DateTime @default(now()) @map("data_foto")
+  createdAt DateTime @default(now()) @map("created_at")
 
-    @@map("fotos")
+  @@map("fotos")
 }
