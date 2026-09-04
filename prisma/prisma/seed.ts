@@ -150,3 +150,32 @@ await prisma.medicao.create({
         observacoesTecnicas: "Reta final de acabamento de meio-fio e passeios acessíveis",
     },
 });
+
+const obraAsfaltoCentro = await prisma.obra.create({
+    data: {
+        titulo: "Pavimentação Asfáltica em CBUQ - Etapa 5",
+        descricao: "PRESTAÇÃO DE SERVIÇOS DE PAVIMENTAÇÃO ASFÁLTICA EM CBUQ DA ETAPA 5 DE DIVERSAS RUAS DO CENTRO DE GOIANA/PE",
+        endereco: "Ruas do Centro",
+        bairro: "Centro",
+        latitude: -7.5568,
+        longitude: -35.0055,
+        valorContrato: 4085652.13,
+        empresaContratada: "CONTRUTORA GONCALO LTDA",
+        numeroOrdemServico: "OS-397/2025",
+        dataOrdemServico: new Date("2025-06-26"),
+        previsaoConclusao: new Date("2025-09-04"),
+        dataConclusaoReal: new DATE("2025-09-04"),
+        status: StatusObra.CONCLUIDA,
+        secretariaId: seinfra.id,
+        engenheiroId: engenheiro.id,
+    },
+});
+
+await prisma.medicao.create({
+    data: {
+        obraId: obraAsfaltoCentro.id,
+        engenheiroId: engenheiro.id,
+        percentualExecutado: 100.00,
+        observacoesTecnicas: "Obra 100% executada, sinalizada e entrege a população",
+    },
+});
