@@ -9,7 +9,9 @@ datasource db {
 }
 
 enum Role {
-  ADMIN
+  SUPER_ADMIN
+  GESTAO
+  ADM_SECRETARIA
   ENGENHEIRO
   CIDADAO
 }
@@ -30,15 +32,20 @@ enum TipoFoto {
 }
 
 model Usuario {
-  id        String   @id @default(uuid())
-  nome      String
-  email     String   @unique
-  cargo     String?
-  role      Role     @default(CIDADAO)
-  createdAt DateTime @default(now()) @map("created_at")
+  id           String      @id @default(uuid())
+  nome         String
+  email        String      @unique
+  cargo        String?
+  telefone     String?
+  ativo        Boolean     @default(true)
+  role         Role        @default(CIDADAO)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  secretariaId String?     @map("secretaria_id")
+  secretaria   Secretaria? @relation(fields: [secretariaId], references: [id], onDelete: SetNull)
 
   obrasFiscalizadas Obra[]    @relation("EngenheiroObra")
   medicoes          Medicao[]
+  fotosEnviadas     Foto[]    @relation("UsuarioFotos")
 
   @@map("usuarios")
 }
@@ -50,7 +57,8 @@ model Secretaria {
   corIdentificacao String?  @map("cor_identificacao")
   createdAt        DateTime @default(now()) @map("created_at")
 
-  obras Obra[]
+  obras    Obra[]
+  usuarios Usuario[]
 
   @@map("secretarias")
 }
@@ -104,6 +112,9 @@ model Foto {
   id        String   @id @default(uuid())
   obraId    String   @map("obra_id")
   obra      Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  usuarioId String?  @map("usuario_id")
+  usuario   Usuario? @relation("UsuarioFotos", fields: [usuarioId], references: [id], onDelete: SetNull)
+
   url       String
   tipo      TipoFoto @default(EM_ANDAMENTO)
   descricao String?

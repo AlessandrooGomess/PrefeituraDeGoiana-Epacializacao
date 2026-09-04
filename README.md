@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📍 Espacialização de Obras Públicas — Prefeitura de Goiana/PE
 
-## Getting Started
+Plataforma web para mapeamento georreferenciado, monitoramento e transparência das obras públicas municipais de Goiana - PE.
 
-First, run the development server:
+---
 
+## 🎯 Objetivo do Projeto
+
+Centralizar e espacializar em mapas interativos todas as intervenções, reformas e construções da Prefeitura Municipal de Goiana, permitindo:
+- **Transparência Pública (Cidadão)**: Consulta visual do andamento das obras por bairro, valores investidos e fotos de evolução.
+- **Gestão Técnica (Engenheiros / Fiscais)**: Registro de vistorias técnicas, evolução percentual e histórico fotográfico (*Antes, Em Andamento, Concluído*).
+- **Tomada de Decisão (Administração / Secretarias)**: Visão consolidada dos investimentos por secretaria e status de execução.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Frontend & Backend**: [Next.js 16](https://nextjs.org/) (App Router, React 19)
+- **Estilização**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **ORM & Banco de Dados**: [Prisma ORM](https://www.prisma.io/) com [PostgreSQL](https://www.postgresql.org/)
+- **Linguagem**: TypeScript
+- **Gerenciador de Pacotes**: `pnpm`
+
+---
+
+## 🏗️ Modelo de Dados
+
+O domínio da aplicação está modelado no Prisma com as seguintes entidades centrais:
+
+- **Secretaria**: Órgãos municipais responsáveis pelas obras (ex.: Infraestrutura, Educação, Saúde) com cores de identificação visual no mapa.
+- **Obra**: Cadastro georreferenciado com latitude/longitude, bairro, número de ordem de serviço, valor de contrato e status (`PLANEJADA`, `ORDEM_EMITIDA`, `EM_ANDAMENTO`, `PARALISADA`, `CONCLUIDA`).
+- **Medicao**: Acompanhamento da evolução percentual e pareceres técnicos realizados pelos fiscais.
+- **Foto**: Registro visual categorizado (`RENDER_PROJETO`, `ANTES`, `EM_ANDAMENTO`, `CONCLUIDO`).
+- **Usuario**: Perfis de acesso (`CIDADAO`, `ENGENHEIRO`, `ADMIN`).
+
+---
+
+## 🚀 Como Executar o Projeto
+
+### Pré-requisitos
+- **Node.js** (versão 20 ou superior)
+- **pnpm** (`npm install -g pnpm`)
+- Instância PostgreSQL ativa
+
+### 1. Clonar e Instalar Dependências
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <url-do-repositorio>
+cd espacializacao-obras
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configurar Variáveis de Ambiente
+Crie um arquivo `.env` na raiz do projeto com as credenciais do banco de dados:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+DATABASE_URL="postgresql://usuario:senha@host:5432/banco?schema=public"
+DIRECT_URL="postgresql://usuario:senha@host:5432/banco?schema=public"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Sincronizar o Banco de Dados (Prisma)
+```bash
+# Executar as migrações existentes
+pnpm prisma migrate dev
 
-## Learn More
+# (Opcional) Abrir o Prisma Studio para visualizar os dados
+pnpm prisma studio
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Rodar o Servidor de Desenvolvimento
+```bash
+pnpm dev
+```
+Acesse [http://localhost:3000](http://localhost:3000) no navegador.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🗺️ Roadmap de Desenvolvimento
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [x] Modelagem do banco de dados relacional e migrações iniciais (Prisma)
+- [ ] Integração de mapa interativo (Leaflet / MapLibre) com marcadores e filtros por bairro/secretaria
+- [ ] Página pública de listagem e detalhes da obra
+- [ ] Painel administrativo para cadastro de obras e secretarias
+- [ ] Módulo do engenheiro para inclusão de vistorias e upload de fotos
+- [ ] Dashboard analítico com métricas de investimento municipal
