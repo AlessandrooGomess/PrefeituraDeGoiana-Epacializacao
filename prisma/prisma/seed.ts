@@ -44,6 +44,7 @@ const obraPontaDePedras = await prisma.obra.create({
         titulo: "Pavimentação em Paralelepípedo e Drenagem no Centro de Ponta de Pedras",
         descricao: "PAVIMENTAÇÃO EM PARALELEPÍPEDO E DRENAGEM DO CENTRO DE PONTA DE PEDRAS DE GOIANA/PE",
         endereco: "Centro de Ponta de Pedras",
+        bairro: "Ponta de Pedras",
         latitude: -7.618,
         longitude: -34.8385,
         valorContrato: 2834000.0,
@@ -70,6 +71,8 @@ const obraCarneDeVaca = await prisma.obra.create({
     data: {
         titulo: "Pavimentação de 18 Ruas em Carne de Vaca",
         descricao: "PAVIMENTACAO EM PARALELEPÍPEDOS GRANÍTICOS DE 18 RUAS NA COMUNIDADE DE CARNE DE VACA",
+        endereco: "Comunidade de Carne de Vaca",
+        bairro: "Ponta de Pedras",
         latitude: -7.5255,
         longitude: -34.8322,
         valorContrato: 1919999.98,
@@ -96,6 +99,8 @@ const obraRestauroCentro = await prisma.obra.create({
     data: {
         titulo: "Restauro do Prédio da Secretaria de Urbanismo e Obras",
         descricao: "RESTAURO DO ANTIGO PRÉDIO DA SECRETARIA DE URBANISMO, OBRAS E PATRIMÔNIO, LOCALIZADO NA R.DR. MANOEL BORBA, CENTRO",
+        endereco: "Rua Dr. Manoel Borba",
+        bairro: "Centro",
         latitude: -7.5292,
         longitude: -35.0028,
         valorContrato: 1815911.69,
@@ -115,5 +120,33 @@ await prisma.medicao.create({
         engenheiroId: engenheiro.id,
         percentualExecutado: 10.27,
         observacoesTecnicas: "Fase inicial de escoramento e prosprecção do patrimônio histórico",
+    },
+});
+
+const obratejucupapo = await prisma.obra.create({
+    data: {
+        titulo: "Pavimentação e Passeio em Ruas de Tejucupapo",
+        descricao: "PAVIMENTAÇÃO EM PARALELEPÍPEDO E PASSEIO DE DIVERSAS RUAS LOCALIZADAS NO DISTRITO DE TEJUCUPAPO",
+        endereco: "Vias urbanas de Tejjucupapo",
+        bairro: "Tejucupapo",
+        latitude: -7.5292,
+        longitude: -35.0028,
+        valorContrato: 1815911.69,
+        empresaContratada: "A2 ENGENHARIA LTDA",
+        numeroOrdemServico: "OS-497/2025",
+        dataOrdemServico: new Date("2025-07-25"),
+        previsaoConclusao: new Date("2026-11-17"),
+        status: StatusObra.EM_ANDAMENTO,
+        secretariaId: seinfra.id,
+        engenheiroId: engenheiro.id,
+    },
+});
+
+await prisma.medicao.create({
+    data: {
+        obraId: obratejucupapo.id,
+        engenheiroId: engenheiro.id,
+        percentualExecutado: 93.29,
+        observacoesTecnicas: "Reta final de acabamento de meio-fio e passeios acessíveis",
     },
 });
