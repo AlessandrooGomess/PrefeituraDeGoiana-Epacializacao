@@ -34,7 +34,6 @@ async function main() {
       email: "fiscal.obras@goiana.pe.gov.br",
       cargo: "Engenheiro Civil",
       role: Role.ENGENHEIRO,
-      secretariaId: seinfra.id,
     },
   });
 
