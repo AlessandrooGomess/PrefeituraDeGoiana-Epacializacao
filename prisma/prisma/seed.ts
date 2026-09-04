@@ -207,3 +207,41 @@ await prisma.medicao.create({
         observacoesTecnicas: "Pintura geral e instalação de esquadrias em andamento.",
     },
 });
+
+const obraFeiraFlexeiras = await prisma.obra.create({
+    data: {
+        titulo: "Implantação do Pátio de Feira Livre de Flexeiras",
+        descricao: "CONTRATAÇÃO DE EMPRESA ESPECIALIZADA NA PRESTAÇÃO DE SERVIÇOS DE EXECUÇÃO DE OBRAS PARA IMPLANTAÇÃO DO PÁTIO DE FEIRA LIVRE DE FLEXEIRAS",
+        endereco: "Distrito de Flexeiras",
+        bairro: "Flexeiras",
+        latitude: -7.5812,
+        longitude: -34.965,
+        valorContrato: 504999.00,
+        empresaContratada: "CASSIANO FERNANDE DE LIRA CONSTRUTORA LTDA",
+        numeroOrdemServico: "OS-019/2025",
+        dataOrdemServico: new Date("2025-01-16"),
+        previsaoConclusao: new Date("2026-07-17"),
+        dataConclusaoReal: new Date("2025-07-17"),
+        status: StatusObra.CONCLUIDA,
+        secretariaId: seinfra.id,
+        engenheiroId: engenheiro.id,
+    },
+});
+
+await prisma.medicao.create({
+    data: {
+        obraId: obraFeiraFlexeiras.id,
+        engenheiroId: engenheiro.id,
+        percentualExecutado: 100.00,
+        observacoesTecnicas: "Pátio pavimentado, bancadas instaladas e iluminação concluída",
+    },
+});
+
+main()
+.catch((e) => {
+    console.error("", e);
+    process.exit(1);
+})
+.finally(async () => {
+    await prisma.$disconnect();
+});
