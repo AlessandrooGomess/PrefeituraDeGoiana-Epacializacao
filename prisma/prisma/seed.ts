@@ -164,7 +164,7 @@ const obraAsfaltoCentro = await prisma.obra.create({
         numeroOrdemServico: "OS-397/2025",
         dataOrdemServico: new Date("2025-06-26"),
         previsaoConclusao: new Date("2025-09-04"),
-        dataConclusaoReal: new DATE("2025-09-04"),
+        dataConclusaoReal: new Date("2025-09-04"),
         status: StatusObra.CONCLUIDA,
         secretariaId: seinfra.id,
         engenheiroId: engenheiro.id,
@@ -177,5 +177,33 @@ await prisma.medicao.create({
         engenheiroId: engenheiro.id,
         percentualExecutado: 100.00,
         observacoesTecnicas: "Obra 100% executada, sinalizada e entrege a população",
+    },
+});
+
+const obraEscolaAngelo = await prisma.obra.create({
+    data: {
+        titulo: "Reforma e Amplição da Escola Municipal Prefeito Ângelo Jordão",
+        descricao: "EXECUÇÃO DAS OBRAS DE REFORMA, AMPLIAÇÃO E ADEQUAÇÃO NA ESCOLA MUNICIPAL PREFEITO ÂNGELO",
+        endereco: "Av. Marechal Deodoro",
+        bairro: "Centro",
+        latitude: -7.5542,
+        longitude: -35.0019,
+        valorContrato: 336599.09,
+        empresaContratada: "A2 ENGENHARIA LTDA",
+        numeroOrdemServico: "OS-320/2025",
+        dataOrdemServico: new Date("2025-04-29"),
+        previsaoConclusao: new Date("2026-02-23"),
+        status: StatusObra.EM_ANDAMENTO,
+        secretariaId: seduc.id,
+        engenheiroId: engenheiro.id,
+    },
+});
+
+await prisma.medicao.create({
+    data: {
+        obraId: obraEscolaAngelo.id,
+        engenheiroId: engenheiro.id,
+        percentualExecutado: 87.05,
+        observacoesTecnicas: "Pintura geral e instalação de esquadrias em andamento.",
     },
 });
