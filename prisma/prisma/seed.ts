@@ -19,3 +19,11 @@ const seinfra = await prisma.secretaria.create({
         corIdentificacao: "#3182CE",
     },
 });
+
+const saude = await prisma.secretaria.create({
+    data: {
+        nome: "Secretaria Municipal de Saúde",
+        sigla: "SMS",
+        corIdentificacao: "#E53E3E",
+    },
+});
