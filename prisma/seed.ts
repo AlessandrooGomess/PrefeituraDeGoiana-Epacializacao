@@ -30,10 +30,10 @@ async function main() {
   console.log("👷 [3/4] Criando Usuário Fiscal (Engenheiro)...");
   const engenheiro = await prisma.usuario.create({
     data: {
-      nome: "Fiscal de Obras - Prefeitura de Goiana",
-      email: "fiscal.obras@goiana.pe.gov.br",
-      cargo: "Engenheiro Civil",
-      role: Role.ENGENHEIRO,
+      nome: "Administrador Geral - Prefeitura de Goiana",
+      email: "admin@goiana.pe.gov.br",
+      cargo: "Gestor de Tecnologia e Transparência",
+      role: Role.SUPER_ADMIN,
     },
   });
 
