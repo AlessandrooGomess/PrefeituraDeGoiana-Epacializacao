@@ -41,7 +41,7 @@ async function main() {
 
   const gestorSeifra = await prisma.usuario.create({
     data: {
-      nome: "Secretario de Obras - SEINRFRA",
+      nome: "Secretario de Obras - SEINFRA",
       email: "gestor.seinfra@goiana.pe.gov.br",
       cargo: "Secretario Executivo de Infraestrutura",
       role: Role.ADM_SECRETARIA,
@@ -54,6 +54,7 @@ async function main() {
       nome: "Fiscal de Obras - Prefeitura de Goiana",
       email: "fiscal.obras@goiana.pe.gov.br",
       cargo: "Engenheiro Civil Fiscal",
+      role: Role.ENGENHEIRO,
       secretariaId: seinfra.id,
     },
   });
@@ -94,6 +95,7 @@ async function main() {
   await prisma.foto.createMany({
     data: [
       {
+        tipo: TipoFoto.RENDER_PROJETO,
         obraId: obraPontaDePedras.id,
         usuarioId: engenheiro.id,
         url: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?q=80&w=800",
@@ -167,9 +169,10 @@ async function main() {
   await prisma.foto.createMany({
     data: [
       {
+        tipo: TipoFoto.ANTES,
         obraId: obraRestauroCentro.id,
         usuarioId: engenheiro.id,
-        url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800](https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800",
+        url: "https://images.unsplash.com/photo-15133694203232-719a280e022f?q=80&w=800",
         descricao: "Estado da fachada histórica antes do início do escoramento",
         dataFoto: new Date("2025-07-28"),
       },
@@ -240,9 +243,10 @@ async function main() {
   await prisma.foto.createMany({
     data: [
       {
+        tipo: TipoFoto.CONCLUIDO,
         obraId: obraAsfaltoCentro.id,
         usuarioId:engenheiro.id,
-        url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800](https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800",
+        url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800",
         descricao: "Vias centrais totalmente asfaltadas em CBUQ e sinalizadas.",
         dataFoto: new Date("2025-09-04"),
       },
