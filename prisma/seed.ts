@@ -237,6 +237,18 @@ async function main() {
     },
   });
 
+  await prisma.foto.createMany({
+    data: [
+      {
+        obraId: obraAsfaltoCentro.id,
+        usuarioId:engenheiro.id,
+        url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800](https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800",
+        descricao: "Vias centrais totalmente asfaltadas em CBUQ e sinalizadas.",
+        dataFoto: new Date("2025-09-04"),
+      },
+    ],
+  });
+
   const obraEscolaAngelo = await prisma.obra.create({
     data: {
       titulo: "Reforma e Ampliação da Escola Municipal Prefeito Ângelo Jordão",
