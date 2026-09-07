@@ -27,13 +27,23 @@ async function main() {
     },
   });
 
-  console.log("👷 [3/4] Criando Usuário Fiscal (Engenheiro)...");
+  console.log(" [3/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...");
   const engenheiro = await prisma.usuario.create({
     data: {
       nome: "Administrador Geral - Prefeitura de Goiana",
       email: "admin@goiana.pe.gov.br",
       cargo: "Gestor de Tecnologia e Transparência",
       role: Role.SUPER_ADMIN,
+    },
+  });
+
+  const gestorSeifra = await prisma.usuario.create({
+    data: {
+      nome: "Secretario de Obras - SEINRFRA",
+      email: "gestor.seinfra@goiana.pe.gov.br",
+      cargo: "Secretario Executivo de Infraestrutura",
+      role: Role.ADM_SECRETARIA,
+      secretariaId: seinfra.id,
     },
   });
 
