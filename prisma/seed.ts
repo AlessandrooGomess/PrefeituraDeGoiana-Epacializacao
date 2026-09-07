@@ -28,7 +28,7 @@ async function main() {
   });
 
   console.log(" [3/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...");
-  const engenheiro = await prisma.usuario.create({
+  const superAdmin = await prisma.usuario.create({
     data: {
       nome: "Administrador Geral - Prefeitura de Goiana",
       email: "admin@goiana.pe.gov.br",
@@ -43,6 +43,15 @@ async function main() {
       email: "gestor.seinfra@goiana.pe.gov.br",
       cargo: "Secretario Executivo de Infraestrutura",
       role: Role.ADM_SECRETARIA,
+      secretariaId: seinfra.id,
+    },
+  });
+
+  const engenheiro = await prisma.usuario.create({
+    data: {
+      nome: "Fiscal de Obras - Prefeitura de Goiana",
+      email: "fiscal.obras@goiana.pe.gov.br",
+      cargo: "Engenheiro Civil Fiscal",
       secretariaId: seinfra.id,
     },
   });
