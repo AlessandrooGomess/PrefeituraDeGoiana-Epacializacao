@@ -164,6 +164,18 @@ async function main() {
     },
   });
 
+  await prisma.foto.createMany({
+    data: [
+      {
+        obraId: obraRestauroCentro.id,
+        usuarioId: engenheiro.id,
+        url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800](https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800",
+        descricao: "Estado da fachada histórica antes do início do escoramento",
+        dataFoto: new Date("2025-07-28"),
+      },
+    ],
+  });
+
   const obraTejucupapo = await prisma.obra.create({
     data: {
       titulo: "Pavimentação e Passeio em Ruas de Tejucupapo",
