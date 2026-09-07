@@ -27,7 +27,9 @@ async function main() {
     },
   });
 
-  console.log(" [3/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...");
+  console.log(
+    " [3/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...",
+  );
   const superAdmin = await prisma.usuario.create({
     data: {
       nome: "Administrador Geral - Prefeitura de Goiana",
@@ -60,8 +62,10 @@ async function main() {
 
   const obraPontaDePedras = await prisma.obra.create({
     data: {
-      titulo: "Pavimentação em Paralelepípedo e Drenagem no Centro de Ponta de Pedras",
-      descricao: "PAVIMENTAÇÃO EM PARALELEPÍPEDO E DRENAGEM DO CENTRO DE PONTA DE PEDRAS DISTRITO DE GOIANA/PE - ETAPA 02",
+      titulo:
+        "Pavimentação em Paralelepípedo e Drenagem no Centro de Ponta de Pedras",
+      descricao:
+        "PAVIMENTAÇÃO EM PARALELEPÍPEDO E DRENAGEM DO CENTRO DE PONTA DE PEDRAS DISTRITO DE GOIANA/PE - ETAPA 02",
       endereco: "Centro de Ponta de Pedras",
       bairro: "Ponta de Pedras",
       latitude: -7.618,
@@ -82,14 +86,29 @@ async function main() {
       obraId: obraPontaDePedras.id,
       engenheiroId: engenheiro.id,
       percentualExecutado: 73.31,
-      observacoesTecnicas: "Execução de drenagem avançada e assentamento de paralelepípedos.",
+      observacoesTecnicas:
+        "Execução de drenagem avançada e assentamento de paralelepípedos.",
     },
+  });
+
+  await prisma.foto.createMany({
+    data: [
+      {
+        obraId: obraPontaDePedras.id,
+        usuarioId: engenheiro.id,
+        url: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?q=80&w=800",
+        descricao:
+          "Perspectiva do projeto executivo de pavimentação e escoamento.",
+        dataFoto: new Date("2025-10-30"),
+      },
+    ],
   });
 
   const obraCarneDeVaca = await prisma.obra.create({
     data: {
       titulo: "Pavimentação de 18 Ruas em Carne de Vaca",
-      descricao: "PAVIMENTAÇÃO EM PARALELEPÍPEDOS GRANÍTICOS DE 18 RUAS NA COMUNIDADE DE CARNE DE VACA - GOIANA/PE",
+      descricao:
+        "PAVIMENTAÇÃO EM PARALELEPÍPEDOS GRANÍTICOS DE 18 RUAS NA COMUNIDADE DE CARNE DE VACA - GOIANA/PE",
       endereco: "Comunidade de Carne de Vaca",
       bairro: "Carne de Vaca",
       latitude: -7.5255,
@@ -110,14 +129,16 @@ async function main() {
       obraId: obraCarneDeVaca.id,
       engenheiroId: engenheiro.id,
       percentualExecutado: 76.72,
-      observacoesTecnicas: "Pavimentação granítica em estágio avançado nas vias principais.",
+      observacoesTecnicas:
+        "Pavimentação granítica em estágio avançado nas vias principais.",
     },
   });
 
   const obraRestauroCentro = await prisma.obra.create({
     data: {
       titulo: "Restauro do Prédio da Secretaria de Urbanismo e Obras",
-      descricao: "RESTAURO DO ANTIGO PRÉDIO DA SECRETARIA DE URBANISMO, OBRAS E PATRIMÔNIO, LOCALIZADO NA R. DR. MANOEL BORBA, CENTRO",
+      descricao:
+        "RESTAURO DO ANTIGO PRÉDIO DA SECRETARIA DE URBANISMO, OBRAS E PATRIMÔNIO, LOCALIZADO NA R. DR. MANOEL BORBA, CENTRO",
       endereco: "Rua Dr. Manoel Borba",
       bairro: "Centro",
       latitude: -7.5592,
@@ -138,14 +159,16 @@ async function main() {
       obraId: obraRestauroCentro.id,
       engenheiroId: engenheiro.id,
       percentualExecutado: 10.27,
-      observacoesTecnicas: "Fase inicial de escoramento e prospecção do patrimônio histórico.",
+      observacoesTecnicas:
+        "Fase inicial de escoramento e prospecção do patrimônio histórico.",
     },
   });
 
   const obraTejucupapo = await prisma.obra.create({
     data: {
       titulo: "Pavimentação e Passeio em Ruas de Tejucupapo",
-      descricao: "PAVIMENTAÇÃO EM PARALELEPÍPEDO E PASSEIO DE DIVERSAS RUAS LOCALIZADAS NO DISTRITO DE TEJUCUPAPO",
+      descricao:
+        "PAVIMENTAÇÃO EM PARALELEPÍPEDO E PASSEIO DE DIVERSAS RUAS LOCALIZADAS NO DISTRITO DE TEJUCUPAPO",
       endereco: "Vias urbanas de Tejucupapo",
       bairro: "Tejucupapo",
       latitude: -7.5619,
@@ -166,14 +189,16 @@ async function main() {
       obraId: obraTejucupapo.id,
       engenheiroId: engenheiro.id,
       percentualExecutado: 93.29,
-      observacoesTecnicas: "Reta final de acabamento de meio-fio e passeios acessíveis.",
+      observacoesTecnicas:
+        "Reta final de acabamento de meio-fio e passeios acessíveis.",
     },
   });
 
   const obraAsfaltoCentro = await prisma.obra.create({
     data: {
       titulo: "Pavimentação Asfáltica em CBUQ - Etapa 5",
-      descricao: "PRESTAÇÃO DE SERVIÇOS DE PAVIMENTAÇÃO ASFÁLTICA EM CBUQ DA ETAPA 5 DE DIVERSAS RUAS DO CENTRO DE GOIANA/PE",
+      descricao:
+        "PRESTAÇÃO DE SERVIÇOS DE PAVIMENTAÇÃO ASFÁLTICA EM CBUQ DA ETAPA 5 DE DIVERSAS RUAS DO CENTRO DE GOIANA/PE",
       endereco: "Ruas do Centro",
       bairro: "Centro",
       latitude: -7.5568,
@@ -195,14 +220,16 @@ async function main() {
       obraId: obraAsfaltoCentro.id,
       engenheiroId: engenheiro.id,
       percentualExecutado: 100.0,
-      observacoesTecnicas: "Obra 100% executada, sinalizada e entregue à população.",
+      observacoesTecnicas:
+        "Obra 100% executada, sinalizada e entregue à população.",
     },
   });
 
   const obraEscolaAngelo = await prisma.obra.create({
     data: {
       titulo: "Reforma e Ampliação da Escola Municipal Prefeito Ângelo Jordão",
-      descricao: "EXECUÇÃO DAS OBRAS DE REFORMA, AMPLIAÇÃO E ADEQUAÇÃO NA ESCOLA MUNICIPAL PREFEITO ÂNGELO JORDÃO",
+      descricao:
+        "EXECUÇÃO DAS OBRAS DE REFORMA, AMPLIAÇÃO E ADEQUAÇÃO NA ESCOLA MUNICIPAL PREFEITO ÂNGELO JORDÃO",
       endereco: "Av. Marechal Deodoro",
       bairro: "Centro",
       latitude: -7.5542,
@@ -223,14 +250,16 @@ async function main() {
       obraId: obraEscolaAngelo.id,
       engenheiroId: engenheiro.id,
       percentualExecutado: 87.05,
-      observacoesTecnicas: "Pintura geral e instalação de esquadrias em andamento.",
+      observacoesTecnicas:
+        "Pintura geral e instalação de esquadrias em andamento.",
     },
   });
 
   const obraFeiraFlexeiras = await prisma.obra.create({
     data: {
       titulo: "Implantação do Pátio de Feira Livre de Flexeiras",
-      descricao: "CONTRATAÇÃO DE EMPRESA ESPECIALIZADA NA PRESTAÇÃO DE SERVIÇOS DE EXECUÇÃO DE OBRAS PARA IMPLANTAÇÃO DO PÁTIO DE FEIRA LIVRE DE FLEXEIRAS",
+      descricao:
+        "CONTRATAÇÃO DE EMPRESA ESPECIALIZADA NA PRESTAÇÃO DE SERVIÇOS DE EXECUÇÃO DE OBRAS PARA IMPLANTAÇÃO DO PÁTIO DE FEIRA LIVRE DE FLEXEIRAS",
       endereco: "Distrito de Flexeiras",
       bairro: "Flexeiras",
       latitude: -7.5812,
@@ -252,7 +281,8 @@ async function main() {
       obraId: obraFeiraFlexeiras.id,
       engenheiroId: engenheiro.id,
       percentualExecutado: 100.0,
-      observacoesTecnicas: "Pátio pavimentado, bancadas instaladas e iluminação concluída.",
+      observacoesTecnicas:
+        "Pátio pavimentado, bancadas instaladas e iluminação concluída.",
     },
   });
 
