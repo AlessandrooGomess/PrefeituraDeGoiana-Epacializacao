@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { ObraItem } from "@/types/obra";
@@ -17,11 +17,10 @@ interface MapContainerProps {
 const GOIANA_DEFAULT_CENTER: [number, number] = [-34.95, -7.56];
 const GOIANA_DEFAULT_ZOOM = 11;
 
-// Delimitação territorial de Goiana/PE [SW (Sudoeste), NE (Nordeste)]
-// Garante que o mapa fique restrito à extensão geográfica do município
+// Extensão real do GeoJSON de Goiana/PE [SW (Sudoeste), NE (Nordeste)]
 const GOIANA_BOUNDS: [[number, number], [number, number]] = [
-  [-35.20, -7.75], // Sudoeste
-  [-34.75, -7.40], // Nordeste
+  [-35.077806, -7.714654],
+  [-34.806691, -7.462009],
 ];
 
 // Sanitização contra XSS para injeção segura no Popup do MapLibre
@@ -81,10 +80,6 @@ function isValidCoordinate(lat: unknown, lng: unknown): boolean {
   );
 }
 
-function isValidHexColor(color: unknown): color is string {
-  return typeof color === "string" && /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(color);
-}
-
 export default function MapContainer({
   initialCenter = GOIANA_DEFAULT_CENTER,
   initialZoom = GOIANA_DEFAULT_ZOOM,
@@ -121,6 +116,10 @@ export default function MapContainer({
             attribution:
               '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
           },
+          goiana: {
+            type: "geojson",
+            data: "/geojson/goiana-limite.geojson",
+          },
         },
         layers: [
           {
@@ -129,6 +128,16 @@ export default function MapContainer({
             source: "osm",
             minzoom: 0,
             maxzoom: 19,
+          },
+          {
+            id: "goiana-fill",
+            type: "fill",
+            source: "goiana",
+          },
+          {
+            id: "goiana-line",
+            type: "line",
+            source: "goiana",
           },
         ],
       },
@@ -148,11 +157,12 @@ export default function MapContainer({
       "top-right"
     );
 
-    map.on("load", () => {
-      setMapLoaded(true);
+    map.once("idle", () => {
+      map.fitBounds(GOIANA_BOUNDS, { padding: 24, duration: 0 });
     });
 
     mapRef.current = map;
+    setMapLoaded(true);
 
     // Cleanup seguro para evitar vazamento de memória e duplicações no React 19
     return () => {
@@ -206,7 +216,7 @@ export default function MapContainer({
   }, [onObrasLoaded]);
 
   // 3. Renderização dos Marcadores e Popups no Mapa
-  const renderizarMarcadores = useCallback(() => {
+  useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded) return;
 
@@ -229,11 +239,7 @@ export default function MapContainer({
 
       const valorFormatado = formatarMoeda(obra.valorContrato);
       const previsaoFormatada = formatarData(obra.previsaoConclusao);
-      const corSecretaria = isValidHexColor(
-        obra.secretaria?.corIdentificacao
-      )
-        ? obra.secretaria.corIdentificacao
-        : "#2563EB";
+      const corSecretaria = obra.secretaria?.corIdentificacao || "#2563EB";
 
       // HTML estruturado e seguro para o Popup
       const popupContent = `
@@ -297,10 +303,6 @@ export default function MapContainer({
       markersRef.current.push(marker);
     });
   }, [obras, mapLoaded]);
-
-  useEffect(() => {
-    renderizarMarcadores();
-  }, [renderizarMarcadores]);
 
   // Contagem de obras válidas
   const obrasValidasCount = obras.filter((o) =>
