@@ -81,6 +81,10 @@ function isValidCoordinate(lat: unknown, lng: unknown): boolean {
   );
 }
 
+function isValidHexColor(color: unknown): color is string {
+  return typeof color === "string" && /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(color);
+}
+
 export default function MapContainer({
   initialCenter = GOIANA_DEFAULT_CENTER,
   initialZoom = GOIANA_DEFAULT_ZOOM,
@@ -225,7 +229,11 @@ export default function MapContainer({
 
       const valorFormatado = formatarMoeda(obra.valorContrato);
       const previsaoFormatada = formatarData(obra.previsaoConclusao);
-      const corSecretaria = obra.secretaria?.corIdentificacao || "#2563EB";
+      const corSecretaria = isValidHexColor(
+        obra.secretaria?.corIdentificacao
+      )
+        ? obra.secretaria.corIdentificacao
+        : "#2563EB";
 
       // HTML estruturado e seguro para o Popup
       const popupContent = `
