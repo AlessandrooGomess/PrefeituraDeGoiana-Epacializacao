@@ -59,6 +59,16 @@ async function main() {
     },
   });
 
+  const engenheiroSeduc = await prisma.usuario.create({
+    data: {
+      nome: "Fiscal de Obras da Educação",
+      email: "fiscal.educacao@goiana.pe.gov.br",
+      cargo: "Engenheiro Civil Fiscal",
+      role: Role.ENGENHEIRO,
+      secretariaId: seduc.id,
+    },
+  });
+
   console.log("📍 [4/4] Inserindo Obras Reais de Goiana (2025)...");
 
   const obraPontaDePedras = await prisma.obra.create({
@@ -245,7 +255,7 @@ async function main() {
       {
         tipo: TipoFoto.CONCLUIDO,
         obraId: obraAsfaltoCentro.id,
-        usuarioId:engenheiro.id,
+        usuarioId: engenheiro.id,
         url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800",
         descricao: "Vias centrais totalmente asfaltadas em CBUQ e sinalizadas.",
         dataFoto: new Date("2025-09-04"),
@@ -269,14 +279,14 @@ async function main() {
       previsaoConclusao: new Date("2026-02-23"),
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seduc.id,
-      engenheiroId: engenheiro.id,
+      engenheiroId: engenheiroSeduc.id,
     },
   });
 
   await prisma.medicao.create({
     data: {
       obraId: obraEscolaAngelo.id,
-      engenheiroId: engenheiro.id,
+      engenheiroId: engenheiroSeduc.id,
       percentualExecutado: 87.05,
       observacoesTecnicas:
         "Pintura geral e instalação de esquadrias em andamento.",
