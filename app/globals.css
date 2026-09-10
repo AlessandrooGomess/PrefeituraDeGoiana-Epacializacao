@@ -1,26 +1,7 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+:root { --navy: #0f2942; --ink: #121c2c; --panel: #f0f3ff; } * { box-sizing: border-box; } html, body { min-height: 100%; } body { margin: 0; background: var(--navy); color: var(--ink); font-family: Arial, Helvetica, sans-serif; } button, input { font: inherit; } button { cursor: pointer; }
+.portal-shell { min-height: 100dvh; display: grid; grid-template-rows: 42px minmax(0, 1fr) 52px; overflow: hidden; }.portal-header { z-index: 20; display: flex; align-items: center; gap: 32px; padding: 0 28px; color: #fff; background: var(--navy); }.portal-brand { font-size: 12px; font-weight: 800; white-space: nowrap; }.portal-header nav { align-self: stretch; display: flex; gap: 24px; }.portal-header nav a { display: grid; place-items: center; padding: 0 1px; color: #d4ddeb; text-decoration: none; font-size: 11px; font-weight: 700; }.portal-header nav a.active { border-bottom: 2px solid #3195e5; color: #fff; }.portal-tools { display: flex; align-items: center; gap: 10px; margin-left: auto; }.portal-tools button { border: 0; padding: 0; color: #fff; background: transparent; font-size: 18px; }.search { display: flex; align-items: center; width: 168px; height: 29px; padding: 0 10px; gap: 5px; border-radius: 7px; background: #fff; color: #3b4757; }.search input { width: 100%; border: 0; outline: 0; background: transparent; color: #263447; font-size: 11px; }
+.portal-content { min-height: 0; display: grid; grid-template-columns: 211px minmax(0, 1fr); }.filter-panel { z-index: 10; overflow: auto; padding: 17px 16px; background: var(--panel); box-shadow: 2px 0 6px rgb(15 41 66 / 13%); }.filter-panel h1 { margin: 0 0 17px; color: #1b4165; font-size: 16px; font-weight: 800; }.near-button { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; height: 31px; border: 0; border-radius: 3px; color: #fff; background: #15476f; box-shadow: 0 3px 7px rgb(15 41 66 / 16%); font-size: 11px; font-weight: 700; }.filter-panel section { margin-top: 21px; }.filter-panel h2 { margin: 0 0 11px; color: #4d5564; font-size: 9px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; }.check-row { display: flex; align-items: center; min-height: 34px; gap: 8px; color: #263447; font-size: 11px; cursor: pointer; }.check-row input { appearance: none; width: 14px; height: 14px; margin: 0; border: 1px solid #d3d9e2; background: #fff; }.check-row input:checked { border-color: #172f4a; background: #172f4a; }.check-row input:checked::after { display: block; margin: 1px 0 0 3px; color: #fff; content: "✓"; font-size: 9px; font-weight: 800; }.color-dot { width: 8px; height: 8px; margin-left: -3px; border-radius: 50%; }.location-notice { margin: 14px 0 0; color: #a23b30; font-size: 10px; line-height: 1.35; }
+.map-area { position: relative; min-width: 0; overflow: hidden; background: #d8e2ed; }.result-chip { position: absolute; top: 14px; left: 16px; z-index: 2; padding: 7px 10px; border-radius: 4px; background: rgb(255 255 255 / 93%); color: #334155; box-shadow: 0 1px 4px rgb(15 41 66 / 15%); font-size: 10px; font-weight: 700; }.map-pin { display: grid; place-items: center; width: 34px; height: 34px; border: 3px solid #fff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); color: #fff; background: var(--pin-color); box-shadow: 0 2px 6px rgb(15 41 66 / 28%); }.map-pin span { transform: rotate(45deg); font-size: 15px; font-weight: bold; }.map-pin--selected { outline: 4px solid rgb(255 255 255 / 60%); transform: rotate(-45deg) scale(1.14); }
+.work-preview { position: absolute; right: 17px; bottom: 17px; z-index: 5; width: min(252px, calc(100% - 34px)); padding: 17px 14px 13px; border-radius: 6px; background: #fff; box-shadow: 0 4px 15px rgb(15 41 66 / 23%); }.preview-close { position: absolute; top: 8px; right: 10px; border: 0; color: #334155; background: transparent; font-size: 18px; }.preview-category, .obra-popup__tag { display: inline-block; border-radius: 3px; background: #fff3e8; padding: 3px 6px; font-size: 8px; font-weight: 800; text-transform: uppercase; }.work-preview h2 { margin: 12px 18px 9px 0; color: #152033; font-size: 16px; line-height: 1.13; }.preview-meta { display: flex; flex-wrap: wrap; gap: 8px; color: #414b5a; font-size: 9px; font-weight: 600; }.preview-meta i { display: inline-block; width: 5px; height: 5px; border-radius: 50%; vertical-align: middle; }.progress, .obra-popup__progress { height: 5px; margin: 13px 0 14px; overflow: hidden; border-radius: 4px; background: #5d616a; }.progress span, .obra-popup__progress span { display: block; height: 100%; border-radius: inherit; background: #142f4c; }.details-button { width: 100%; height: 26px; border: 0; border-radius: 2px; color: #fff; background: #12446d; font-size: 10px; font-weight: 800; }.obra-maplibre-popup .maplibregl-popup-content { padding: 0; overflow: hidden; border-radius: 6px; box-shadow: 0 4px 15px rgb(15 41 66 / 23%); }.obra-popup { min-width: 220px; padding: 14px; font-family: Arial, sans-serif; }.obra-popup h3 { margin: 10px 0 8px; color: #152033; font-size: 14px; line-height: 1.2; }.obra-popup__meta { display: flex; gap: 8px; color: #414b5a; font-size: 9px; }.obra-popup__progress { margin-bottom: 0; } footer { display: flex; align-items: center; justify-content: flex-end; gap: 21px; padding: 0 22px; background: var(--navy); } footer a { color: #f7f9ff; text-decoration: none; font-size: 9px; font-weight: 700; }
+@media (max-width: 700px) { .portal-shell { grid-template-rows: 50px minmax(0, 1fr) 42px; }.portal-header { gap: 12px; padding: 0 14px; }.portal-brand { max-width: 112px; font-size: 10px; white-space: normal; }.portal-header nav { display: none; }.search { width: 145px; }.portal-content { grid-template-columns: 1fr; }.filter-panel { position: absolute; top: 50px; left: 0; z-index: 30; width: 205px; max-height: calc(100dvh - 92px); border-radius: 0 0 8px 0; }.filter-panel h1 { font-size: 14px; }.map-area { grid-column: 1; }.result-chip { left: 219px; }.work-preview { bottom: 12px; right: 12px; } footer { gap: 11px; justify-content: center; padding: 0 8px; } }

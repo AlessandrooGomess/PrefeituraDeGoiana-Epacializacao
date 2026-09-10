@@ -1,49 +1,23 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useCallback, useMemo, useState } from "react";
+import type { ObraItem, StatusObra } from "@/types/obra";
 
-const MapContainer = dynamic(() => import("@/components/map/MapContainer"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-500">
-      <div className="flex flex-col items-center gap-2">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-        <p className="text-sm font-medium">Carregando mapa de Goiana...</p>
-      </div>
-    </div>
-  ),
-});
+const MapContainer = dynamic(() => import("@/components/map/MapContainer"), { ssr: false, loading: () => <div className="grid h-full place-items-center bg-[#e8edf7] text-sm text-slate-500">Carregando mapa...</div> });
+const statusNames: Record<StatusObra, string> = { PLANEJADA: "Em planejamento", ORDEM_EMITIDA: "Ordem emitida", EM_ANDAMENTO: "Em execução", PARALISADA: "Paralisada", CONCLUIDA: "Concluída" };
+const statusColors: Record<StatusObra, string> = { PLANEJADA: "#77869a", ORDEM_EMITIDA: "#3879c6", EM_ANDAMENTO: "#ed7927", PARALISADA: "#d34545", CONCLUIDA: "#2d9e61" };
+function Icon({ children }: { children: React.ReactNode }) { return <span aria-hidden="true" className="inline-flex leading-none">{children}</span>; }
 
 export default function Home() {
-  return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-white">
-      {/* Barra de Cabeçalho Institucional */}
-      <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-slate-200 z-10 shrink-0 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-            🏛️
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-slate-900 leading-tight">
-              Prefeitura Municipal de Goiana
-            </h1>
-            <p className="text-xs text-slate-500 font-medium">
-              Plataforma de Espacialização e Transparência de Obras
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-            ● Mapa Ativo
-          </span>
-        </div>
-      </header>
-
-      {/* Área do Mapa */}
-      <main className="relative flex-1 w-full h-full">
-        <MapContainer />
-      </main>
-    </div>
-  );
+  const [obras, setObras] = useState<ObraItem[]>([]); const [query, setQuery] = useState(""); const [secretarias, setSecretarias] = useState<string[]>([]); const [statuses, setStatuses] = useState<StatusObra[]>(["EM_ANDAMENTO"]); const [selected, setSelected] = useState<ObraItem | null>(null); const [nearMeRequest, setNearMeRequest] = useState(0); const [notice, setNotice] = useState<string | null>(null);
+  const onObrasLoaded = useCallback((items: ObraItem[]) => setObras(items), []); const onSelectObra = useCallback((obra: ObraItem) => setSelected(obra), []);
+  const secretaries = useMemo(() => Array.from(new Map(obras.map((obra) => [obra.secretaria.id, obra.secretaria])).values()), [obras]);
+  const filtered = useMemo(() => obras.filter((obra) => { const haystack = [obra.titulo, obra.endereco, obra.bairro, obra.secretaria?.nome].filter(Boolean).join(" ").toLocaleLowerCase("pt-BR"); return (!query || haystack.includes(query.toLocaleLowerCase("pt-BR"))) && (!secretarias.length || secretarias.includes(obra.secretaria.id)) && (!statuses.length || statuses.includes(obra.status)); }), [obras, query, secretarias, statuses]);
+  const toggle = <T,>(value: T, values: T[], setter: (next: T[]) => void) => setter(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
+  const formatDate = (value: string | null) => value ? new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(value)) : null;
+  return <div className="portal-shell"><header className="portal-header"><div className="portal-brand">PORTAL DE INFRAESTRUTURA</div><nav><a className="active" href="#mapa">Mapa</a><a href="#projetos">Projetos</a></nav><div className="portal-tools"><label className="search"><Icon>⌕</Icon><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar projeto..." aria-label="Buscar projeto" /></label><button aria-label="Notificações">♧</button><button aria-label="Perfil">◎</button></div></header>
+    <main id="mapa" className="portal-content"><aside className="filter-panel"><h1>Filtros</h1><button className="near-button" onClick={() => { setNotice(null); setNearMeRequest((n) => n + 1); }}><Icon>⌾</Icon> Perto de Mim</button><section><h2>Categorias</h2>{secretaries.map((secretaria) => <label className="check-row" key={secretaria.id}><input type="checkbox" checked={secretarias.includes(secretaria.id)} onChange={() => toggle(secretaria.id, secretarias, setSecretarias)} /><span className="color-dot" style={{ background: secretaria.corIdentificacao || "#2383d9" }} />{secretaria.nome.replace("Secretaria de ", "")}</label>)}</section><section><h2>Status</h2>{(Object.keys(statusNames) as StatusObra[]).map((status) => <label className="check-row" key={status}><input type="checkbox" checked={statuses.includes(status)} onChange={() => toggle(status, statuses, setStatuses)} />{statusNames[status]}</label>)}</section>{notice && <p className="location-notice">{notice}</p>}</aside>
+      <div className="map-area"><MapContainer onObrasLoaded={onObrasLoaded} onSelectObra={onSelectObra} selectedObraId={selected?.id} visibleObraIds={filtered.map((obra) => obra.id)} nearMeRequest={nearMeRequest} onGeolocationError={setNotice} /><div className="result-chip">{filtered.length} {filtered.length === 1 ? "obra encontrada" : "obras encontradas"}</div>{selected && <article className="work-preview"><button className="preview-close" onClick={() => setSelected(null)} aria-label="Fechar detalhes">×</button><span className="preview-category" style={{ color: selected.secretaria.corIdentificacao || "#ec7b2b" }}>{selected.secretaria.sigla}</span><h2>{selected.titulo}</h2><div className="preview-meta"><span><i style={{ background: statusColors[selected.status] }} /> {statusNames[selected.status]}</span>{selected.previsaoConclusao && <span>▣ Previsão: {formatDate(selected.previsaoConclusao)}</span>}</div><div className="progress"><span style={{ width: `${selected.percentualExecutado ?? 0}%` }} /></div><button className="details-button" type="button">Ver Detalhes Completos</button></article>}</div></main>
+    <footer><a href="#privacidade">Privacidade</a><a href="#transparencia">Transparência</a><a href="#contato">Contato</a><a href="#acessibilidade">Acessibilidade</a></footer></div>;
 }

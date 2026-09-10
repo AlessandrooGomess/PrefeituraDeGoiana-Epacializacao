@@ -6,338 +6,68 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { ObraItem } from "@/types/obra";
 
 interface MapContainerProps {
-  initialCenter?: [number, number]; // [longitude, latitude]
-  initialZoom?: number;
   className?: string;
   onObrasLoaded?: (obras: ObraItem[]) => void;
+  visibleObraIds?: string[];
+  selectedObraId?: string | null;
+  onSelectObra?: (obra: ObraItem) => void;
+  nearMeRequest?: number;
+  onGeolocationError?: (message: string) => void;
 }
 
-// Coordenadas centrais padrão de Goiana - PE
-// Permitem visualizar simultaneamente o centro urbano e os distritos litorâneos (Ponta de Pedras e Carne de Vaca)
-const GOIANA_DEFAULT_CENTER: [number, number] = [-34.95, -7.56];
-const GOIANA_DEFAULT_ZOOM = 11;
+const GOIANA_BOUNDS: [[number, number], [number, number]] = [[-35.077806, -7.714654], [-34.806691, -7.462009]];
+const statusLabel: Record<string, string> = { PLANEJADA: "Em planejamento", ORDEM_EMITIDA: "Ordem emitida", EM_ANDAMENTO: "Em execução", PARALISADA: "Paralisada", CONCLUIDA: "Concluída" };
 
-// Extensão real do GeoJSON de Goiana/PE [SW (Sudoeste), NE (Nordeste)]
-const GOIANA_BOUNDS: [[number, number], [number, number]] = [
-  [-35.077806, -7.714654],
-  [-34.806691, -7.462009],
-];
-
-// Sanitização contra XSS para injeção segura no Popup do MapLibre
-function escapeHtml(text: string | null | undefined): string {
-  if (!text) return "";
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+function validCoordinate(lat: unknown, lng: unknown): lat is number { return typeof lat === "number" && typeof lng === "number" && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180; }
+function popupHtml(obra: ObraItem) {
+  const previsao = obra.previsaoConclusao ? new Date(obra.previsaoConclusao).toLocaleDateString("pt-BR", { month: "short", year: "numeric", timeZone: "UTC" }) : null;
+  const percentual = obra.percentualExecutado ?? 0;
+  return `<div class="obra-popup"><span class="obra-popup__tag">${obra.secretaria?.sigla || "OBRA"}</span><h3>${obra.titulo}</h3><div class="obra-popup__meta"><span>● ${statusLabel[obra.status] || obra.status}</span>${previsao ? `<span>▣ Previsão: ${previsao}</span>` : ""}</div><div class="obra-popup__progress"><span style="width:${Math.max(0, Math.min(100, percentual))}%"></span></div></div>`;
 }
 
-// Formatadores seguros
-function formatarMoeda(valor: number | null): string | null {
-  if (valor === null || valor === undefined) return null;
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(valor);
-}
-
-function formatarData(dataIso: string | null): string | null {
-  if (!dataIso) return null;
-  try {
-    const data = new Date(dataIso);
-    return isNaN(data.getTime())
-      ? null
-      : data.toLocaleDateString("pt-BR", { timeZone: "UTC" });
-  } catch {
-    return null;
-  }
-}
-
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; bg: string; text: string }
-> = {
-  PLANEJADA: { label: "Planejada", bg: "#F1F5F9", text: "#475569" },
-  ORDEM_EMITIDA: { label: "Ordem Emitida", bg: "#E0F2FE", text: "#0369A1" },
-  EM_ANDAMENTO: { label: "Em Andamento", bg: "#FEF3C7", text: "#B45309" },
-  PARALISADA: { label: "Paralisada", bg: "#FEE2E2", text: "#B91C1C" },
-  CONCLUIDA: { label: "Concluída", bg: "#DCFCE7", text: "#15803D" },
-};
-
-// Validador estrito de coordenadas geográficas válidas
-function isValidCoordinate(lat: unknown, lng: unknown): boolean {
-  return (
-    typeof lat === "number" &&
-    typeof lng === "number" &&
-    !Number.isNaN(lat) &&
-    !Number.isNaN(lng) &&
-    lat >= -90 &&
-    lat <= 90 &&
-    lng >= -180 &&
-    lng <= 180
-  );
-}
-
-export default function MapContainer({
-  initialCenter = GOIANA_DEFAULT_CENTER,
-  initialZoom = GOIANA_DEFAULT_ZOOM,
-  className = "w-full h-full min-h-[500px]",
-  onObrasLoaded,
-}: MapContainerProps) {
+export default function MapContainer({ className = "h-full w-full", onObrasLoaded, visibleObraIds, selectedObraId, onSelectObra, nearMeRequest, onGeolocationError }: MapContainerProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
-
+  const markerMapRef = useRef(new Map<string, { marker: maplibregl.Marker; popup: maplibregl.Popup; obra: ObraItem }>());
   const [obras, setObras] = useState<ObraItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [mapLoaded, setMapLoaded] = useState<boolean>(false);
+  const [ready, setReady] = useState(false);
 
-  // 1. Inicialização do Mapa
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
-
-    // Inicialização da instância MapLibre GL
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: "raster",
-            tiles: [
-              "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-              "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-              "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            ],
-            tileSize: 256,
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
-          },
-          goiana: {
-            type: "geojson",
-            data: "/geojson/goiana-limite.geojson",
-          },
-        },
-        layers: [
-          {
-            id: "osm-layer",
-            type: "raster",
-            source: "osm",
-            minzoom: 0,
-            maxzoom: 19,
-          },
-          {
-            id: "goiana-fill",
-            type: "fill",
-            source: "goiana",
-          },
-          {
-            id: "goiana-line",
-            type: "line",
-            source: "goiana",
-          },
-        ],
-      },
-      center: initialCenter,
-      zoom: initialZoom,
-      minZoom: 10,
-      maxZoom: 18,
-      maxBounds: GOIANA_BOUNDS,
-    });
-
-    // Adiciona controles de zoom e rotação (canto superior direito)
-    map.addControl(
-      new maplibregl.NavigationControl({
-        showCompass: true,
-        showZoom: true,
-      }),
-      "top-right"
-    );
-
-    map.once("idle", () => {
-      map.fitBounds(GOIANA_BOUNDS, { padding: 24, duration: 0 });
-    });
-
-    mapRef.current = map;
-    setMapLoaded(true);
-
-    // Cleanup seguro para evitar vazamento de memória e duplicações no React 19
-    return () => {
-      // Limpeza de marcadores e instância do mapa
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current = [];
-      map.remove();
-      mapRef.current = null;
-      setMapLoaded(false);
-    };
-  }, [initialCenter, initialZoom]);
-
-  // 2. Busca das Obras via API
-  useEffect(() => {
-    let isMounted = true;
-
-    async function carregarObras() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response = await fetch("/api/obras");
-        if (!response.ok) {
-          throw new Error(`Falha ao carregar obras (status: ${response.status})`);
-        }
-
-        const dados: ObraItem[] = await response.json();
-        if (isMounted) {
-          setObras(dados);
-          onObrasLoaded?.(dados);
-        }
-      } catch (err) {
-        console.error("Erro na busca de obras:", err);
-        if (isMounted) {
-          setError(
-            err instanceof Error ? err.message : "Erro desconhecido ao carregar obras."
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
+    const markerMap = markerMapRef.current;
+    try {
+      const map = new maplibregl.Map({ container: mapContainerRef.current, style: { version: 8, sources: { osm: { type: "raster", tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png", "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png", "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"], tileSize: 256, attribution: "© OpenStreetMap contributors" }, goiana: { type: "geojson", data: "/geojson/goiana-limite.geojson" } }, layers: [{ id: "osm-layer", type: "raster", source: "osm", minzoom: 0, maxzoom: 19 }, { id: "goiana-fill", type: "fill", source: "goiana", paint: { "fill-color": "#dbeafe", "fill-opacity": 0.10 } }, { id: "goiana-line", type: "line", source: "goiana", paint: { "line-color": "#5c7b9b", "line-width": 1.5, "line-opacity": 0.55 } }] }, center: [-34.95, -7.56], zoom: 11, minZoom: 10, maxZoom: 18, maxBounds: GOIANA_BOUNDS });
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+      map.once("load", () => { map.fitBounds(GOIANA_BOUNDS, { padding: 24, duration: 0 }); map.resize(); });
+      map.on("error", (event) => { if (event.error) console.error("Erro do MapLibre:", event.error); });
+      mapRef.current = map;
+      const readyTimer = window.setTimeout(() => setReady(true), 0);
+      const resizeObserver = new ResizeObserver(() => map.resize());
+      resizeObserver.observe(mapContainerRef.current);
+      const resizeTimer = window.setTimeout(() => map.resize(), 150);
+      return () => { window.clearTimeout(readyTimer); window.clearTimeout(resizeTimer); resizeObserver.disconnect(); markerMap.forEach(({ marker }) => marker.remove()); markerMap.clear(); map.remove(); mapRef.current = null; };
+    } catch (mapError) {
+      const message = mapError instanceof Error ? `Não foi possível iniciar o mapa: ${mapError.message}` : "Não foi possível iniciar o mapa.";
+      window.setTimeout(() => setError(message), 0);
     }
+  }, []);
 
-    carregarObras();
+  useEffect(() => { let active = true; fetch("/api/obras").then(async (response) => { if (!response.ok) throw new Error("Não foi possível carregar as obras."); return response.json() as Promise<ObraItem[]>; }).then((items) => { if (active) { setObras(items); onObrasLoaded?.(items); } }).catch((err: unknown) => { if (active) setError(err instanceof Error ? err.message : "Erro ao carregar obras."); }); return () => { active = false; }; }, [onObrasLoaded]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [onObrasLoaded]);
-
-  // 3. Renderização dos Marcadores e Popups no Mapa
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded) return;
-
-    // Limpar marcadores anteriores com segurança
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current = [];
-
+    if (!mapRef.current || !ready) return;
+    markerMapRef.current.forEach(({ marker }) => marker.remove()); markerMapRef.current.clear(); const allowed = visibleObraIds ? new Set(visibleObraIds) : null;
     obras.forEach((obra) => {
-      // Etapa 6: Tratamento rigoroso de coordenadas inválidas
-      if (!isValidCoordinate(obra.latitude, obra.longitude)) {
-        console.warn(`Obra ignorada por coordenadas inválidas: "${obra.titulo}" (ID: ${obra.id})`);
-        return;
-      }
-
-      const status = STATUS_CONFIG[obra.status] || {
-        label: obra.status,
-        bg: "#F1F5F9",
-        text: "#475569",
-      };
-
-      const valorFormatado = formatarMoeda(obra.valorContrato);
-      const previsaoFormatada = formatarData(obra.previsaoConclusao);
-      const corSecretaria = obra.secretaria?.corIdentificacao || "#2563EB";
-
-      // HTML estruturado e seguro para o Popup
-      const popupContent = `
-        <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 240px; max-width: 300px; padding: 2px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
-            <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 9999px; background: ${status.bg}; color: ${status.text};">
-              ${escapeHtml(status.label)}
-            </span>
-            <span style="font-size: 11px; font-weight: 700; color: ${corSecretaria};">
-              ${escapeHtml(obra.secretaria?.sigla || "")}
-            </span>
-          </div>
-
-          <h3 style="font-size: 13px; font-weight: 700; color: #0F172A; margin: 0 0 6px 0; line-height: 1.35;">
-            🏗️ ${escapeHtml(obra.titulo)}
-          </h3>
-
-          ${
-            obra.descricao
-              ? `<p style="font-size: 11px; color: #475569; margin: 0 0 8px 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${escapeHtml(obra.descricao)}</p>`
-              : ""
-          }
-
-          <div style="border-top: 1px solid #E2E8F0; padding-top: 6px; font-size: 11px; color: #334155; display: flex; flex-direction: column; gap: 3px;">
-            <div><strong>📍 Endereço:</strong> ${escapeHtml(obra.endereco)}</div>
-            <div><strong>🏘️ Bairro:</strong> ${escapeHtml(obra.bairro)}</div>
-            ${
-              obra.percentualExecutado !== null
-                ? `<div><strong>📊 Execução:</strong> ${obra.percentualExecutado.toFixed(1)}%</div>`
-                : ""
-            }
-            ${
-              previsaoFormatada
-                ? `<div><strong>📅 Previsão:</strong> ${previsaoFormatada}</div>`
-                : ""
-            }
-            ${
-              valorFormatado
-                ? `<div><strong>💰 Contrato:</strong> ${valorFormatado}</div>`
-                : ""
-            }
-          </div>
-        </div>
-      `;
-
-      const popup = new maplibregl.Popup({
-        offset: 25,
-        closeButton: true,
-        closeOnClick: true,
-        maxWidth: "320px",
-      }).setHTML(popupContent);
-
-      // Marcador com cor temática da secretaria da obra
-      const marker = new maplibregl.Marker({
-        color: corSecretaria,
-      })
-        .setLngLat([obra.longitude, obra.latitude])
-        .setPopup(popup)
-        .addTo(map);
-
-      markersRef.current.push(marker);
+      if (!validCoordinate(obra.latitude, obra.longitude) || (allowed && !allowed.has(obra.id))) return;
+      const pin = document.createElement("button"); pin.type = "button"; pin.className = `map-pin ${selectedObraId === obra.id ? "map-pin--selected" : ""}`; pin.style.setProperty("--pin-color", obra.secretaria?.corIdentificacao || "#2383d9"); pin.setAttribute("aria-label", `Ver obra: ${obra.titulo}`); pin.innerHTML = "<span>⌂</span>";
+      const popup = new maplibregl.Popup({ offset: 24, closeButton: false, closeOnClick: true, maxWidth: "282px", className: "obra-maplibre-popup" }).setHTML(popupHtml(obra));
+      const marker = new maplibregl.Marker({ element: pin, anchor: "bottom" }).setLngLat([obra.longitude, obra.latitude]).setPopup(popup).addTo(mapRef.current!);
+      pin.addEventListener("click", () => onSelectObra?.(obra)); markerMapRef.current.set(obra.id, { marker, popup, obra });
     });
-  }, [obras, mapLoaded]);
+  }, [obras, ready, visibleObraIds, selectedObraId, onSelectObra]);
 
-  // Contagem de obras válidas
-  const obrasValidasCount = obras.filter((o) =>
-    isValidCoordinate(o.latitude, o.longitude)
-  ).length;
-
-  return (
-    <div className={`relative ${className}`}>
-      {/* Contêiner físico do mapa */}
-      <div ref={mapContainerRef} className="w-full h-full absolute inset-0" />
-
-      {/* Card Flutuante de Informações de Status no Canto Superior Esquerdo */}
-      <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-xs px-3.5 py-2 rounded-lg shadow-md border border-slate-200 flex items-center gap-2.5">
-        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-        <div className="text-xs font-medium text-slate-700">
-          {loading ? (
-            <span>Buscando obras no banco...</span>
-          ) : error ? (
-            <span className="text-rose-600 font-semibold">Falha ao obter obras</span>
-          ) : (
-            <span>
-              <strong className="text-slate-900 font-bold">{obrasValidasCount}</strong>{" "}
-              obras georreferenciadas
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Alerta de Erro caso a API falhe */}
-      {error && (
-        <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-10 bg-rose-50 border border-rose-200 text-rose-800 text-xs px-4 py-3 rounded-lg shadow-md max-w-md">
-          <p className="font-semibold">Erro ao carregar dados:</p>
-          <p>{error}</p>
-        </div>
-      )}
-    </div>
-  );
+  useEffect(() => { if (!selectedObraId) return; const current = markerMapRef.current.get(selectedObraId); if (!current || !mapRef.current) return; mapRef.current.flyTo({ center: [current.obra.longitude, current.obra.latitude], zoom: Math.max(mapRef.current.getZoom(), 14), essential: true }); current.popup.addTo(mapRef.current); }, [selectedObraId]);
+  useEffect(() => { if (!nearMeRequest || !mapRef.current) return; if (!navigator.geolocation) { onGeolocationError?.("Seu navegador não oferece suporte à geolocalização."); return; } navigator.geolocation.getCurrentPosition(({ coords }) => mapRef.current?.flyTo({ center: [coords.longitude, coords.latitude], zoom: 15, essential: true }), () => onGeolocationError?.("Não foi possível acessar sua localização. Verifique a permissão do navegador."), { enableHighAccuracy: true, timeout: 10000 }); }, [nearMeRequest, onGeolocationError]);
+  return <div className={`relative ${className}`}><div ref={mapContainerRef} className="h-full w-full absolute inset-0" />{error && <div className="absolute bottom-5 left-5 z-10 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800 shadow">{error}</div>}</div>;
 }
