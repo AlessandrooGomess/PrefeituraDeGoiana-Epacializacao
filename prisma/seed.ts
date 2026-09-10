@@ -286,7 +286,7 @@ async function main() {
   await prisma.medicao.create({
     data: {
       obraId: obraEscolaAngelo.id,
-      engenheiroId: engenheiro.id,
+      engenheiroId: engenheiroSeduc.id,
       percentualExecutado: 87.05,
       observacoesTecnicas:
         "Pintura geral e instalação de esquadrias em andamento.",
