@@ -39,6 +39,15 @@ export async function GET() {
             percentualExecutado: true,
           },
         },
+        fotos: {
+          take: 1,
+          orderBy: {
+            dataFoto: "desc",
+          },
+          select: {
+            url: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -61,6 +70,10 @@ export async function GET() {
       ? obra.dataOrdemServico.toISOString()
       : null,
       previsaoConclusao: obra.previsaoConclusao
+        ? obra.previsaoConclusao.toISOString()
+        : null,
+      atualizadoEm: obra.updatedAt.toISOString(),
+      imagemUrl: obra.fotos[0]?.url ?? null,
       ? obra.previsaoConclusao.toISOString()
       : null,
       dataConclusaoReal: obra.dataConclusaoReal
