@@ -25,7 +25,7 @@ async function main() {
     data: {
       nome: "DESENVOLVIMENTO SOCIAL",
       slug: "desenvolvimento-social",
-      corIdentificacao: "#3182CE",
+      cor: "#3182CE",
       descricao:
         "Infraestrutura urbana, saúde, educação, assistência e qualidade de vida.",
       areas: {
@@ -48,7 +48,7 @@ async function main() {
     data: {
       nome: "DESENVOLVIMENTO ECONÔMICO",
       slug: "desenvolvimento-economico-sustentavel",
-      corIdentificacao: "#059669",
+      cor: "#059669",
       descricao:
         "Economia local, sustentabilidade, agricultura, turismo e patrimonio.",
       areas: {
@@ -68,7 +68,7 @@ async function main() {
     data: {
       nome: "MODERNIZAÇÃO ADMINISTRATIVA",
       slug: "modernizacao-administrativa",
-      corIdentificacao: "#D97706",
+      cor: "#D97706",
       descricao:
         "Inovação tecnológica e modernização da gestão administrativa.",
       areas: {
@@ -86,7 +86,7 @@ async function main() {
     data: {
       nome: "Secretaria de Educação",
       sigla: "SEDUC",
-      corIdentificacao: "#EAB308",
+      cor: "#EAB308",
     },
   });
 
@@ -152,6 +152,9 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
+      
     },
   });
 
@@ -196,6 +199,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
     },
   });
 
@@ -226,6 +231,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoEconomico.id,
+      areaTematicaId: areaPatrimonio.id,
     },
   });
 
@@ -269,6 +276,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
     },
   });
 
@@ -300,6 +309,8 @@ async function main() {
       status: StatusObra.CONCLUIDA,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
     },
   });
 
@@ -343,6 +354,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seduc.id,
       engenheiroId: engenheiroSeduc.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaEducacao.id,
     },
   });
 
@@ -374,6 +387,8 @@ async function main() {
       status: StatusObra.CONCLUIDA,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoEconomico.id,
+      areaTematicaId: areaEconomia.id,
     },
   });
 
