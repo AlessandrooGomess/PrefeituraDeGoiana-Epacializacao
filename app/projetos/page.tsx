@@ -1,160 +1,77 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import Image from 'next/image';
+import type { ObraItem as ObraApiItem, StatusObra } from '@/types/obra';
 import { 
   Search, 
   SlidersHorizontal, 
   Bell, 
   User, 
-  MapPin, 
   Activity, 
   GraduationCap, 
   Trees, 
   Zap, 
   Route, 
   CheckCircle2, 
-  Clock, 
-  FileText,
-  Calendar,
   Layers,
-  ChevronRight,
   X
 } from 'lucide-react';
 
-export interface ObraItem {
+interface ProjetoItem {
   id: string;
   codigo: string;
   titulo: string;
   categoria: 'Saude' | 'Mobilidade' | 'Educacao' | 'MeioAmbiente' | 'Energia' | 'Rodovias';
   categoriaLabel: string;
-  status: 'Em Projeto' | 'Ordem de Serviço' | 'Licitado' | 'Concluído';
+  status: 'Planejada' | 'Ordem Emitida' | 'Em Andamento' | 'Paralisada' | 'Concluído';
   progressoFisico: number;
   atualizadoEm: string;
-  imagemUrl: string;
-  valorPrevisto?: string;
+  imagemUrl: string | null;
+  valorPrevisto: string;
   bairro?: string;
   secretaria?: string;
+  descricao?: string | null;
 }
 
-const DADOS_OBRAS_INICIAIS: ObraItem[] = [
-  {
-    id: '1',
-    codigo: 'OBR-2026-001',
-    titulo: 'Novo Complexo Hospitalar Regional',
-    categoria: 'Saude',
-    categoriaLabel: 'Saúde',
-    status: 'Em Projeto',
-    progressoFisico: 15,
-    atualizadoEm: 'Atualizado há 2 dias',
-    imagemUrl: 'https://images.unsplash.com/photo-1541888946425-d0fbb186156f?q=80&w=900&auto=format&fit=crop',
-    valorPrevisto: 'R$ 42.500.000,00',
-    bairro: 'Setor Central',
-    secretaria: 'Secretaria Municipal de Saúde'
-  },
-  {
-    id: '2',
-    codigo: 'OBR-2026-002',
-    titulo: 'Ponte de Integração Sul-Norte',
-    categoria: 'Mobilidade',
-    categoriaLabel: 'Mobilidade',
-    status: 'Ordem de Serviço',
-    progressoFisico: 42,
-    atualizadoEm: 'Atualizado hoje',
-    imagemUrl: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?q=80&w=900&auto=format&fit=crop',
-    valorPrevisto: 'R$ 28.150.000,00',
-    bairro: 'Margem do Rio Goiana',
-    secretaria: 'Secretaria de Infraestrutura e Mobilidade'
-  },
-  {
-    id: '3',
-    codigo: 'OBR-2026-003',
-    titulo: 'Instituto Federal Campus Avançado',
-    categoria: 'Educacao',
-    categoriaLabel: 'Educação',
-    status: 'Licitado',
-    progressoFisico: 0,
-    atualizadoEm: 'Atualizado há 1 semana',
-    imagemUrl: 'https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=900&auto=format&fit=crop',
-    valorPrevisto: 'R$ 19.800.000,00',
-    bairro: 'Distrito Universitário',
-    secretaria: 'Secretaria Municipal de Educação'
-  },
-  {
-    id: '4',
-    codigo: 'OBR-2026-004',
-    titulo: 'Parque Metropolitano das Águas',
-    categoria: 'MeioAmbiente',
-    categoriaLabel: 'Meio Ambiente',
-    status: 'Concluído',
-    progressoFisico: 100,
-    atualizadoEm: 'Atualizado há 1 mês',
-    imagemUrl: 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?q=80&w=900&auto=format&fit=crop',
-    valorPrevisto: 'R$ 8.900.000,00',
-    bairro: 'Residencial das Águas',
-    secretaria: 'Secretaria de Meio Ambiente e Sustentabilidade'
-  },
-  {
-    id: '5',
-    codigo: 'OBR-2026-005',
-    titulo: 'Usina Solar Fotovoltaica Central',
-    categoria: 'Energia',
-    categoriaLabel: 'Energia',
-    status: 'Ordem de Serviço',
-    progressoFisico: 68,
-    atualizadoEm: 'Atualizado ontem',
-    imagemUrl: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?q=80&w=900&auto=format&fit=crop',
-    valorPrevisto: 'R$ 14.300.000,00',
-    bairro: 'Polo Agroindustrial',
-    secretaria: 'Secretaria de Inovação e Energia'
-  },
-  {
-    id: '6',
-    codigo: 'OBR-2026-006',
-    titulo: 'Duplicação BR-101 Trecho Norte',
-    categoria: 'Rodovias',
-    categoriaLabel: 'Rodovias',
-    status: 'Ordem de Serviço',
-    progressoFisico: 85,
-    atualizadoEm: 'Atualizado há 5 horas',
-    imagemUrl: 'https://images.unsplash.com/photo-1584463699039-4d640fa8a1e2?q=80&w=900&auto=format&fit=crop',
-    valorPrevisto: 'R$ 56.700.000,00',
-    bairro: 'Acesso Rodoviário Norte',
-    secretaria: 'Secretaria de Obras e Serviços Públicos'
-  }
-];
+const STATUS_LABEL: Record<StatusObra, ProjetoItem['status']> = {
+  PLANEJADA: 'Planejada',
+  ORDEM_EMITIDA: 'Ordem Emitida',
+  EM_ANDAMENTO: 'Em Andamento',
+  PARALISADA: 'Paralisada',
+  CONCLUIDA: 'Concluído',
+};
 
-const PROJETOS_EXTRAS: ObraItem[] = [
-  {
-    id: '7',
-    codigo: 'OBR-2026-007',
-    titulo: 'Canalização e Drenagem da Bacia Central',
-    categoria: 'MeioAmbiente',
-    categoriaLabel: 'Meio Ambiente',
-    status: 'Em Projeto',
-    progressoFisico: 20,
-    atualizadoEm: 'Atualizado há 3 dias',
-    imagemUrl: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=900&auto=format&fit=crop',
-    valorPrevisto: 'R$ 11.200.000,00',
-    bairro: 'Vila Esperança',
-    secretaria: 'Secretaria de Infraestrutura'
-  },
-  {
-    id: '8',
-    codigo: 'OBR-2026-008',
-    titulo: 'Novo Terminal Rodoviário Integrado',
-    categoria: 'Mobilidade',
-    categoriaLabel: 'Mobilidade',
-    status: 'Licitado',
-    progressoFisico: 5,
-    atualizadoEm: 'Atualizado há 4 dias',
-    imagemUrl: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?q=80&w=900&auto=format&fit=crop',
-    valorPrevisto: 'R$ 22.400.000,00',
-    bairro: 'Setor Intermunicipal',
-    secretaria: 'Secretaria de Transportes'
-  }
-];
+function getCategoria(obra: ObraApiItem): Pick<ProjetoItem, 'categoria' | 'categoriaLabel'> {
+  const texto = `${obra.titulo} ${obra.secretaria.nome}`.toLowerCase();
+  if (texto.includes('educa') || texto.includes('escola')) return { categoria: 'Educacao', categoriaLabel: 'Educação' };
+  if (texto.includes('parque') || texto.includes('drenagem') || texto.includes('ambient')) return { categoria: 'MeioAmbiente', categoriaLabel: 'Meio Ambiente' };
+  if (texto.includes('energia') || texto.includes('solar')) return { categoria: 'Energia', categoriaLabel: 'Energia' };
+  if (texto.includes('rodovia') || texto.includes('br-') || texto.includes('paviment')) return { categoria: 'Rodovias', categoriaLabel: 'Rodovias' };
+  return { categoria: 'Mobilidade', categoriaLabel: 'Mobilidade' };
+}
 
-function getCategoriaBadge(categoria: ObraItem['categoria'], label: string) {
+function mapearObra(obra: ObraApiItem): ProjetoItem {
+  const categoria = getCategoria(obra);
+  return {
+    ...categoria,
+    id: obra.id,
+    codigo: obra.numeroOrdemServico ?? `OBR-${obra.id.slice(0, 8).toUpperCase()}`,
+    titulo: obra.titulo,
+    status: STATUS_LABEL[obra.status],
+    progressoFisico: obra.percentualExecutado ?? 0,
+    atualizadoEm: `Atualizado em ${new Date(obra.atualizadoEm).toLocaleDateString('pt-BR')}`,
+    imagemUrl: obra.imagemUrl,
+    valorPrevisto: obra.valorContrato === null
+      ? 'Não informado'
+      : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(obra.valorContrato),
+    bairro: obra.bairro,
+    secretaria: obra.secretaria.nome,
+    descricao: obra.descricao,
+  };
+}
+
+function getCategoriaBadge(categoria: ProjetoItem['categoria'], label: string) {
   switch (categoria) {
     case 'Saude':
       return (
@@ -207,24 +124,30 @@ function getCategoriaBadge(categoria: ObraItem['categoria'], label: string) {
   }
 }
 
-function getStatusBadge(status: ObraItem['status']) {
+function getStatusBadge(status: ProjetoItem['status']) {
   switch (status) {
-    case 'Em Projeto':
+    case 'Planejada':
       return (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-bold text-[#1d4ed8] bg-[#dbeafe]">
-          Em Projeto
+          Planejada
         </span>
       );
-    case 'Ordem de Serviço':
+    case 'Ordem Emitida':
       return (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-bold text-[#1e40af] bg-[#e0e7ff]">
-          Ordem de Serviço
+          Ordem Emitida
         </span>
       );
-    case 'Licitado':
+    case 'Em Andamento':
       return (
-        <span className="px-2.5 py-0.5 rounded text-[11px] font-bold text-[#334155] bg-[#f1f5f9]">
-          Licitado
+        <span className="px-2.5 py-0.5 rounded text-[11px] font-bold text-[#b45309] bg-[#fef3c7]">
+          Em Andamento
+        </span>
+      );
+    case 'Paralisada':
+      return (
+        <span className="px-2.5 py-0.5 rounded text-[11px] font-bold text-[#b91c1c] bg-[#fee2e2]">
+          Paralisada
         </span>
       );
     case 'Concluído':
@@ -243,12 +166,35 @@ function getStatusBadge(status: ObraItem['status']) {
 }
 
 export default function PaginaCarteiraProjetos() {
-  const [projetos, setProjetos] = useState<ObraItem[]>(DADOS_OBRAS_INICIAIS);
+  const [projetos, setProjetos] = useState<ProjetoItem[]>([]);
   const [termoBusca, setTermoBusca] = useState('');
   const [statusFiltro, setStatusFiltro] = useState<string>('Todos');
   const [mostrarFiltrosMenu, setMostrarFiltrosMenu] = useState(false);
-  const [carregandoMais, setCarregandoMais] = useState(false);
-  const [projetoSelecionado, setProjetoSelecionado] = useState<ObraItem | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+  const [projetoSelecionado, setProjetoSelecionado] = useState<ProjetoItem | null>(null);
+
+  useEffect(() => {
+    let montado = true;
+
+    async function carregarProjetos() {
+      try {
+        setCarregando(true);
+        setErro(null);
+        const resposta = await fetch('/api/obras');
+        if (!resposta.ok) throw new Error('Não foi possível carregar as obras.');
+        const obras: ObraApiItem[] = await resposta.json();
+        if (montado) setProjetos(obras.map(mapearObra));
+      } catch (error) {
+        if (montado) setErro(error instanceof Error ? error.message : 'Erro ao carregar as obras.');
+      } finally {
+        if (montado) setCarregando(false);
+      }
+    }
+
+    carregarProjetos();
+    return () => { montado = false; };
+  }, []);
 
   const projetosFiltrados = useMemo(() => {
     return projetos.filter((item) => {
@@ -263,14 +209,6 @@ export default function PaginaCarteiraProjetos() {
       return matchTexto && matchStatus;
     });
   }, [projetos, termoBusca, statusFiltro]);
-
-  const handleCarregarMais = () => {
-    setCarregandoMais(true);
-    setTimeout(() => {
-      setProjetos((prev) => [...prev, ...PROJETOS_EXTRAS]);
-      setCarregandoMais(false);
-    }, 600);
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbfcfd] text-[#0f172a] font-sans antialiased selection:bg-blue-100">
@@ -397,7 +335,7 @@ export default function PaginaCarteiraProjetos() {
                   <div className="px-3 py-1.5 font-semibold text-slate-400 uppercase tracking-wider text-[10px]">
                     Status da Obra
                   </div>
-                  {['Todos', 'Em Projeto', 'Ordem de Serviço', 'Licitado', 'Concluído'].map((st) => (
+                  {['Todos', 'Planejada', 'Ordem Emitida', 'Em Andamento', 'Paralisada', 'Concluído'].map((st) => (
                     <button
                       key={st}
                       type="button"
@@ -424,7 +362,14 @@ export default function PaginaCarteiraProjetos() {
         </div>
 
         {}
-        {projetosFiltrados.length === 0 ? (
+        {carregando ? (
+          <div className="py-20 text-center text-sm text-slate-500">Carregando obras...</div>
+        ) : erro ? (
+          <div className="py-20 text-center">
+            <h3 className="text-base font-bold text-slate-800">Não foi possível carregar os projetos</h3>
+            <p className="text-xs text-slate-500 mt-1">{erro}</p>
+          </div>
+        ) : projetosFiltrados.length === 0 ? (
           <div className="py-20 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
               <Search className="w-7 h-7" />
@@ -454,12 +399,18 @@ export default function PaginaCarteiraProjetos() {
               >
                 {/* Card Image Container */}
                 <div className="relative aspect-[16/10] w-full bg-slate-100 overflow-hidden">
-                  <img
-                    src={obra.imagemUrl}
-                    alt={obra.titulo}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                  />
+                  {obra.imagemUrl ? (
+                    <Image
+                      src={obra.imagemUrl}
+                      alt={obra.titulo}
+                      fill
+                      unoptimized
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">Sem foto cadastrada</div>
+                  )}
                   {/* Floating Category Badge (Top-left exactly like Figma) */}
                   <div className="absolute top-2.5 left-2.5">
                     {getCategoriaBadge(obra.categoria, obra.categoriaLabel)}
@@ -511,27 +462,6 @@ export default function PaginaCarteiraProjetos() {
           </div>
         )}
 
-        {}
-        {projetos.length <= DADOS_OBRAS_INICIAIS.length && (
-          <div className="mt-12 flex justify-center">
-            <button
-              type="button"
-              onClick={handleCarregarMais}
-              disabled={carregandoMais}
-              className="px-6 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-medium text-xs rounded-md shadow-sm hover:bg-slate-50 transition active:scale-95 disabled:opacity-50"
-            >
-              {carregandoMais ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></span>
-                  Carregando...
-                </span>
-              ) : (
-                'Carregar mais projetos'
-              )}
-            </button>
-          </div>
-        )}
-
       </main>
 
       {}
@@ -545,11 +475,18 @@ export default function PaginaCarteiraProjetos() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative aspect-[16/9] w-full">
-              <img 
-                src={projetoSelecionado.imagemUrl} 
-                alt={projetoSelecionado.titulo} 
-                className="w-full h-full object-cover"
-              />
+              {projetoSelecionado.imagemUrl ? (
+                <Image
+                  src={projetoSelecionado.imagemUrl}
+                  alt={projetoSelecionado.titulo}
+                  fill
+                  unoptimized
+                  sizes="(max-width: 640px) 100vw, 512px"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-sm text-slate-400 bg-slate-100">Sem foto cadastrada</div>
+              )}
               <button
                 onClick={() => setProjetoSelecionado(null)}
                 className="absolute top-3 right-3 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition"

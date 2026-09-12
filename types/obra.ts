@@ -24,6 +24,8 @@ export interface ObraItem {
   empresaContratada: string | null;
   numeroOrdemServico: string | null;
   previsaoConclusao: string | null;
+  atualizadoEm: string;
+  imagemUrl: string | null;
   status: StatusObra;
   secretaria: SecretariaResumo;
   percentualExecutado: number | null;
