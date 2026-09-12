@@ -78,6 +78,10 @@ async function main() {
     include: { areas: true },
   });
 
+  const areaInfra = eixoSocial.areas.find((a) => a.nome === "Infraestrutura Urbana")!;
+  const areaEducacao = eixoSocial.areas.find((a) => a.nome === "Educação")!;
+  const areaPatrimonio = eixoEconomico.areas.find((a) => a.nome === "Patrimônio Histórico")!;
+  const areaEconomia = eixoEconomico.areas.find((a) => a.nome === "Economia Local")!;
   const seduc = await prisma.secretaria.create({
     data: {
       nome: "Secretaria de Educação",
