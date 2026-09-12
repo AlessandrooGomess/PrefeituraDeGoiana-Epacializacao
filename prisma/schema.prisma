@@ -107,11 +107,11 @@ model Obra {
   secretariaId String     @map("secretaria_id")
   secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
 
-  eixidId String     @map("eixo_id")
-  eixo    EixoEstrategico @relation(fields: [eixidId], references: [id], onDelete: SetNull)
+  eixoId String?     @map("eixo_id")
+  eixo    EixoEstrategico? @relation(fields: [eixoId], references: [id], onDelete: SetNull)
 
-  areaTematicaId String     @map("area_tematica_id")
-  areaTematica   AreaTematica @relation(fields: [areaTematicaId], references: [id], onDelete: SetNull)
+  areaTematicaId String?     @map("area_tematica_id")
+  areaTematica   AreaTematica? @relation(fields: [areaTematicaId], references: [id], onDelete: SetNull)
 
   engenheiroId String?  @map("engenheiro_id")
   engenheiro   Usuario? @relation("EngenheiroObra", fields: [engenheiroId], references: [id])
