@@ -6,8 +6,6 @@ import type { ObraItem as ObraApiItem, StatusObra } from '@/types/obra';
 import { 
   Search, 
   SlidersHorizontal, 
-  Bell, 
-  User, 
   Activity, 
   GraduationCap, 
   Trees, 
@@ -213,11 +211,9 @@ export default function PaginaCarteiraProjetos() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fbfcfd] text-[#0f172a] font-sans antialiased selection:bg-blue-100">
       
-      {/* Top Navigation Bar - Fiel à cor da prefeitura no Figma (#0f2a42) */}
-      <header className="bg-[#0b243b] text-white sticky top-0 z-30 shadow-md">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="bg-(--cor-header-footer) text-white sticky top-0 z-30 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
-          {/* Logo / Brand Name */}
           <div className="flex items-center space-x-3">
             <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block animate-pulse"></span>
@@ -225,8 +221,7 @@ export default function PaginaCarteiraProjetos() {
             </span>
           </div>
 
-          {/* Center Nav Links */}
-          <nav className="flex items-center space-x-8 text-sm font-medium">
+          <nav className="ml-auto flex items-center space-x-8 text-sm font-medium">
             <button 
               type="button" 
               className="text-slate-300 hover:text-white transition-colors duration-150"
@@ -240,45 +235,17 @@ export default function PaginaCarteiraProjetos() {
               >
                 Projetos
               </button>
-              {/* Active Indicator Underline */}
               <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white rounded-t-full"></div>
             </div>
           </nav>
 
-          {/* Right Action Icons */}
-          <div className="flex items-center space-x-4">
-            <button 
-              type="button"
-              className="p-1.5 text-slate-300 hover:text-white rounded-full transition relative focus:outline-none focus:ring-2 focus:ring-blue-400"
-              title="Notificações"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-amber-400 rounded-full"></span>
-            </button>
-
-            <button 
-              type="button"
-              className="p-1.5 text-slate-300 hover:text-white rounded-full transition focus:outline-none focus:ring-2 focus:ring-blue-400"
-              title="Perfil de Usuário"
-            >
-              <div className="w-7 h-7 rounded-full border border-slate-400 flex items-center justify-center">
-                <User className="w-4 h-4" />
-              </div>
-            </button>
-          </div>
-
         </div>
       </header>
 
-      {}
-      <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Page Header: Title + Search & Filters */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-8 border-b border-slate-100">
-          
-          {/* Title & Subtitle */}
           <div className="max-w-xl">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#092237] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-(--cor-principal) tracking-tight">
               Carteira de Projetos
             </h1>
             <p className="mt-1.5 text-xs sm:text-sm text-slate-500 leading-relaxed">
@@ -286,10 +253,7 @@ export default function PaginaCarteiraProjetos() {
             </p>
           </div>
 
-          {/* Search Bar & Filter Button */}
           <div className="flex items-center gap-3 w-full lg:w-auto">
-            
-            {/* Input Search */}
             <div className="relative flex-1 lg:w-72">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <Search className="w-4 h-4" />
@@ -299,7 +263,7 @@ export default function PaginaCarteiraProjetos() {
                 value={termoBusca}
                 onChange={(e) => setTermoBusca(e.target.value)}
                 placeholder="Buscar por nome ou ID..."
-                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-md text-xs sm:text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0b243b] focus:border-transparent transition"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-md text-xs sm:text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-(--cor-principal) focus:border-transparent transition"
               />
               {termoBusca && (
                 <button 
@@ -311,14 +275,13 @@ export default function PaginaCarteiraProjetos() {
               )}
             </div>
 
-            {/* Filter Toggle Button */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setMostrarFiltrosMenu(!mostrarFiltrosMenu)}
                 className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-medium border rounded-md shadow-sm transition ${
                   mostrarFiltrosMenu || statusFiltro !== 'Todos'
-                    ? 'bg-[#0b243b] text-white border-[#0b243b]'
+                    ? 'bg-(--cor-principal) text-white border-(--cor-principal)'
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                 }`}
               >
@@ -329,7 +292,6 @@ export default function PaginaCarteiraProjetos() {
                 )}
               </button>
 
-              {/* Dropdown de status para demonstração interativa */}
               {mostrarFiltrosMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 py-1.5 z-40 text-xs animate-in fade-in slide-in-from-top-1">
                   <div className="px-3 py-1.5 font-semibold text-slate-400 uppercase tracking-wider text-[10px]">
@@ -361,7 +323,6 @@ export default function PaginaCarteiraProjetos() {
 
         </div>
 
-        {}
         {carregando ? (
           <div className="py-20 text-center text-sm text-slate-500">Carregando obras...</div>
         ) : erro ? (
@@ -384,21 +345,20 @@ export default function PaginaCarteiraProjetos() {
                 setTermoBusca('');
                 setStatusFiltro('Todos');
               }}
-              className="mt-4 px-4 py-1.5 text-xs font-semibold text-[#0b243b] border border-slate-300 rounded hover:bg-slate-50 transition"
+              className="mt-4 px-4 py-1.5 text-xs font-semibold text-(--cor-principal) border border-slate-300 rounded hover:bg-slate-50 transition"
             >
               Limpar filtros
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-8">
             {projetosFiltrados.map((obra) => (
               <div
                 key={obra.id}
                 onClick={() => setProjetoSelecionado(obra)}
                 className="group bg-white rounded-lg border border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md hover:border-slate-300 transition-all duration-200 flex flex-col overflow-hidden cursor-pointer"
               >
-                {/* Card Image Container */}
-                <div className="relative aspect-[16/10] w-full bg-slate-100 overflow-hidden">
+                <div className="relative aspect-16/10 w-full bg-slate-100 overflow-hidden">
                   {obra.imagemUrl ? (
                     <Image
                       src={obra.imagemUrl}
@@ -411,21 +371,17 @@ export default function PaginaCarteiraProjetos() {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">Sem foto cadastrada</div>
                   )}
-                  {/* Floating Category Badge (Top-left exactly like Figma) */}
                   <div className="absolute top-2.5 left-2.5">
                     {getCategoriaBadge(obra.categoria, obra.categoriaLabel)}
                   </div>
                 </div>
 
-                {/* Card Content */}
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
-                    {/* Project Title */}
-                    <h3 className="font-bold text-[15px] leading-snug text-[#0f2438] line-clamp-2 min-h-[42px]">
+                    <h3 className="font-bold text-[15px] leading-snug text-[#0f2438] line-clamp-2 min-h-10.5">
                       {obra.titulo}
                     </h3>
 
-                    {/* Status Section */}
                     <div className="mt-4 flex items-center justify-between">
                       <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
                         STATUS
@@ -435,24 +391,21 @@ export default function PaginaCarteiraProjetos() {
                       </div>
                     </div>
 
-                    {/* Progress Bar Section */}
                     <div className="mt-4">
                       <div className="flex items-center justify-between text-[11px] mb-1.5">
                         <span className="text-slate-500 font-medium">Progresso Físico</span>
                         <span className="font-bold text-slate-900">{obra.progressoFisico}%</span>
                       </div>
                       
-                      {/* Visual progress bar */}
                       <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[#0b243b] rounded-full transition-all duration-500 ease-out"
+                          className="h-full bg-(--cor-principal) rounded-full transition-all duration-500 ease-out"
                           style={{ width: `${obra.progressoFisico}%` }}
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Card Footer: Last Updated Date (Right aligned as in Figma) */}
                   <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end text-[10px] text-slate-400">
                     <span>{obra.atualizadoEm}</span>
                   </div>
@@ -464,7 +417,6 @@ export default function PaginaCarteiraProjetos() {
 
       </main>
 
-      {}
       {projetoSelecionado && (
         <div 
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
@@ -474,7 +426,7 @@ export default function PaginaCarteiraProjetos() {
             className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-[16/9] w-full">
+            <div className="relative aspect-video w-full">
               {projetoSelecionado.imagemUrl ? (
                 <Image
                   src={projetoSelecionado.imagemUrl}
@@ -532,7 +484,7 @@ export default function PaginaCarteiraProjetos() {
                 </div>
                 <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-[#0b243b] rounded-full" 
+                    className="h-full bg-(--cor-principal) rounded-full"
                     style={{ width: `${projetoSelecionado.progressoFisico}%` }}
                   />
                 </div>
@@ -549,7 +501,7 @@ export default function PaginaCarteiraProjetos() {
                 <button
                   type="button"
                   onClick={() => setProjetoSelecionado(null)}
-                  className="px-4 py-2 text-xs font-medium text-white bg-[#0b243b] hover:bg-[#123657] rounded-md transition shadow-sm"
+                  className="px-4 py-2 text-xs font-medium text-white bg-(--cor-principal) hover:bg-(--cor-principal) rounded-md transition shadow-sm"
                 >
                   Ver Relatório Completo
                 </button>
@@ -559,9 +511,8 @@ export default function PaginaCarteiraProjetos() {
         </div>
       )}
 
-      {}
-      <footer className="bg-[#0b243b] text-slate-300 py-6 border-t border-[#163554] mt-auto">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-end text-[11px] font-medium space-y-3 sm:space-y-0 sm:space-x-8">
+      <footer className="bg-(--cor-header-footer) text-slate-300 py-6 border-t border-(--cor-header-footer) mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-end text-[11px] font-medium space-y-3 sm:space-y-0 sm:space-x-8">
           <a href="#privacidade" className="hover:text-white transition">Privacidade</a>
           <a href="#transparencia" className="hover:text-white transition">Transparência</a>
           <a href="#contato" className="hover:text-white transition">Contato</a>
