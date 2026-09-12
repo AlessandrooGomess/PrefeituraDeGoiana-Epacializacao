@@ -319,7 +319,7 @@ export default function MapContainer({
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
         <div className="text-xs font-medium text-slate-700">
           {loading ? (
-            <span>Buscando obras no banco...</span>
+            <span>Buscando obras...</span>
           ) : error ? (
             <span className="text-rose-600 font-semibold">Falha ao obter obras</span>
           ) : (

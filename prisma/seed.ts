@@ -9,6 +9,8 @@ async function main() {
   await prisma.obra.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.secretaria.deleteMany();
+  await prisma.areaTematica.deleteMany();
+  await prisma.eixoEstrategico.deleteMany();
 
   console.log("🏛️ [2/4] Criando Secretarias Municipais...");
   const seinfra = await prisma.secretaria.create({
@@ -19,6 +21,67 @@ async function main() {
     },
   });
 
+  const eixoSocial = await prisma.eixoEstrategico.create({
+    data: {
+      nome: "DESENVOLVIMENTO SOCIAL",
+      slug: "desenvolvimento-social",
+      cor: "#3182CE",
+      descricao:
+        "Infraestrutura urbana, saúde, educação, assistência e qualidade de vida.",
+      areas: {
+        create: [
+          { nome: "Infraestrutura Urbana" },
+          { nome: "Direito à Cidade" },
+          { nome: "Resiliencia Urbana" },
+          { nome: "Assistência Social" },
+          { nome: "Saúde" },
+          { nome: "Esporte e Lazer" },
+          { nome: "Educação" },
+          { nome: "Segurança Pública e Mobilidade Urbana" },
+        ],
+      },
+    },
+    include: { areas: true },
+  });
+
+  const eixoEconomico = await prisma.eixoEstrategico.create({
+    data: {
+      nome: "DESENVOLVIMENTO ECONÔMICO",
+      slug: "desenvolvimento-economico-sustentavel",
+      cor: "#059669",
+      descricao:
+        "Economia local, sustentabilidade, agricultura, turismo e patrimonio.",
+      areas: {
+        create: [
+          { nome: "Economia Local" },
+          { nome: "Ciência e Tecnologia" },
+          { nome: "Agricultura e Pesca" },
+          { nome: "Patrimônio Histórico" },
+          { nome: "Meio Ambiente" },
+        ],
+      },
+    },
+    include: { areas: true },
+  });
+
+  const eixoModernizacao = await prisma.eixoEstrategico.create({
+    data: {
+      nome: "MODERNIZAÇÃO ADMINISTRATIVA",
+      slug: "modernizacao-administrativa",
+      cor: "#D97706",
+      descricao:
+        "Inovação tecnológica e modernização da gestão administrativa.",
+      areas: {
+        create: [{ nome: "Inovação e Gestão Administrativa" }],
+      },
+    },
+    include: { areas: true },
+  });
+
+  const areaInfra = eixoSocial.areas.find((a) => a.nome === "Infraestrutura Urbana")!;
+  const areaEducacao = eixoSocial.areas.find((a) => a.nome === "Educação")!;
+  const areaPatrimonio = eixoEconomico.areas.find((a) => a.nome === "Patrimônio Histórico")!;
+  const areaEconomia = eixoEconomico.areas.find((a) => a.nome === "Economia Local")!;
   const seduc = await prisma.secretaria.create({
     data: {
       nome: "Secretaria de Educação",
@@ -89,6 +152,9 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
+      
     },
   });
 
@@ -133,6 +199,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
     },
   });
 
@@ -163,6 +231,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoEconomico.id,
+      areaTematicaId: areaPatrimonio.id,
     },
   });
 
@@ -206,6 +276,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
     },
   });
 
@@ -237,6 +309,8 @@ async function main() {
       status: StatusObra.CONCLUIDA,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
     },
   });
 
@@ -280,6 +354,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seduc.id,
       engenheiroId: engenheiroSeduc.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaEducacao.id,
     },
   });
 
@@ -311,6 +387,8 @@ async function main() {
       status: StatusObra.CONCLUIDA,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoEconomico.id,
+      areaTematicaId: areaEconomia.id,
     },
   });
 

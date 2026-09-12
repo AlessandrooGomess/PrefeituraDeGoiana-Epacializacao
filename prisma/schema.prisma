@@ -63,6 +63,31 @@ model Secretaria {
   @@map("secretarias")
 }
 
+model EixoEstrategico {
+  id String @id @default(uuid())
+  nome String @unique
+  slug String @unique
+  cor String? @default("#3182CE")
+  descricao String? @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  areas AreaTematica[]
+  obras Obra[]
+  @@map("eixos_estrategicos")
+}
+
+model AreaTematica {
+  id String @id @default(uuid())
+  nome String @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  eixoId String @map("eixo_id")
+  eixo   EixoEstrategico @relation(fields: [eixoId], references: [id], onDelete: Cascade)
+
+  obras Obra[]
+  @@map("areas_tematicas")
+}
+
 model Obra {
   id                 String     @id @default(uuid())
   titulo             String
@@ -81,6 +106,12 @@ model Obra {
 
   secretariaId String     @map("secretaria_id")
   secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
+
+  eixoId String?     @map("eixo_id")
+  eixo    EixoEstrategico? @relation(fields: [eixoId], references: [id], onDelete: SetNull)
+
+  areaTematicaId String?     @map("area_tematica_id")
+  areaTematica   AreaTematica? @relation(fields: [areaTematicaId], references: [id], onDelete: SetNull)
 
   engenheiroId String?  @map("engenheiro_id")
   engenheiro   Usuario? @relation("EngenheiroObra", fields: [engenheiroId], references: [id])
