@@ -6,8 +6,6 @@ import type { ObraItem as ObraApiItem, StatusObra } from '@/types/obra';
 import { 
   Search, 
   SlidersHorizontal, 
-  Bell, 
-  User, 
   Activity, 
   GraduationCap, 
   Trees, 
@@ -223,7 +221,7 @@ export default function PaginaCarteiraProjetos() {
             </span>
           </div>
 
-          <nav className="flex items-center space-x-8 text-sm font-medium">
+          <nav className="ml-auto flex items-center space-x-8 text-sm font-medium">
             <button 
               type="button" 
               className="text-slate-300 hover:text-white transition-colors duration-150"
@@ -240,27 +238,6 @@ export default function PaginaCarteiraProjetos() {
               <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white rounded-t-full"></div>
             </div>
           </nav>
-
-          <div className="flex items-center space-x-4">
-            <button 
-              type="button"
-              className="p-1.5 text-slate-300 hover:text-white rounded-full transition relative focus:outline-none focus:ring-2 focus:ring-blue-400"
-              title="Notificações"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-amber-400 rounded-full"></span>
-            </button>
-
-            <button 
-              type="button"
-              className="p-1.5 text-slate-300 hover:text-white rounded-full transition focus:outline-none focus:ring-2 focus:ring-blue-400"
-              title="Perfil de Usuário"
-            >
-              <div className="w-7 h-7 rounded-full border border-slate-400 flex items-center justify-center">
-                <User className="w-4 h-4" />
-              </div>
-            </button>
-          </div>
 
         </div>
       </header>
