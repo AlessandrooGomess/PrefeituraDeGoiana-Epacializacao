@@ -79,7 +79,7 @@ function getCategoriaBadge(categoria: ProjetoItem['categoria'], label: string) {
           <Activity className="w-3 h-3" />
           {label}
         </span>
-      );
+      ); 
     case 'Mobilidade':
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-[#2563eb] shadow-sm">
