@@ -76,6 +76,18 @@ model EixoEstrategico {
   @@map("eixos_estrategicos")
 }
 
+model AreaTematica {
+  id String @id @default(uuid())
+  nome String @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  eixoId String @map("eixo_id")
+  eixo   EixoEstrategico @relation(fields: [eixoId], references: [id], onDelete: Cascade)
+
+  obras Obra[]
+  @@map("areas_tematicas")
+}
+
 model Obra {
   id                 String     @id @default(uuid())
   titulo             String
