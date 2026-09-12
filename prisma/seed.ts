@@ -26,7 +26,8 @@ async function main() {
       nome: "DESENVOLVIMENTO SOCIAL",
       slug: "desenvolvimento-social",
       corIdentificacao: "#3182CE",
-      descricao: "Infraestrutura urbana, saúde, educação, assistência e qualidade de vida.",
+      descricao:
+        "Infraestrutura urbana, saúde, educação, assistência e qualidade de vida.",
       areas: {
         create: [
           { nome: "Infraestrutura Urbana" },
@@ -48,7 +49,8 @@ async function main() {
       nome: "DESENVOLVIMENTO ECONÔMICO",
       slug: "desenvolvimento-economico-sustentavel",
       corIdentificacao: "#059669",
-      descricao: "Economia local, sustentabilidade, agricultura, turismo e patrimonio.",
+      descricao:
+        "Economia local, sustentabilidade, agricultura, turismo e patrimonio.",
       areas: {
         create: [
           { nome: "Economia Local" },
@@ -61,7 +63,21 @@ async function main() {
     },
     include: { areas: true },
   });
-  
+
+  const eixoModernizacao = await prisma.eixoEstrategico.create({
+    data: {
+      nome: "MODERNIZAÇÃO ADMINISTRATIVA",
+      slug: "modernizacao-administrativa",
+      corIdentificacao: "#D97706",
+      descricao:
+        "Inovação tecnológica e modernização da gestão administrativa.",
+      areas: {
+        create: [{ nome: "Inovação e Gestão Administrativa" }],
+      },
+    },
+    include: { areas: true },
+  });
+
   const seduc = await prisma.secretaria.create({
     data: {
       nome: "Secretaria de Educação",
