@@ -48,21 +48,3 @@ export interface ObraItem {
 
   percentualExecutado: number | null;
 }
-
-export interface ObraItem {
-  id: string;
-  titulo: string;
-  descricao: string | null;
-  endereco: string;
-  bairro: string;
-  latitude: number;
-  longitude: number;
-  valorContrato: number | null;
-  empresaContratada: string | null;
-  numeroOrdemServico: string | null;
-  previsaoConclusao: string | null;
-  status: StatusObra;
-  secretaria: SecretariaResumo;
-  percentualExecutado: number | null;
-}
-
