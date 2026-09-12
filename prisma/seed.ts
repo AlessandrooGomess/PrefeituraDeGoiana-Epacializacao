@@ -86,7 +86,7 @@ async function main() {
     data: {
       nome: "Secretaria de Educação",
       sigla: "SEDUC",
-      cor: "#EAB308",
+      corIdentificacao: "#EAB308",
     },
   });
 
