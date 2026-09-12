@@ -9,6 +9,8 @@ async function main() {
   await prisma.obra.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.secretaria.deleteMany();
+  await prisma.areaTematica.deleteMany();
+  await prisma.eixoEstrategico.deleteMany();
 
   console.log("🏛️ [2/4] Criando Secretarias Municipais...");
   const seinfra = await prisma.secretaria.create({
@@ -18,6 +20,29 @@ async function main() {
       corIdentificacao: "#2563EB",
     },
   });
+
+  const eixoSocial = await prisma.eixoEstrategico.create({
+    data: {
+      nome: "DESENVOLVIMENTO SOCIAL",
+      slug: "desenvolvimento-social",
+      corIdentificacao: "#3182CE",
+      descricao: "Infraestrutura urbana, saúde, educação, assistência e qualidade de vida",
+      areas: {
+        create: [
+          { nome: "Infraestrutura Urbana" },
+          { nome: "Direito à Cidade" },
+          { nome: "Resiliencia Urbana" },
+          { nome: "Assistência Social" },
+          { nome: "Saúde" },
+          { nome: "Esporte e Lazer" },
+          { nome: "Educação" },
+          { nome: "Segurança Pública e Mobilidade Urbana" },
+        ],
+      },
+    },
+    include: { areas: true },
+  });
+    }
 
   const seduc = await prisma.secretaria.create({
     data: {
