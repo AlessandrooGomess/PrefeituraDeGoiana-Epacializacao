@@ -38,8 +38,8 @@ export interface ObraItem {
 
   dataOrdemServico: string | null;
   previsaoConclusao: string | null;
-  dataConclusaoReal: string | null;
-
+  atualizadoEm: string;
+  imagemUrl: string | null;
   status: StatusObra;
   secretaria: SecretariaResumo;
   
