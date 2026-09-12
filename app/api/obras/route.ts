@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { ObraItem } from "@/types/obra";
+import { ObraItem } from "@/types/obra";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +14,20 @@ export async function GET() {
             nome: true,
             sigla: true,
             corIdentificacao: true,
+          },
+        },
+        eixo: {
+          select: {
+            id: true,
+            nome: true,
+            slug: true,
+            cor: true,
+          },
+        },
+        areaTematica: {
+          select: {
+            id: true,
+            nome: true,
           },
         },
         medicoes: {
@@ -40,7 +54,6 @@ export async function GET() {
       },
     });
 
-    // Mapeamento limpo com conversão segura de campos Decimal do Prisma para Number
     const obras: ObraItem[] = obrasDb.map((obra) => ({
       id: obra.id,
       titulo: obra.titulo,
@@ -52,25 +65,37 @@ export async function GET() {
       valorContrato: obra.valorContrato ? Number(obra.valorContrato) : null,
       empresaContratada: obra.empresaContratada,
       numeroOrdemServico: obra.numeroOrdemServico,
+
+      dataOrdemServico: obra.dataOrdemServico
+      ? obra.dataOrdemServico.toISOString()
+      : null,
       previsaoConclusao: obra.previsaoConclusao
         ? obra.previsaoConclusao.toISOString()
         : null,
       atualizadoEm: obra.updatedAt.toISOString(),
       imagemUrl: obra.fotos[0]?.url ?? null,
+      ? obra.previsaoConclusao.toISOString()
+      : null,
+      dataConclusaoReal: obra.dataConclusaoReal
+      ? obra.dataConclusaoReal.toISOString()
+      : null,
+
       status: obra.status,
       secretaria: obra.secretaria,
+      eixo: obra.eixo,
+      areaTematica: obra.areaTematica,
+
       percentualExecutado: obra.medicoes[0]
-        ? Number(obra.medicoes[0].percentualExecutado)
-        : null,
+      ? Number(obra.medicoes[0].percentualExecutado)
+      : null,
     }));
 
     return NextResponse.json(obras, { status: 200 });
   } catch (error) {
-    console.error("❌ Erro ao buscar obras no banco:", error);
+    console.error("Erro ao buscar obras:", error);
     return NextResponse.json(
-      { error: "Erro interno ao carregar a listagem de obras." },
+      { message: "Erro interno ao carregar listagem de obras." },
       { status: 500 }
     );
   }
 }
-

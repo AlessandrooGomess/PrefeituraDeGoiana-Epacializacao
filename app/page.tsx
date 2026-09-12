@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 
-// Carregamento dinâmico sem SSR para evitar erros com objetos de navegador (window, document, WebGL)
 const MapContainer = dynamic(() => import("@/components/map/MapContainer"), {
   ssr: false,
   loading: () => (

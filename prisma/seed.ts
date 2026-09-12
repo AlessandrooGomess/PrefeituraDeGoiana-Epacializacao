@@ -9,6 +9,8 @@ async function main() {
   await prisma.obra.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.secretaria.deleteMany();
+  await prisma.areaTematica.deleteMany();
+  await prisma.eixoEstrategico.deleteMany();
 
   console.log("🏛️ [2/4] Criando Secretarias Municipais...");
   const seinfra = await prisma.secretaria.create({
@@ -19,6 +21,67 @@ async function main() {
     },
   });
 
+  const eixoSocial = await prisma.eixoEstrategico.create({
+    data: {
+      nome: "DESENVOLVIMENTO SOCIAL",
+      slug: "desenvolvimento-social",
+      cor: "#3182CE",
+      descricao:
+        "Infraestrutura urbana, saúde, educação, assistência e qualidade de vida.",
+      areas: {
+        create: [
+          { nome: "Infraestrutura Urbana" },
+          { nome: "Direito à Cidade" },
+          { nome: "Resiliencia Urbana" },
+          { nome: "Assistência Social" },
+          { nome: "Saúde" },
+          { nome: "Esporte e Lazer" },
+          { nome: "Educação" },
+          { nome: "Segurança Pública e Mobilidade Urbana" },
+        ],
+      },
+    },
+    include: { areas: true },
+  });
+
+  const eixoEconomico = await prisma.eixoEstrategico.create({
+    data: {
+      nome: "DESENVOLVIMENTO ECONÔMICO",
+      slug: "desenvolvimento-economico-sustentavel",
+      cor: "#059669",
+      descricao:
+        "Economia local, sustentabilidade, agricultura, turismo e patrimonio.",
+      areas: {
+        create: [
+          { nome: "Economia Local" },
+          { nome: "Ciência e Tecnologia" },
+          { nome: "Agricultura e Pesca" },
+          { nome: "Patrimônio Histórico" },
+          { nome: "Meio Ambiente" },
+        ],
+      },
+    },
+    include: { areas: true },
+  });
+
+  const eixoModernizacao = await prisma.eixoEstrategico.create({
+    data: {
+      nome: "MODERNIZAÇÃO ADMINISTRATIVA",
+      slug: "modernizacao-administrativa",
+      cor: "#D97706",
+      descricao:
+        "Inovação tecnológica e modernização da gestão administrativa.",
+      areas: {
+        create: [{ nome: "Inovação e Gestão Administrativa" }],
+      },
+    },
+    include: { areas: true },
+  });
+
+  const areaInfra = eixoSocial.areas.find((a) => a.nome === "Infraestrutura Urbana")!;
+  const areaEducacao = eixoSocial.areas.find((a) => a.nome === "Educação")!;
+  const areaPatrimonio = eixoEconomico.areas.find((a) => a.nome === "Patrimônio Histórico")!;
+  const areaEconomia = eixoEconomico.areas.find((a) => a.nome === "Economia Local")!;
   const seduc = await prisma.secretaria.create({
     data: {
       nome: "Secretaria de Educação",
@@ -59,6 +122,16 @@ async function main() {
     },
   });
 
+  const engenheiroSeduc = await prisma.usuario.create({
+    data: {
+      nome: "Fiscal de Obras da Educação",
+      email: "fiscal.educacao@goiana.pe.gov.br",
+      cargo: "Engenheiro Civil Fiscal",
+      role: Role.ENGENHEIRO,
+      secretariaId: seduc.id,
+    },
+  });
+
   console.log("📍 [4/4] Inserindo Obras Reais de Goiana (2025)...");
 
   const obraPontaDePedras = await prisma.obra.create({
@@ -79,6 +152,9 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
+      
     },
   });
 
@@ -123,6 +199,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
     },
   });
 
@@ -153,6 +231,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoEconomico.id,
+      areaTematicaId: areaPatrimonio.id,
     },
   });
 
@@ -196,6 +276,8 @@ async function main() {
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
     },
   });
 
@@ -227,6 +309,8 @@ async function main() {
       status: StatusObra.CONCLUIDA,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
     },
   });
 
@@ -245,7 +329,7 @@ async function main() {
       {
         tipo: TipoFoto.CONCLUIDO,
         obraId: obraAsfaltoCentro.id,
-        usuarioId:engenheiro.id,
+        usuarioId: engenheiro.id,
         url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800",
         descricao: "Vias centrais totalmente asfaltadas em CBUQ e sinalizadas.",
         dataFoto: new Date("2025-09-04"),
@@ -269,14 +353,16 @@ async function main() {
       previsaoConclusao: new Date("2026-02-23"),
       status: StatusObra.EM_ANDAMENTO,
       secretariaId: seduc.id,
-      engenheiroId: engenheiro.id,
+      engenheiroId: engenheiroSeduc.id,
+      eixoId: eixoSocial.id,
+      areaTematicaId: areaEducacao.id,
     },
   });
 
   await prisma.medicao.create({
     data: {
       obraId: obraEscolaAngelo.id,
-      engenheiroId: engenheiro.id,
+      engenheiroId: engenheiroSeduc.id,
       percentualExecutado: 87.05,
       observacoesTecnicas:
         "Pintura geral e instalação de esquadrias em andamento.",
@@ -301,6 +387,8 @@ async function main() {
       status: StatusObra.CONCLUIDA,
       secretariaId: seinfra.id,
       engenheiroId: engenheiro.id,
+      eixoId: eixoEconomico.id,
+      areaTematicaId: areaEconomia.id,
     },
   });
 
