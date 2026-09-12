@@ -63,6 +63,19 @@ model Secretaria {
   @@map("secretarias")
 }
 
+model EixoEstrategico {
+  id String @id @default(uuid())
+  nome String @unique
+  slug String @unique
+  cor String? @default("#3182CE")
+  descricao String? @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  areas AreaTematica[]
+  obras Obra[]
+  @@map("eixos_estrategicos")
+}
+
 model Obra {
   id                 String     @id @default(uuid())
   titulo             String
