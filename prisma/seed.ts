@@ -174,7 +174,7 @@ async function main() {
         tipo: TipoFoto.RENDER_PROJETO,
         obraId: obraPontaDePedras.id,
         usuarioId: engenheiro.id,
-        url: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?q=80&w=800",
+        url: "/fotos/foto obra 1.jpg",
         descricao:
           "Perspectiva do projeto executivo de pavimentação e escoamento.",
         dataFoto: new Date("2025-10-30"),
