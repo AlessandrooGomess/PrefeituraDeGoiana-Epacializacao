@@ -10,6 +10,11 @@ interface MapContainerProps {
   initialZoom?: number;
   className?: string;
   onObrasLoaded?: (obras: ObraItem[]) => void;
+  onSelectObra?: (obra: ObraItem) => void;
+  selectedObraId?: string;
+  visibleObraIds?: string[];
+  nearMeRequest?: number;
+  onGeolocationError?: (message: string) => void;
 }
 
 // Coordenadas centrais padrão de Goiana - PE
@@ -85,6 +90,11 @@ export default function MapContainer({
   initialZoom = GOIANA_DEFAULT_ZOOM,
   className = "w-full h-full min-h-[500px]",
   onObrasLoaded,
+  onSelectObra,
+  selectedObraId,
+  visibleObraIds,
+  nearMeRequest = 0,
+  onGeolocationError,
 }: MapContainerProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -225,6 +235,8 @@ export default function MapContainer({
     markersRef.current = [];
 
     obras.forEach((obra) => {
+      if (visibleObraIds && !visibleObraIds.includes(obra.id)) return;
+
       // Etapa 6: Tratamento rigoroso de coordenadas inválidas
       if (!isValidCoordinate(obra.latitude, obra.longitude)) {
         console.warn(`Obra ignorada por coordenadas inválidas: "${obra.titulo}" (ID: ${obra.id})`);
@@ -300,9 +312,32 @@ export default function MapContainer({
         .setPopup(popup)
         .addTo(map);
 
+      if (obra.id === selectedObraId) {
+        marker.getElement().classList.add("map-marker-selected");
+      }
+
+      marker.getElement().addEventListener("click", () => onSelectObra?.(obra));
+
       markersRef.current.push(marker);
     });
-  }, [obras, mapLoaded]);
+  }, [obras, mapLoaded, onSelectObra, selectedObraId, visibleObraIds]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || nearMeRequest === 0) return;
+
+    if (!navigator.geolocation) {
+      onGeolocationError?.("Seu navegador não oferece localização.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        map.flyTo({ center: [coords.longitude, coords.latitude], zoom: 14 });
+      },
+      () => onGeolocationError?.("Não foi possível acessar sua localização.")
+    );
+  }, [mapLoaded, nearMeRequest, onGeolocationError]);
 
   // Contagem de obras válidas
   const obrasValidasCount = obras.filter((o) =>

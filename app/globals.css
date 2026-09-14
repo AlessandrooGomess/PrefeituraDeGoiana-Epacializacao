@@ -8,8 +8,379 @@
   --cor-principal: #1170d6;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-poppins), sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.portal-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f4f7fb;
+  color: #172033;
+}
+
+.portal-header {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 14px;
+  background: var(--cor-header-footer);
+  color: #fff;
+  box-shadow: 0 2px 10px rgb(15 39 72 / 18%);
+  z-index: 10;
+}
+
+.portal-logo-slot {
+  width: 96px;
+  height: 50px;
+  flex: 0 0 96px;
+}
+
+.portal-brand {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.portal-header nav {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  gap: 28px;
+  margin-left: auto;
+}
+
+.portal-header nav a {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  color: rgb(255 255 255 / 78%);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.portal-header nav a:hover,
+.portal-header nav a.active {
+  color: #fff;
+}
+
+.portal-header nav a.active {
+  border-bottom: 3px solid #fff;
+}
+
+.portal-tools {
+  display: flex;
+  align-items: center;
+  margin-left: 18px;
+}
+
+.search {
+  width: min(250px, 28vw);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border: 1px solid #d8dce2;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 8%);
+}
+
+.search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #43474e;
+  font-size: 0.8rem;
+}
+
+.search input::placeholder {
+  color: #737982;
+}
+
+.portal-content {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+}
+
+.filter-panel {
+  padding: 28px 22px;
+  background: #fff;
+  border-right: 1px solid #dce4ef;
+  overflow-y: auto;
+}
+
+.filter-panel h1 {
+  margin: 0 0 20px;
+  color: #172033;
+  font-size: 1.25rem;
+}
+
+.filter-panel section {
+  margin-top: 28px;
+}
+
+.filter-panel h2 {
+  margin: 0 0 12px;
+  color: #68758a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.near-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--cor-header-footer);
+  border-radius: 6px;
+  background: var(--cor-header-footer);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.near-button:hover {
+  background: #3478d6;
+}
+
+.check-row {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #4b5870;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.check-row input {
+  accent-color: var(--cor-principal);
+}
+
+.color-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.location-notice {
+  margin-top: 20px;
+  color: #b45309;
+  font-size: 0.75rem;
+}
+
+.map-area {
+  position: relative;
+  min-height: calc(100vh - 112px);
+  overflow: hidden;
+  background: #dce8f5;
+}
+
+.result-chip {
+  position: absolute;
+  top: 16px;
+  right: 56px;
+  z-index: 2;
+  padding: 8px 12px;
+  border: 1px solid #d9e2ee;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 2px 8px rgb(15 39 72 / 12%);
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.work-preview {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 3;
+  width: min(360px, calc(100% - 40px));
+  padding: 20px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgb(15 39 72 / 18%);
+}
+
+.preview-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: 0;
+  background: transparent;
+  color: #718096;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.preview-category {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.work-preview h2 {
+  margin: 0 22px 14px 0;
+  color: #172033;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: #68758a;
+  font-size: 0.72rem;
+}
+
+.preview-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.preview-meta i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.progress {
+  height: 6px;
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #e8edf4;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cor-principal);
+}
+
+.details-button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--cor-principal);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.portal-shell > footer {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 10px 20px;
+  background: #fff;
+  border-top: 1px solid #dce4ef;
+}
+
+.portal-shell > footer a {
+  color: #718096;
+  font-size: 0.7rem;
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .portal-header {
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    padding: 12px 16px;
+  }
+
+  .portal-header nav {
+    order: 3;
+    width: 100%;
+    height: 34px;
+  }
+
+  .portal-tools {
+    margin-left: auto;
+  }
+
+  .portal-logo-slot {
+    width: 64px;
+    flex-basis: 64px;
+  }
+
+  .search {
+    width: min(190px, 48vw);
+  }
+
+  .portal-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .filter-panel {
+    padding: 18px 16px;
+    border-right: 0;
+    border-bottom: 1px solid #dce4ef;
+  }
+
+  .filter-panel h1 {
+    margin-bottom: 14px;
+  }
+
+  .filter-panel section {
+    margin-top: 16px;
+  }
+
+  .map-area {
+    min-height: 62vh;
+  }
+
+  .portal-shell > footer {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
 }
