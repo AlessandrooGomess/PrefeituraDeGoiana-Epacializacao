@@ -42,6 +42,7 @@ a {
 }
 
 .portal-header {
+  position: relative;
   min-height: 56px;
   display: flex;
   align-items: center;
@@ -50,7 +51,7 @@ a {
   background: var(--cor-header-footer);
   color: #fff;
   box-shadow: 0 2px 10px rgb(15 39 72 / 18%);
-  z-index: 10;
+  z-index: 50;
 }
 
 .portal-logo-slot {
@@ -60,10 +61,32 @@ a {
 }
 
 .portal-brand {
+  flex: 0 0 auto;
   font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 0.03em;
   white-space: nowrap;
+}
+
+.menu-toggle {
+  display: none;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.menu-toggle:hover {
+  background: rgb(255 255 255 / 16%);
+}
+
+.menu-toggle img {
+  filter: brightness(0) invert(1);
 }
 
 .portal-header nav {
@@ -138,6 +161,14 @@ a {
   overflow-y: auto;
 }
 
+.mobile-filter-strip {
+  display: none;
+}
+
+.mobile-category-list {
+  display: none;
+}
+
 .filter-panel h1 {
   margin: 0 0 20px;
   color: #172033;
@@ -164,9 +195,9 @@ a {
   justify-content: center;
   gap: 8px;
   padding: 10px 14px;
-  border: 1px solid var(--cor-header-footer);
+  border: 1px solid var(--cor-principal);
   border-radius: 6px;
-  background: var(--cor-header-footer);
+  background: var(--cor-principal);
   color: #fff;
   cursor: pointer;
   font-size: 0.82rem;
@@ -174,6 +205,27 @@ a {
 }
 
 .near-button:hover {
+  background: #3478d6;
+}
+
+.near-button-mobile {
+  display: none;
+}
+
+.filter-apply {
+  display: none;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--cor-principal);
+  border-radius: 6px;
+  background: var(--cor-principal);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.filter-apply:hover {
   background: #3478d6;
 }
 
@@ -209,6 +261,8 @@ a {
   min-height: calc(100vh - 112px);
   overflow: hidden;
   background: #dce8f5;
+  display: flex;
+  flex-direction: column;
 }
 
 .result-chip {
@@ -331,56 +385,295 @@ a {
 }
 
 @media (max-width: 720px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .portal-shell {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .portal-header {
-    flex-wrap: wrap;
-    gap: 12px 18px;
-    padding: 12px 16px;
-  }
-
-  .portal-header nav {
-    order: 3;
-    width: 100%;
-    height: 34px;
-  }
-
-  .portal-tools {
-    margin-left: auto;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto auto;
+    min-height: 64px;
+    gap: 8px;
+    padding: 8px 12px;
+    position: relative;
   }
 
   .portal-logo-slot {
     width: 64px;
-    flex-basis: 64px;
+    height: 42px;
+    grid-column: 1;
+    flex-basis: auto;
+  }
+
+  .portal-brand {
+    max-width: 118px;
+    overflow: visible;
+    font-size: 0.68rem;
+    line-height: 1.08;
+    white-space: normal;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+    grid-column: 4;
+    grid-row: 1;
+    margin-left: 0;
+  }
+
+  .portal-header nav {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 12px;
+    left: 12px;
+    z-index: 60;
+    display: none;
+    height: auto;
+    padding: 8px;
+    border: 1px solid #dce4ef;
+    border-radius: 7px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgb(15 39 72 / 16%);
+  }
+
+  .portal-header nav.is-open {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .portal-header nav a,
+  .portal-header nav a.active {
+    height: auto;
+    padding: 11px 12px;
+    border: 0;
+    border-radius: 4px;
+    color: #334155;
+    font-size: 0.85rem;
+  }
+
+  .portal-header nav a:hover,
+  .portal-header nav a.active {
+    background: #eef6ff;
+    color: var(--cor-principal);
+  }
+
+  .portal-tools {
+    grid-column: 3;
+    grid-row: 1;
+    min-width: 0;
+    margin-left: 0;
   }
 
   .search {
-    width: min(190px, 48vw);
+    width: clamp(112px, 31vw, 140px);
+    padding: 8px 10px;
   }
 
   .portal-content {
     display: flex;
     flex-direction: column;
+    flex: 1 1 auto;
+    height: 0;
+    min-height: 0;
   }
 
   .filter-panel {
-    padding: 18px 16px;
+    flex: 0 0 auto;
+    max-height: none;
+    padding: 0;
+    background: transparent;
     border-right: 0;
     border-bottom: 1px solid #dce4ef;
-  }
-
-  .filter-panel h1 {
-    margin-bottom: 14px;
-  }
-
-  .filter-panel section {
-    margin-top: 16px;
+    overflow: visible;
   }
 
   .map-area {
-    min-height: 62vh;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+  }
+
+  .filter-panel section {
+    overflow: visible;
+    margin-top: 14px;
+  }
+  .mobile-filter-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 10px 12px;
+    background: rgb(255 255 255 / 72%);
+    backdrop-filter: blur(10px);
+  }
+
+  .mobile-filter-toggle {
+    height: 38px;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    border: 1px solid #dbe4ef;
+    border-radius: 7px;
+    background: #fff;
+    color: #172033;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .near-button-desktop {
+    display: none;
+  }
+
+  .near-button-mobile {
+    width: auto;
+    min-height: 38px;
+    display: inline-flex;
+    flex: 0 1 auto;
+    margin-left: auto;
+    padding: 0 10px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+
+  .filter-toggle-icon {
+    color: var(--cor-principal);
+    font-size: 1.1rem;
+    line-height: 1;
+    transform: rotate(90deg);
+  }
+
+  .filter-toggle-chevron {
+    color: #64748b;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .mobile-category-list {
+    display: none;
+    min-width: 0;
+    flex-direction: column;
+    margin: 0 12px 10px;
+    gap: 7px;
+    overflow: visible;
+  }
+
+  .mobile-category-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-panel.is-expanded .mobile-category-list {
+    display: flex;
+  }
+
+  .filter-panel.is-expanded .near-button-mobile {
+    display: none;
+  }
+
+  .mobile-category-chip {
+    width: 100%;
+    min-height: 42px;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    border: 1px solid #dbe4ef;
+    border-radius: 7px;
+    background: rgb(255 255 255 / 72%);
+    backdrop-filter: blur(8px);
+    color: #334155;
+    cursor: pointer;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+
+  .mobile-category-chip > span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .mobile-category-chip.is-selected {
+    border-color: var(--cor-principal);
+    background: var(--cor-principal);
+    color: #fff;
+  }
+
+  .filter-panel:not(.is-expanded) > h1,
+  .filter-panel:not(.is-expanded) > .near-button,
+  .filter-panel:not(.is-expanded) > .filter-apply,
+  .filter-panel:not(.is-expanded) > section,
+  .filter-panel:not(.is-expanded) > .location-notice {
+    display: none;
+  }
+
+  .filter-panel.is-expanded > h1,
+  .filter-panel.is-expanded > .near-button,
+  .filter-panel.is-expanded > .filter-apply,
+  .filter-panel.is-expanded > section,
+  .filter-panel.is-expanded > .location-notice {
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+
+  .filter-panel.is-expanded > section {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgb(255 255 255 / 48%);
+    backdrop-filter: blur(8px);
+  }
+
+  .filter-panel.is-expanded .check-row {
+    min-height: 42px;
+    padding: 0 10px;
+    border: 1px solid rgb(219 228 239 / 85%);
+    border-radius: 7px;
+    background: rgb(255 255 255 / 72%);
+  }
+
+  .filter-panel.is-expanded > h1 {
+    margin-top: 18px;
+    margin-bottom: 14px;
+  }
+
+  .filter-panel.is-expanded > .near-button {
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+
+  .filter-panel.is-expanded > .filter-apply {
+    display: block;
+    margin-right: 16px;
+    margin-bottom: 16px;
+    margin-left: 16px;
+    width: calc(100% - 32px);
+  }
+
+  .result-chip {
+    top: 10px;
+    left: 10px;
+    right: auto;
+  }
+
+  .map-marker-selected {
+    filter: drop-shadow(0 0 6px rgba(17, 112, 214, 0.9));
+    transform: scale(1.2);
+    z-index: 10;
   }
 
   .portal-shell > footer {
-    flex-wrap: wrap;
-    gap: 8px 16px;
+    display: none;
   }
 }

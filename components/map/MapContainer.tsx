@@ -15,6 +15,7 @@ interface MapContainerProps {
   visibleObraIds?: string[];
   nearMeRequest?: number;
   onGeolocationError?: (message: string) => void;
+  onGeolocationSuccess?: (latitude: number, longitude: number) => void;
 }
 
 // Coordenadas centrais padrão de Goiana - PE
@@ -95,6 +96,7 @@ export default function MapContainer({
   visibleObraIds,
   nearMeRequest = 0,
   onGeolocationError,
+  onGeolocationSuccess,
 }: MapContainerProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -167,12 +169,16 @@ export default function MapContainer({
       "top-right"
     );
 
-    map.once("idle", () => {
+    map.once("load", () => {
       map.fitBounds(GOIANA_BOUNDS, { padding: 24, duration: 0 });
+      map.resize();
+      setTimeout(() => {
+        map.resize();
+      }, 150);
     });
 
     mapRef.current = map;
-    setMapLoaded(true);
+  setMapLoaded(true);
 
     // Cleanup seguro para evitar vazamento de memória e duplicações no React 19
     return () => {
@@ -184,6 +190,17 @@ export default function MapContainer({
       setMapLoaded(false);
     };
   }, [initialCenter, initialZoom]);
+
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    const map = mapRef.current;
+    if (!container || !map) return;
+
+    const resizeObserver = new ResizeObserver(() => map.resize());
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, [mapLoaded]);
 
   // 2. Busca das Obras via API
   useEffect(() => {
@@ -333,11 +350,12 @@ export default function MapContainer({
 
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
+        onGeolocationSuccess?.(coords.latitude, coords.longitude);
         map.flyTo({ center: [coords.longitude, coords.latitude], zoom: 14 });
       },
       () => onGeolocationError?.("Não foi possível acessar sua localização.")
     );
-  }, [mapLoaded, nearMeRequest, onGeolocationError]);
+  }, [mapLoaded, nearMeRequest, onGeolocationError, onGeolocationSuccess]);
 
   // Contagem de obras válidas
   const obrasValidasCount = obras.filter((o) =>
@@ -345,9 +363,16 @@ export default function MapContainer({
   ).length;
 
   return (
-    <div className={`relative ${className}`}>
+    <div
+      className={`relative w-full h-full flex-1 ${className}`}
+      style={{ minHeight: "360px", width: "100%", height: "100%" }}
+    >
       {/* Contêiner físico do mapa */}
-      <div ref={mapContainerRef} className="w-full h-full absolute inset-0" />
+      <div
+        ref={mapContainerRef}
+        className="w-full h-full absolute inset-0"
+        style={{ minHeight: "360px", width: "100%", height: "100%" }}
+      />
 
       {/* Card Flutuante de Informações de Status no Canto Superior Esquerdo */}
       <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-xs px-3.5 py-2 rounded-lg shadow-md border border-slate-200 flex items-center gap-2.5">
