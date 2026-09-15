@@ -60,7 +60,7 @@ async function main() {
     include: { areas: true },
   });
 
-  await prisma.eixoEstrategico.create({
+  const eixoModernizacao = await prisma.eixoEstrategico.create({
     data: {
       nome: "MODERNIZAÇÃO ADMINISTRATIVA",
       slug: "modernizacao-administrativa",
