@@ -95,11 +95,12 @@ async function main() {
       nome: "Secretaria de Educação",
       sigla: "SEDUC",
       corIdentificacao: "#EAB308",
+      eixoId: eixoSocial.id,
     },
   });
 
   console.log(
-    " [3/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...",
+    " [4/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...",
   );
   const superAdmin = await prisma.usuario.create({
     data: {
