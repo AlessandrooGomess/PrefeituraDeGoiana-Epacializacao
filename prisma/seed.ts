@@ -99,6 +99,122 @@ async function main() {
     },
   });
 
+  // Siglas provisórias, aguardando confirmação institucional.
+  await prisma.secretaria.createMany({
+    data: [
+      {
+        nome: "Desenvolvimento Urbano e Obras",
+        sigla: "SDUO",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Manutenção e Serviços Públicos",
+        sigla: "SMSP",
+        eixoId: eixoSocial.id,
+      },
+      { nome: "Esportes", sigla: "SESP", eixoId: eixoSocial.id },
+      { nome: "Criança e Juventude", sigla: "SCJ", eixoId: eixoSocial.id },
+      { nome: "Saúde", sigla: "SMS", eixoId: eixoSocial.id },
+      {
+        nome: "Assistência Social e Direitos Humanos",
+        sigla: "SASDH",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Educação e Inovação Pedagógica",
+        sigla: "SEIP",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Autarquia de Ensino Superior",
+        sigla: "AUESG",
+        eixoId: eixoSocial.id,
+      },
+      { nome: "Mulher", sigla: "SM", eixoId: eixoSocial.id },
+      { nome: "Segurança Cidadã", sigla: "SSC", eixoId: eixoSocial.id },
+      {
+        nome: "Trânsito e Transportes Urbanos",
+        sigla: "STTU",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Habitação e Regularização Fundiária",
+        sigla: "SHRF",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Turismo",
+        sigla: "SETUR",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Cultura e Proteção ao Patrimônio Histórico Cultural",
+        sigla: "SCPPHC",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Agência de Desenvolvimento de Goiana",
+        sigla: "ADG",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Desenvolvimento Econômico e Tecnologia",
+        sigla: "SDET",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Agricultura, Pecuária, Pesca e Proteção Animal",
+        sigla: "SAPPA",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Agência de Meio Ambiente",
+        sigla: "AMAG",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Planejamento Estratégico",
+        sigla: "SPE",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Orçamento e Gestão",
+        sigla: "SOG",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Administração e Gestão da Qualidade",
+        sigla: "SAGQ",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Fazenda Municipal",
+        sigla: "SFM",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Articulação Política",
+        sigla: "SAP",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Governo e Participação Social",
+        sigla: "SGPS",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Licitações e Contratos Públicos",
+        sigla: "SLCP",
+        eixoId: eixoModernizacao.id,
+      },
+      { nome: "Ouvidoria", sigla: "OUV", eixoId: eixoModernizacao.id },
+      { nome: "Goiana Previ", sigla: "GP", eixoId: eixoModernizacao.id },
+      { nome: "Controladoria", sigla: "CGM", eixoId: eixoModernizacao.id },
+      { nome: "Comunicação", sigla: "ASCOM", eixoId: eixoModernizacao.id },
+      { nome: "Procuradoria", sigla: "PGM", eixoId: eixoModernizacao.id },
+    ],
+  });
+
   console.log(
     " [4/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...",
   );
