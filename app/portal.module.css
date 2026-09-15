@@ -361,6 +361,13 @@
     overflow: visible;
   }
 
+  .filter-panel.is-expanded {
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .map-area {
     flex: 1 1 auto;
     min-height: 0;
