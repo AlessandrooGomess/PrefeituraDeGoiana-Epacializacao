@@ -76,6 +76,8 @@ model EixoEstrategico {
 
   areas AreaTematica[]
   obras Obra[]
+  secretarias Secretaria[]
+  
   @@map("eixos_estrategicos")
 }
 
