@@ -1,4 +1,10 @@
-import { PrismaClient, Role, StatusObra, TipoFoto } from "@prisma/client";
+import {
+  PrismaClient,
+  Role,
+  StatusObra,
+  TipoFoto,
+  type AreaTematica,
+} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -64,7 +70,7 @@ async function main() {
     include: { areas: true },
   });
 
-  const eixoModernizacao = await prisma.eixoEstrategico.create({
+  await prisma.eixoEstrategico.create({
     data: {
       nome: "MODERNIZAÇÃO ADMINISTRATIVA",
       slug: "modernizacao-administrativa",
@@ -78,10 +84,10 @@ async function main() {
     include: { areas: true },
   });
 
-  const areaInfra = eixoSocial.areas.find((a) => a.nome === "Infraestrutura Urbana")!;
-  const areaEducacao = eixoSocial.areas.find((a) => a.nome === "Educação")!;
-  const areaPatrimonio = eixoEconomico.areas.find((a) => a.nome === "Patrimônio Histórico")!;
-  const areaEconomia = eixoEconomico.areas.find((a) => a.nome === "Economia Local")!;
+  const areaInfra = eixoSocial.areas.find((a: AreaTematica) => a.nome === "Infraestrutura Urbana")!;
+  const areaEducacao = eixoSocial.areas.find((a: AreaTematica) => a.nome === "Educação")!;
+  const areaPatrimonio = eixoEconomico.areas.find((a: AreaTematica) => a.nome === "Patrimônio Histórico")!;
+  const areaEconomia = eixoEconomico.areas.find((a: AreaTematica) => a.nome === "Economia Local")!;
   const seduc = await prisma.secretaria.create({
     data: {
       nome: "Secretaria de Educação",
@@ -93,7 +99,7 @@ async function main() {
   console.log(
     " [3/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...",
   );
-  const superAdmin = await prisma.usuario.create({
+  await prisma.usuario.create({
     data: {
       nome: "Administrador Geral - Prefeitura de Goiana",
       email: "admin@goiana.pe.gov.br",
@@ -102,7 +108,7 @@ async function main() {
     },
   });
 
-  const gestorSeifra = await prisma.usuario.create({
+  await prisma.usuario.create({
     data: {
       nome: "Secretario de Obras - SEINFRA",
       email: "gestor.seinfra@goiana.pe.gov.br",
@@ -406,7 +412,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch((e: unknown) => {
     console.error("❌ Erro durante o seed:", e);
     process.exit(1);
   })
