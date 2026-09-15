@@ -27,7 +27,7 @@ async function main() {
       slug: "desenvolvimento-social",
       cor: "#3182CE",
       descricao:
-        "Infraestrutura urbana, saúde, educação, assistência e qualidade de vida.",
+        "Infraestrutura urbana, saúde, educação, assistência social, esporte, segurança, mobilidade e habitação.",
       areas: {
         create: [
           { nome: "Infraestrutura Urbana" },
@@ -46,11 +46,11 @@ async function main() {
 
   const eixoEconomico = await prisma.eixoEstrategico.create({
     data: {
-      nome: "DESENVOLVIMENTO ECONÔMICO",
+      nome: "DESENVOLVIMENTO ECONÔMICO SUSTENTÁVEL",
       slug: "desenvolvimento-economico-sustentavel",
       cor: "#059669",
       descricao:
-        "Economia local, sustentabilidade, agricultura, turismo e patrimonio.",
+        "Turismo, cultura, patrimônio histórico, desenvolvimento econômico, tecnologia, agricultura, pesca, proteção animal e meio ambiente.",
       areas: {
         create: [
           { nome: "Economia Local" },
@@ -70,7 +70,7 @@ async function main() {
       slug: "modernizacao-administrativa",
       cor: "#D97706",
       descricao:
-        "Inovação tecnológica e modernização da gestão administrativa.",
+        "Planejamento estratégico, orçamento, gestão, administração, fazenda, controle, comunicação e assuntos jurídicos.",
       areas: {
         create: [{ nome: "Inovação e Gestão Administrativa" }],
       },
@@ -78,10 +78,16 @@ async function main() {
     include: { areas: true },
   });
 
-  const areaInfra = eixoSocial.areas.find((a) => a.nome === "Infraestrutura Urbana")!;
+  const areaInfra = eixoSocial.areas.find(
+    (a) => a.nome === "Infraestrutura Urbana",
+  )!;
   const areaEducacao = eixoSocial.areas.find((a) => a.nome === "Educação")!;
-  const areaPatrimonio = eixoEconomico.areas.find((a) => a.nome === "Patrimônio Histórico")!;
-  const areaEconomia = eixoEconomico.areas.find((a) => a.nome === "Economia Local")!;
+  const areaPatrimonio = eixoEconomico.areas.find(
+    (a) => a.nome === "Patrimônio Histórico",
+  )!;
+  const areaEconomia = eixoEconomico.areas.find(
+    (a) => a.nome === "Economia Local",
+  )!;
   const seduc = await prisma.secretaria.create({
     data: {
       nome: "Secretaria de Educação",
@@ -154,7 +160,6 @@ async function main() {
       engenheiroId: engenheiro.id,
       eixoId: eixoSocial.id,
       areaTematicaId: areaInfra.id,
-      
     },
   });
 
