@@ -1,13 +1,12 @@
 /*
   Warnings:
 
-  - Added the required column `area_tematica_id` to the `obras` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `eixo_id` to the `obras` table without a default value. This is not possible if the table is not empty.
+  - Added the optional columns `area_tematica_id` and `eixo_id` to the `obras` table.
 
 */
 -- AlterTable
-ALTER TABLE "obras" ADD COLUMN     "area_tematica_id" TEXT NOT NULL,
-ADD COLUMN     "eixo_id" TEXT NOT NULL;
+ALTER TABLE "obras" ADD COLUMN     "area_tematica_id" TEXT,
+ADD COLUMN     "eixo_id" TEXT;
 
 -- CreateTable
 CREATE TABLE "eixos_estrategicos" (

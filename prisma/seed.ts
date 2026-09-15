@@ -3,7 +3,6 @@ import {
   Role,
   StatusObra,
   TipoFoto,
-  type AreaTematica,
 } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -18,22 +17,13 @@ async function main() {
   await prisma.areaTematica.deleteMany();
   await prisma.eixoEstrategico.deleteMany();
 
-  console.log("🏛️ [2/4] Criando Secretarias Municipais...");
-  const seinfra = await prisma.secretaria.create({
-    data: {
-      nome: "Secretaria de Infraestrutura e Serviços Públicos",
-      sigla: "SEINFRA",
-      corIdentificacao: "#2563EB",
-    },
-  });
-
   const eixoSocial = await prisma.eixoEstrategico.create({
     data: {
       nome: "DESENVOLVIMENTO SOCIAL",
       slug: "desenvolvimento-social",
       cor: "#3182CE",
       descricao:
-        "Infraestrutura urbana, saúde, educação, assistência e qualidade de vida.",
+        "Infraestrutura urbana, saúde, educação, assistência social, esporte, segurança, mobilidade e habitação.",
       areas: {
         create: [
           { nome: "Infraestrutura Urbana" },
@@ -52,11 +42,11 @@ async function main() {
 
   const eixoEconomico = await prisma.eixoEstrategico.create({
     data: {
-      nome: "DESENVOLVIMENTO ECONÔMICO",
+      nome: "DESENVOLVIMENTO ECONÔMICO SUSTENTÁVEL",
       slug: "desenvolvimento-economico-sustentavel",
       cor: "#059669",
       descricao:
-        "Economia local, sustentabilidade, agricultura, turismo e patrimonio.",
+        "Turismo, cultura, patrimônio histórico, desenvolvimento econômico, tecnologia, agricultura, pesca, proteção animal e meio ambiente.",
       areas: {
         create: [
           { nome: "Economia Local" },
@@ -70,13 +60,13 @@ async function main() {
     include: { areas: true },
   });
 
-  await prisma.eixoEstrategico.create({
+  const eixoModernizacao = await prisma.eixoEstrategico.create({
     data: {
       nome: "MODERNIZAÇÃO ADMINISTRATIVA",
       slug: "modernizacao-administrativa",
       cor: "#D97706",
       descricao:
-        "Inovação tecnológica e modernização da gestão administrativa.",
+        "Planejamento estratégico, orçamento, gestão, administração, fazenda, controle, comunicação e assuntos jurídicos.",
       areas: {
         create: [{ nome: "Inovação e Gestão Administrativa" }],
       },
@@ -84,20 +74,154 @@ async function main() {
     include: { areas: true },
   });
 
-  const areaInfra = eixoSocial.areas.find((a: AreaTematica) => a.nome === "Infraestrutura Urbana")!;
-  const areaEducacao = eixoSocial.areas.find((a: AreaTematica) => a.nome === "Educação")!;
-  const areaPatrimonio = eixoEconomico.areas.find((a: AreaTematica) => a.nome === "Patrimônio Histórico")!;
-  const areaEconomia = eixoEconomico.areas.find((a: AreaTematica) => a.nome === "Economia Local")!;
+  console.log("📍 [3/4] Criando Secretarias Municipais...");
+
+  const seinfra = await prisma.secretaria.create({
+    data: {
+      nome: "Secretaria de Infraestrutura e Serviços Públicos",
+      sigla: "SEINFRA",
+      corIdentificacao: "#2563EB",
+      eixoId: eixoSocial.id,
+    },
+  });
+
+  const areaInfra = eixoSocial.areas.find(
+    (a) => a.nome === "Infraestrutura Urbana",
+  )!;
+  const areaEducacao = eixoSocial.areas.find((a) => a.nome === "Educação")!;
+  const areaPatrimonio = eixoEconomico.areas.find(
+    (a) => a.nome === "Patrimônio Histórico",
+  )!;
+  const areaEconomia = eixoEconomico.areas.find(
+    (a) => a.nome === "Economia Local",
+  )!;
   const seduc = await prisma.secretaria.create({
     data: {
       nome: "Secretaria de Educação",
       sigla: "SEDUC",
       corIdentificacao: "#EAB308",
+      eixoId: eixoSocial.id,
     },
   });
 
+  // Siglas provisórias, aguardando confirmação institucional.
+  await prisma.secretaria.createMany({
+    data: [
+      {
+        nome: "Desenvolvimento Urbano e Obras",
+        sigla: "SDUO",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Manutenção e Serviços Públicos",
+        sigla: "SMSP",
+        eixoId: eixoSocial.id,
+      },
+      { nome: "Esportes", sigla: "SESP", eixoId: eixoSocial.id },
+      { nome: "Criança e Juventude", sigla: "SCJ", eixoId: eixoSocial.id },
+      { nome: "Saúde", sigla: "SMS", eixoId: eixoSocial.id },
+      {
+        nome: "Assistência Social e Direitos Humanos",
+        sigla: "SASDH",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Educação e Inovação Pedagógica",
+        sigla: "SEIP",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Autarquia de Ensino Superior",
+        sigla: "AUESG",
+        eixoId: eixoSocial.id,
+      },
+      { nome: "Mulher", sigla: "SM", eixoId: eixoSocial.id },
+      { nome: "Segurança Cidadã", sigla: "SSC", eixoId: eixoSocial.id },
+      {
+        nome: "Trânsito e Transportes Urbanos",
+        sigla: "STTU",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Habitação e Regularização Fundiária",
+        sigla: "SHRF",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Turismo",
+        sigla: "SETUR",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Cultura e Proteção ao Patrimônio Histórico Cultural",
+        sigla: "SCPPHC",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Agência de Desenvolvimento de Goiana",
+        sigla: "ADG",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Desenvolvimento Econômico e Tecnologia",
+        sigla: "SDET",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Agricultura, Pecuária, Pesca e Proteção Animal",
+        sigla: "SAPPA",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Agência de Meio Ambiente",
+        sigla: "AMAG",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Planejamento Estratégico",
+        sigla: "SPE",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Orçamento e Gestão",
+        sigla: "SOG",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Administração e Gestão da Qualidade",
+        sigla: "SAGQ",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Fazenda Municipal",
+        sigla: "SFM",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Articulação Política",
+        sigla: "SAP",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Governo e Participação Social",
+        sigla: "SGPS",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Licitações e Contratos Públicos",
+        sigla: "SLCP",
+        eixoId: eixoModernizacao.id,
+      },
+      { nome: "Ouvidoria", sigla: "OUV", eixoId: eixoModernizacao.id },
+      { nome: "Goiana Previ", sigla: "GP", eixoId: eixoModernizacao.id },
+      { nome: "Controladoria", sigla: "CGM", eixoId: eixoModernizacao.id },
+      { nome: "Comunicação", sigla: "ASCOM", eixoId: eixoModernizacao.id },
+      { nome: "Procuradoria", sigla: "PGM", eixoId: eixoModernizacao.id },
+    ],
+  });
+
   console.log(
-    " [3/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...",
+    " [4/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...",
   );
   await prisma.usuario.create({
     data: {
@@ -160,7 +284,6 @@ async function main() {
       engenheiroId: engenheiro.id,
       eixoId: eixoSocial.id,
       areaTematicaId: areaInfra.id,
-      
     },
   });
 
@@ -180,7 +303,7 @@ async function main() {
         tipo: TipoFoto.RENDER_PROJETO,
         obraId: obraPontaDePedras.id,
         usuarioId: engenheiro.id,
-        url: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?q=80&w=800",
+        url: "/fotos/foto obra 1.jpg",
         descricao:
           "Perspectiva do projeto executivo de pavimentação e escoamento.",
         dataFoto: new Date("2025-10-30"),
