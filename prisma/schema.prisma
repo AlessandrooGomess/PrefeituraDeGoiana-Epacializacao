@@ -57,6 +57,9 @@ model Secretaria {
   corIdentificacao String?  @map("cor_identificacao")
   createdAt        DateTime @default(now()) @map("created_at")
 
+  eixoId String? @map("eixo_id")
+  eixo EixoEstrategico? @relation(fields: [eixoId], references: [id], onDelete: SetNull)
+
   obras    Obra[]
   usuarios Usuario[]
 
