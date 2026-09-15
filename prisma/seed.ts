@@ -12,15 +12,6 @@ async function main() {
   await prisma.areaTematica.deleteMany();
   await prisma.eixoEstrategico.deleteMany();
 
-  console.log("🏛️ [2/4] Criando Secretarias Municipais...");
-  const seinfra = await prisma.secretaria.create({
-    data: {
-      nome: "Secretaria de Infraestrutura e Serviços Públicos",
-      sigla: "SEINFRA",
-      corIdentificacao: "#2563EB",
-    },
-  });
-
   const eixoSocial = await prisma.eixoEstrategico.create({
     data: {
       nome: "DESENVOLVIMENTO SOCIAL",
@@ -76,6 +67,17 @@ async function main() {
       },
     },
     include: { areas: true },
+  });
+
+  console.log("📍 [3/4] Criando Secretarias Municipais...");
+
+  const seinfra = await prisma.secretaria.create({
+    data: {
+      nome: "Secretaria de Infraestrutura e Serviços Públicos",
+      sigla: "SEINFRA",
+      corIdentificacao: "#2563EB",
+      eixoId: eixoSocial.id,
+    },
   });
 
   const areaInfra = eixoSocial.areas.find(
