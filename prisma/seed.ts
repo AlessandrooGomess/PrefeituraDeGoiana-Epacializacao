@@ -303,7 +303,7 @@ async function main() {
         tipo: TipoFoto.RENDER_PROJETO,
         obraId: obraPontaDePedras.id,
         usuarioId: engenheiro.id,
-        url: "/fotos/foto obra 1.jpg",
+        url: "/fotos/obra-ponta-de-pedras.jpg",
         descricao:
           "Perspectiva do projeto executivo de pavimentação e escoamento.",
         dataFoto: new Date("2025-10-30"),
@@ -340,6 +340,16 @@ async function main() {
       percentualExecutado: 76.72,
       observacoesTecnicas:
         "Pavimentação granítica em estágio avançado nas vias principais.",
+    },
+  });
+
+  await prisma.foto.create({
+    data: {
+      tipo: TipoFoto.EM_ANDAMENTO,
+      obraId: obraCarneDeVaca.id,
+      usuarioId: engenheiro.id,
+      url: "/fotos/obra-carne-de-vaca.jpg",
+      descricao: "Registro fotográfico da pavimentação em Carne de Vaca.",
     },
   });
 
@@ -381,7 +391,7 @@ async function main() {
         tipo: TipoFoto.ANTES,
         obraId: obraRestauroCentro.id,
         usuarioId: engenheiro.id,
-        url: "https://images.unsplash.com/photo-15133694203232-719a280e022f?q=80&w=800",
+        url: "/fotos/obra-restauro-centro.jpg",
         descricao: "Estado da fachada histórica antes do início do escoramento",
         dataFoto: new Date("2025-07-28"),
       },
@@ -417,6 +427,16 @@ async function main() {
       percentualExecutado: 93.29,
       observacoesTecnicas:
         "Reta final de acabamento de meio-fio e passeios acessíveis.",
+    },
+  });
+
+  await prisma.foto.create({
+    data: {
+      tipo: TipoFoto.EM_ANDAMENTO,
+      obraId: obraTejucupapo.id,
+      usuarioId: engenheiro.id,
+      url: "/fotos/obra-tejucupapo.jpg",
+      descricao: "Registro fotográfico da pavimentação em Tejucupapo.",
     },
   });
 
@@ -459,7 +479,7 @@ async function main() {
         tipo: TipoFoto.CONCLUIDO,
         obraId: obraAsfaltoCentro.id,
         usuarioId: engenheiro.id,
-        url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800",
+        url: "/fotos/obra-asfalto-cbuq.jpg",
         descricao: "Vias centrais totalmente asfaltadas em CBUQ e sinalizadas.",
         dataFoto: new Date("2025-09-04"),
       },
@@ -498,6 +518,16 @@ async function main() {
     },
   });
 
+  await prisma.foto.create({
+    data: {
+      tipo: TipoFoto.EM_ANDAMENTO,
+      obraId: obraEscolaAngelo.id,
+      usuarioId: engenheiroSeduc.id,
+      url: "/fotos/obra-escola-angelo.jpg",
+      descricao: "Registro fotográfico da reforma da Escola Municipal Prefeito Ângelo Jordão.",
+    },
+  });
+
   const obraFeiraFlexeiras = await prisma.obra.create({
     data: {
       titulo: "Implantação do Pátio de Feira Livre de Flexeiras",
@@ -528,6 +558,16 @@ async function main() {
       percentualExecutado: 100.0,
       observacoesTecnicas:
         "Pátio pavimentado, bancadas instaladas e iluminação concluída.",
+    },
+  });
+
+  await prisma.foto.create({
+    data: {
+      tipo: TipoFoto.CONCLUIDO,
+      obraId: obraFeiraFlexeiras.id,
+      usuarioId: engenheiro.id,
+      url: "/fotos/obra-patio-flexeiras.jpg",
+      descricao: "Registro fotográfico do pátio de feira de Flexeiras.",
     },
   });
 

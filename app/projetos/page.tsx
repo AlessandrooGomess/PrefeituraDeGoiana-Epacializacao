@@ -1,28 +1,42 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState, useMemo } from 'react';
-import Image from 'next/image';
-import type { ObraItem as ObraApiItem, StatusObra } from '@/types/obra';
-import { 
-  Search, 
-  SlidersHorizontal, 
-  Activity, 
-  GraduationCap, 
-  Trees, 
-  Zap, 
-  Route, 
-  CheckCircle2, 
+import React, { useEffect, useState, useMemo } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import type { ObraItem as ObraApiItem, StatusObra } from "@/types/obra";
+import {
+  Search,
+  SlidersHorizontal,
+  Activity,
+  GraduationCap,
+  Trees,
+  Zap,
+  Route,
+  CheckCircle2,
   Layers,
-  X
-} from 'lucide-react';
+  Building2,
+  X,
+} from "lucide-react";
 
 interface ProjetoItem {
   id: string;
   codigo: string;
   titulo: string;
-  categoria: 'Saude' | 'Mobilidade' | 'Educacao' | 'MeioAmbiente' | 'Energia' | 'Rodovias';
+  categoria:
+    | "Saude"
+    | "Mobilidade"
+    | "Infraestrutura"
+    | "Educacao"
+    | "MeioAmbiente"
+    | "Energia"
+    | "Rodovias";
   categoriaLabel: string;
-  status: 'Planejada' | 'Ordem Emitida' | 'Em Andamento' | 'Paralisada' | 'Concluído';
+  status:
+    | "Planejada"
+    | "Ordem Emitida"
+    | "Em Andamento"
+    | "Paralisada"
+    | "Concluído";
   progressoFisico: number;
   atualizadoEm: string;
   imagemUrl: string | null;
@@ -32,21 +46,44 @@ interface ProjetoItem {
   descricao?: string | null;
 }
 
-const STATUS_LABEL: Record<StatusObra, ProjetoItem['status']> = {
-  PLANEJADA: 'Planejada',
-  ORDEM_EMITIDA: 'Ordem Emitida',
-  EM_ANDAMENTO: 'Em Andamento',
-  PARALISADA: 'Paralisada',
-  CONCLUIDA: 'Concluído',
+const STATUS_LABEL: Record<StatusObra, ProjetoItem["status"]> = {
+  PLANEJADA: "Planejada",
+  ORDEM_EMITIDA: "Ordem Emitida",
+  EM_ANDAMENTO: "Em Andamento",
+  PARALISADA: "Paralisada",
+  CONCLUIDA: "Concluído",
 };
 
-function getCategoria(obra: ObraApiItem): Pick<ProjetoItem, 'categoria' | 'categoriaLabel'> {
-  const texto = `${obra.titulo} ${obra.secretaria.nome}`.toLowerCase();
-  if (texto.includes('educa') || texto.includes('escola')) return { categoria: 'Educacao', categoriaLabel: 'Educação' };
-  if (texto.includes('parque') || texto.includes('drenagem') || texto.includes('ambient')) return { categoria: 'MeioAmbiente', categoriaLabel: 'Meio Ambiente' };
-  if (texto.includes('energia') || texto.includes('solar')) return { categoria: 'Energia', categoriaLabel: 'Energia' };
-  if (texto.includes('rodovia') || texto.includes('br-') || texto.includes('paviment')) return { categoria: 'Rodovias', categoriaLabel: 'Rodovias' };
-  return { categoria: 'Mobilidade', categoriaLabel: 'Mobilidade' };
+function getCategoria(
+  obra: ObraApiItem,
+): Pick<ProjetoItem, "categoria" | "categoriaLabel"> {
+  const texto =
+    `${obra.titulo} ${obra.secretaria.nome} ${obra.areaTematica?.nome ?? ""}`.toLowerCase();
+  if (
+    texto.includes("saúde") ||
+    texto.includes("hospital") ||
+    texto.includes("ubs") ||
+    texto.includes("posto")
+  ) {
+    return { categoria: "Saude", categoriaLabel: "Saúde" };
+  }
+  if (texto.includes("educa") || texto.includes("escola"))
+    return { categoria: "Educacao", categoriaLabel: "Educação" };
+  if (
+    texto.includes("parque") ||
+    texto.includes("drenagem") ||
+    texto.includes("ambient")
+  )
+    return { categoria: "MeioAmbiente", categoriaLabel: "Meio Ambiente" };
+  if (texto.includes("energia") || texto.includes("solar"))
+    return { categoria: "Energia", categoriaLabel: "Energia" };
+  if (
+    texto.includes("rodovia") ||
+    texto.includes("br-") ||
+    texto.includes("paviment")
+  )
+    return { categoria: "Rodovias", categoriaLabel: "Rodovias" };
+  return { categoria: "Infraestrutura", categoriaLabel: "Infraestrutura" };
 }
 
 function mapearObra(obra: ObraApiItem): ProjetoItem {
@@ -54,59 +91,71 @@ function mapearObra(obra: ObraApiItem): ProjetoItem {
   return {
     ...categoria,
     id: obra.id,
-    codigo: obra.numeroOrdemServico ?? `OBR-${obra.id.slice(0, 8).toUpperCase()}`,
+    codigo:
+      obra.numeroOrdemServico ?? `OBR-${obra.id.slice(0, 8).toUpperCase()}`,
     titulo: obra.titulo,
     status: STATUS_LABEL[obra.status],
     progressoFisico: obra.percentualExecutado ?? 0,
-    atualizadoEm: `Atualizado em ${new Date(obra.atualizadoEm).toLocaleDateString('pt-BR')}`,
+    atualizadoEm: `Atualizado em ${new Date(obra.atualizadoEm).toLocaleDateString("pt-BR")}`,
     imagemUrl: obra.imagemUrl,
-    valorPrevisto: obra.valorContrato === null
-      ? 'Não informado'
-      : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(obra.valorContrato),
+    valorPrevisto:
+      obra.valorContrato === null
+        ? "Não informado"
+        : new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(obra.valorContrato),
     bairro: obra.bairro,
     secretaria: obra.secretaria.nome,
     descricao: obra.descricao,
   };
 }
 
-function getCategoriaBadge(categoria: ProjetoItem['categoria'], label: string) {
+function getCategoriaBadge(categoria: ProjetoItem["categoria"], label: string) {
   switch (categoria) {
-    case 'Saude':
+    case "Saude":
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-[#ef4444] shadow-sm">
           <Activity className="w-3 h-3" />
           {label}
         </span>
-      ); 
-    case 'Mobilidade':
+      );
+    case "Mobilidade":
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-[#2563eb] shadow-sm">
           <Route className="w-3 h-3" />
           {label}
         </span>
       );
-    case 'Educacao':
+    case "Infraestrutura":
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-[#475569] shadow-sm">
+          <Building2 className="w-3 h-3" />
+          {label}
+        </span>
+      );
+    case "Educacao":
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-[#ea580c] shadow-sm">
           <GraduationCap className="w-3 h-3" />
           {label}
         </span>
       );
-    case 'MeioAmbiente':
+    case "MeioAmbiente":
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-[#15803d] shadow-sm">
           <Trees className="w-3 h-3" />
           {label}
         </span>
       );
-    case 'Energia':
+    case "Energia":
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-[#d97706] shadow-sm">
           <Zap className="w-3 h-3" />
           {label}
         </span>
       );
-    case 'Rodovias':
+    case "Rodovias":
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-[#0284c7] shadow-sm">
           <Layers className="w-3 h-3" />
@@ -122,33 +171,33 @@ function getCategoriaBadge(categoria: ProjetoItem['categoria'], label: string) {
   }
 }
 
-function getStatusBadge(status: ProjetoItem['status']) {
+function getStatusBadge(status: ProjetoItem["status"]) {
   switch (status) {
-    case 'Planejada':
+    case "Planejada":
       return (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-bold text-[#1d4ed8] bg-[#dbeafe]">
           Planejada
         </span>
       );
-    case 'Ordem Emitida':
+    case "Ordem Emitida":
       return (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-bold text-[#1e40af] bg-[#e0e7ff]">
           Ordem Emitida
         </span>
       );
-    case 'Em Andamento':
+    case "Em Andamento":
       return (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-bold text-[#b45309] bg-[#fef3c7]">
           Em Andamento
         </span>
       );
-    case 'Paralisada':
+    case "Paralisada":
       return (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-bold text-[#b91c1c] bg-[#fee2e2]">
           Paralisada
         </span>
       );
-    case 'Concluído':
+    case "Concluído":
       return (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-bold text-[#15803d] bg-[#dcfce7]">
           Concluído
@@ -165,12 +214,13 @@ function getStatusBadge(status: ProjetoItem['status']) {
 
 export default function PaginaCarteiraProjetos() {
   const [projetos, setProjetos] = useState<ProjetoItem[]>([]);
-  const [termoBusca, setTermoBusca] = useState('');
-  const [statusFiltro, setStatusFiltro] = useState<string>('Todos');
+  const [termoBusca, setTermoBusca] = useState("");
+  const [statusFiltro, setStatusFiltro] = useState<string>("Todos");
   const [mostrarFiltrosMenu, setMostrarFiltrosMenu] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  const [projetoSelecionado, setProjetoSelecionado] = useState<ProjetoItem | null>(null);
+  const [projetoSelecionado, setProjetoSelecionado] =
+    useState<ProjetoItem | null>(null);
 
   useEffect(() => {
     let montado = true;
@@ -179,30 +229,49 @@ export default function PaginaCarteiraProjetos() {
       try {
         setCarregando(true);
         setErro(null);
-        const resposta = await fetch('/api/obras');
-        if (!resposta.ok) throw new Error('Não foi possível carregar as obras.');
+        const resposta = await fetch("/api/obras");
+        if (!resposta.ok)
+          throw new Error("Não foi possível carregar as obras.");
         const obras: ObraApiItem[] = await resposta.json();
         if (montado) setProjetos(obras.map(mapearObra));
       } catch (error) {
-        if (montado) setErro(error instanceof Error ? error.message : 'Erro ao carregar as obras.');
+        if (montado)
+          setErro(
+            error instanceof Error
+              ? error.message
+              : "Erro ao carregar as obras.",
+          );
       } finally {
         if (montado) setCarregando(false);
       }
     }
 
     carregarProjetos();
-    return () => { montado = false; };
+    return () => {
+      montado = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!projetoSelecionado) return;
+
+    const fecharComEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setProjetoSelecionado(null);
+    };
+
+    document.addEventListener("keydown", fecharComEscape);
+    return () => document.removeEventListener("keydown", fecharComEscape);
+  }, [projetoSelecionado]);
 
   const projetosFiltrados = useMemo(() => {
     return projetos.filter((item) => {
-      const matchTexto = 
+      const matchTexto =
         item.titulo.toLowerCase().includes(termoBusca.toLowerCase()) ||
         item.codigo.toLowerCase().includes(termoBusca.toLowerCase()) ||
         item.categoriaLabel.toLowerCase().includes(termoBusca.toLowerCase());
 
-      const matchStatus = 
-        statusFiltro === 'Todos' || item.status === statusFiltro;
+      const matchStatus =
+        statusFiltro === "Todos" || item.status === statusFiltro;
 
       return matchTexto && matchStatus;
     });
@@ -210,35 +279,34 @@ export default function PaginaCarteiraProjetos() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbfcfd] text-[#0f172a] font-sans antialiased selection:bg-blue-100">
-      
       <header className="bg-(--cor-header-footer) text-white sticky top-0 z-30 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          
-          <div className="flex items-center space-x-3">
-            <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block animate-pulse"></span>
-              Portal de Infraestrutura
-            </span>
-          </div>
-
           <nav className="ml-auto flex items-center space-x-8 text-sm font-medium">
-            <button 
-              type="button" 
+            <Link
+              href="/"
               className="text-slate-300 hover:text-white transition-colors duration-150"
             >
               Mapa
-            </button>
+            </Link>
+
             <div className="relative py-5">
-              <button 
-                type="button" 
+              <Link
+                href="/projetos"
                 className="text-white font-semibold flex items-center gap-1"
               >
                 Projetos
-              </button>
-              <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white rounded-t-full"></div>
-            </div>
-          </nav>
+              </Link>
 
+              <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white rounded-t-full" />
+            </div>
+
+            <Link
+              href="/area-do-servidor"
+              className="text-slate-300 hover:text-white transition-colors duration-150"
+            >
+              Área do Servidor
+            </Link>
+          </nav>
         </div>
       </header>
 
@@ -249,7 +317,8 @@ export default function PaginaCarteiraProjetos() {
               Carteira de Projetos
             </h1>
             <p className="mt-1.5 text-xs sm:text-sm text-slate-500 leading-relaxed">
-              Acompanhe o andamento físico e financeiro das obras e intervenções estruturais em todo o município de Goiana
+              Acompanhe o andamento físico e financeiro das obras e intervenções
+              estruturais em todo o município de Goiana
             </p>
           </div>
 
@@ -266,8 +335,8 @@ export default function PaginaCarteiraProjetos() {
                 className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-md text-xs sm:text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-(--cor-principal) focus:border-transparent transition"
               />
               {termoBusca && (
-                <button 
-                  onClick={() => setTermoBusca('')}
+                <button
+                  onClick={() => setTermoBusca("")}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -280,14 +349,14 @@ export default function PaginaCarteiraProjetos() {
                 type="button"
                 onClick={() => setMostrarFiltrosMenu(!mostrarFiltrosMenu)}
                 className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-medium border rounded-md shadow-sm transition ${
-                  mostrarFiltrosMenu || statusFiltro !== 'Todos'
-                    ? 'bg-(--cor-principal) text-white border-(--cor-principal)'
-                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                  mostrarFiltrosMenu || statusFiltro !== "Todos"
+                    ? "bg-(--cor-principal) text-white border-(--cor-principal)"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                 }`}
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Filtros</span>
-                {statusFiltro !== 'Todos' && (
+                {statusFiltro !== "Todos" && (
                   <span className="w-2 h-2 rounded-full bg-blue-400 ml-1"></span>
                 )}
               </button>
@@ -297,7 +366,14 @@ export default function PaginaCarteiraProjetos() {
                   <div className="px-3 py-1.5 font-semibold text-slate-400 uppercase tracking-wider text-[10px]">
                     Status da Obra
                   </div>
-                  {['Todos', 'Planejada', 'Ordem Emitida', 'Em Andamento', 'Paralisada', 'Concluído'].map((st) => (
+                  {[
+                    "Todos",
+                    "Planejada",
+                    "Ordem Emitida",
+                    "Em Andamento",
+                    "Paralisada",
+                    "Concluído",
+                  ].map((st) => (
                     <button
                       key={st}
                       type="button"
@@ -307,27 +383,31 @@ export default function PaginaCarteiraProjetos() {
                       }}
                       className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between ${
                         statusFiltro === st
-                          ? 'bg-blue-50 text-blue-800 font-semibold'
-                          : 'text-slate-700 hover:bg-slate-50'
+                          ? "bg-blue-50 text-blue-800 font-semibold"
+                          : "text-slate-700 hover:bg-slate-50"
                       }`}
                     >
                       {st}
-                      {statusFiltro === st && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
+                      {statusFiltro === st && (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                      )}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-
           </div>
-
         </div>
 
         {carregando ? (
-          <div className="py-20 text-center text-sm text-slate-500">Carregando obras...</div>
+          <div className="py-20 text-center text-sm text-slate-500">
+            Carregando obras...
+          </div>
         ) : erro ? (
           <div className="py-20 text-center">
-            <h3 className="text-base font-bold text-slate-800">Não foi possível carregar os projetos</h3>
+            <h3 className="text-base font-bold text-slate-800">
+              Não foi possível carregar os projetos
+            </h3>
             <p className="text-xs text-slate-500 mt-1">{erro}</p>
           </div>
         ) : projetosFiltrados.length === 0 ? (
@@ -335,15 +415,19 @@ export default function PaginaCarteiraProjetos() {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
               <Search className="w-7 h-7" />
             </div>
-            <h3 className="text-base font-bold text-slate-800">Nenhum projeto encontrado</h3>
+            <h3 className="text-base font-bold text-slate-800">
+              Nenhum projeto encontrado
+            </h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              Não encontramos nenhuma obra com o termo pesquisado. Tente alterar o filtro ou limpar o campo de busca.
+              {projetos.length === 0
+                ? "Ainda não há obras cadastradas para exibir."
+                : "Não encontramos nenhuma obra com os filtros atuais. Tente alterar o filtro ou limpar a busca."}
             </p>
             <button
               type="button"
               onClick={() => {
-                setTermoBusca('');
-                setStatusFiltro('Todos');
+                setTermoBusca("");
+                setStatusFiltro("Todos");
               }}
               className="mt-4 px-4 py-1.5 text-xs font-semibold text-(--cor-principal) border border-slate-300 rounded hover:bg-slate-50 transition"
             >
@@ -351,11 +435,19 @@ export default function PaginaCarteiraProjetos() {
             </button>
           </div>
         ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-8">
             {projetosFiltrados.map((obra) => (
               <div
                 key={obra.id}
                 onClick={() => setProjetoSelecionado(obra)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setProjetoSelecionado(obra);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
                 className="group bg-white rounded-lg border border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md hover:border-slate-300 transition-all duration-200 flex flex-col overflow-hidden cursor-pointer"
               >
                 <div className="relative aspect-16/10 w-full bg-slate-100 overflow-hidden">
@@ -369,7 +461,9 @@ export default function PaginaCarteiraProjetos() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">Sem foto cadastrada</div>
+                    <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">
+                      Sem foto cadastrada
+                    </div>
                   )}
                   <div className="absolute top-2.5 left-2.5">
                     {getCategoriaBadge(obra.categoria, obra.categoriaLabel)}
@@ -386,17 +480,19 @@ export default function PaginaCarteiraProjetos() {
                       <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
                         STATUS
                       </span>
-                      <div>
-                        {getStatusBadge(obra.status)}
-                      </div>
+                      <div>{getStatusBadge(obra.status)}</div>
                     </div>
 
                     <div className="mt-4">
                       <div className="flex items-center justify-between text-[11px] mb-1.5">
-                        <span className="text-slate-500 font-medium">Progresso Físico</span>
-                        <span className="font-bold text-slate-900">{obra.progressoFisico}%</span>
+                        <span className="text-slate-500 font-medium">
+                          Progresso Físico
+                        </span>
+                        <span className="font-bold text-slate-900">
+                          {obra.progressoFisico}%
+                        </span>
                       </div>
-                      
+
                       <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-(--cor-principal) rounded-full transition-all duration-500 ease-out"
@@ -414,15 +510,14 @@ export default function PaginaCarteiraProjetos() {
             ))}
           </div>
         )}
-
       </main>
 
       {projetoSelecionado && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
           onClick={() => setProjetoSelecionado(null)}
         >
-          <div 
+          <div
             className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100"
             onClick={(e) => e.stopPropagation()}
           >
@@ -437,16 +532,23 @@ export default function PaginaCarteiraProjetos() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-sm text-slate-400 bg-slate-100">Sem foto cadastrada</div>
+                <div className="w-full h-full flex items-center justify-center text-sm text-slate-400 bg-slate-100">
+                  Sem foto cadastrada
+                </div>
               )}
               <button
+                type="button"
+                aria-label="Fechar detalhes da obra"
                 onClick={() => setProjetoSelecionado(null)}
                 className="absolute top-3 right-3 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition"
               >
                 <X className="w-4 h-4" />
               </button>
               <div className="absolute bottom-3 left-3">
-                {getCategoriaBadge(projetoSelecionado.categoria, projetoSelecionado.categoriaLabel)}
+                {getCategoriaBadge(
+                  projetoSelecionado.categoria,
+                  projetoSelecionado.categoriaLabel,
+                )}
               </div>
             </div>
 
@@ -464,46 +566,55 @@ export default function PaginaCarteiraProjetos() {
 
               <div className="mt-4 space-y-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-medium">Localização:</span>
-                  <span className="font-semibold text-slate-800">{projetoSelecionado.bairro}</span>
+                  <span className="text-slate-400 font-medium">
+                    Localização:
+                  </span>
+                  <span className="font-semibold text-slate-800">
+                    {projetoSelecionado.bairro}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-medium">Investimento Estimado:</span>
-                  <span className="font-bold text-emerald-700">{projetoSelecionado.valorPrevisto}</span>
+                  <span className="text-slate-400 font-medium">
+                    Investimento Estimado:
+                  </span>
+                  <span className="font-bold text-emerald-700">
+                    {projetoSelecionado.valorPrevisto}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 font-medium">Secretaria Responsável:</span>
-                  <span className="text-slate-800">{projetoSelecionado.secretaria}</span>
+                  <span className="text-slate-400 font-medium">
+                    Secretaria Responsável:
+                  </span>
+                  <span className="text-slate-800">
+                    {projetoSelecionado.secretaria}
+                  </span>
                 </div>
               </div>
 
               <div className="mt-5">
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-700">Execução Físico-Financeira</span>
-                  <span className="text-blue-900">{projetoSelecionado.progressoFisico}%</span>
+                  <span className="text-slate-700">
+                    Execução Físico-Financeira
+                  </span>
+                  <span className="text-blue-900">
+                    {projetoSelecionado.progressoFisico}%
+                  </span>
                 </div>
                 <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-(--cor-principal) rounded-full"
                     style={{ width: `${projetoSelecionado.progressoFisico}%` }}
                   />
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end gap-2">
+              <div className="mt-6 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setProjetoSelecionado(null)}
                   className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-md transition"
                 >
                   Fechar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setProjetoSelecionado(null)}
-                  className="px-4 py-2 text-xs font-medium text-white bg-(--cor-principal) hover:bg-(--cor-principal) rounded-md transition shadow-sm"
-                >
-                  Ver Relatório Completo
                 </button>
               </div>
             </div>
@@ -513,13 +624,20 @@ export default function PaginaCarteiraProjetos() {
 
       <footer className="bg-(--cor-header-footer) text-slate-300 py-6 border-t border-(--cor-header-footer) mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-end text-[11px] font-medium space-y-3 sm:space-y-0 sm:space-x-8">
-          <a href="#privacidade" className="hover:text-white transition">Privacidade</a>
-          <a href="#transparencia" className="hover:text-white transition">Transparência</a>
-          <a href="#contato" className="hover:text-white transition">Contato</a>
-          <a href="#acessibilidade" className="hover:text-white transition">Acessibilidade</a>
+          <a href="#privacidade" className="hover:text-white transition">
+            Privacidade
+          </a>
+          <a href="#transparencia" className="hover:text-white transition">
+            Transparência
+          </a>
+          <a href="#contato" className="hover:text-white transition">
+            Contato
+          </a>
+          <a href="#acessibilidade" className="hover:text-white transition">
+            Acessibilidade
+          </a>
         </div>
       </footer>
-
     </div>
   );
 }
