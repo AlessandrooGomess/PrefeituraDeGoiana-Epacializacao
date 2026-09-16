@@ -2,12 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ObraItem } from "@/types/obra";
 import { createObraSchema } from "@/lib/validations/obra";
+import { serializeDate } from "@/lib/serializers/obra";
 
 export const dynamic = "force-dynamic";
-
-function serializeDate(date: Date | null): string | null {
-  return date?.toISOString() ?? null;
-}
 
 export async function GET() {
   try {
@@ -67,16 +64,12 @@ export async function GET() {
       bairro: obra.bairro,
       latitude: obra.latitude,
       longitude: obra.longitude,
-      valorContrato: obra.valorContrato ? Number(obra.valorContrato) : null,
+      valorContrato: obra.valorContrato === null ? null : Number(obra.valorContrato),
       empresaContratada: obra.empresaContratada,
       numeroOrdemServico: obra.numeroOrdemServico,
 
-      dataOrdemServico: obra.dataOrdemServico
-      ? obra.dataOrdemServico.toISOString()
-      : null,
-      previsaoConclusao: obra.previsaoConclusao
-        ? obra.previsaoConclusao.toISOString()
-        : null,
+      dataOrdemServico: serializeDate(obra.dataOrdemServico),
+      previsaoConclusao: serializeDate(obra.previsaoConclusao),
       atualizadoEm: obra.updatedAt.toISOString(),
       imagemUrl: obra.fotos[0]?.url ?? null,
       status: obra.status,

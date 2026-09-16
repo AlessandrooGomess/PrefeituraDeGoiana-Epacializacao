@@ -48,3 +48,33 @@ export interface ObraItem {
 
   percentualExecutado: number | null;
 }
+
+export interface ObraDetalhe extends ObraItem {
+  dataConclusaoReal: string | null;
+  createdAt: string;
+  medicoes: MedicaoResumo[];
+  fotos: FotoResumo[];
+  engenheiro: EngenheiroResumo | null;
+}
+
+export interface MedicaoResumo {
+  id: string;
+  dataVistoria: string;
+  percentualExecutado: number;
+  observacoesTecnicas: string | null;
+  engenheiro: EngenheiroResumo;
+}
+
+export interface FotoResumo {
+  id: string;
+  url: string;
+  tipo: "RENDER_PROJETO" | "ANTES" | "EM_ANDAMENTO" | "CONCLUIDO";
+  descricao: string | null;
+  dataFoto: string;
+}
+
+export interface EngenheiroResumo {
+  id: string;
+  nome: string;
+  cargo: string | null;
+}
