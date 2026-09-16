@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const optionalText = z.string().trim().optional().nullable();
+const optionalUuid = z.uuid().optional().nullable();
 
 const dateInput = z
   .string()
@@ -30,11 +31,11 @@ const obraFields = {
     "EM_ANDAMENTO",
     "PARALISADA",
     "CONCLUIDA",
-  ]).optional(),
-  secretariaId: z.string().trim().min(1, "A secretaria é obrigatória."),
-  eixoId: z.string().trim().optional().nullable(),
-  areaTematicaId: z.string().trim().optional().nullable(),
-  engenheiroId: z.string().trim().optional().nullable(),
+  ]).default("PLANEJADA"),
+  secretariaId: z.uuid("A secretaria deve ter um identificador válido."),
+  eixoId: optionalUuid,
+  areaTematicaId: optionalUuid,
+  engenheiroId: optionalUuid,
 };
 
 export const createObraSchema = z.object(obraFields).strict();

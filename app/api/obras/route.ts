@@ -118,6 +118,52 @@ export async function POST(request: Request) {
     }
 
     const data = result.data;
+    const [secretaria, eixo, areaTematica, engenheiro] = await Promise.all([
+      prisma.secretaria.findUnique({
+        where: { id: data.secretariaId },
+        select: { id: true },
+      }),
+      data.eixoId
+        ? prisma.eixoEstrategico.findUnique({
+            where: { id: data.eixoId },
+            select: { id: true },
+          })
+        : null,
+      data.areaTematicaId
+        ? prisma.areaTematica.findUnique({
+            where: { id: data.areaTematicaId },
+            select: { id: true, eixoId: true },
+          })
+        : null,
+      data.engenheiroId
+        ? prisma.usuario.findUnique({
+            where: { id: data.engenheiroId },
+            select: { id: true, role: true },
+          })
+        : null,
+    ]);
+
+    const missingRelations = [
+      !secretaria && "secretariaId",
+      data.eixoId && !eixo && "eixoId",
+      data.areaTematicaId && !areaTematica && "areaTematicaId",
+      data.engenheiroId && !engenheiro && "engenheiroId",
+      data.engenheiroId && engenheiro && engenheiro.role !== "ENGENHEIRO"
+        && "engenheiroId",
+      data.eixoId && areaTematica && areaTematica.eixoId !== data.eixoId
+        && "areaTematicaId",
+    ].filter((field): field is string => Boolean(field));
+
+    if (missingRelations.length > 0) {
+      return NextResponse.json(
+        {
+          message: "Uma ou mais referências relacionadas são inválidas.",
+          fields: missingRelations,
+        },
+        { status: 400 },
+      );
+    }
+
     const obra = await prisma.obra.create({
       data: {
         titulo: data.titulo,
