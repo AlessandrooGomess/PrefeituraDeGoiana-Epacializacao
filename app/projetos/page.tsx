@@ -331,7 +331,7 @@ export default function PaginaCarteiraProjetos() {
                 type="text"
                 value={termoBusca}
                 onChange={(e) => setTermoBusca(e.target.value)}
-                placeholder="Buscar por nome ou ID..."
+                placeholder="Buscar por nome ou categoria..."
                 className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-md text-xs sm:text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-(--cor-principal) focus:border-transparent transition"
               />
               {termoBusca && (
