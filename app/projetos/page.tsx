@@ -55,7 +55,15 @@ const STATUS_LABEL: Record<StatusObra, ProjetoItem["status"]> = {
 function getCategoria(
   obra: ObraApiItem,
 ): Pick<ProjetoItem, "categoria" | "categoriaLabel"> {
-  const texto = `${obra.titulo} ${obra.secretaria.nome}`.toLowerCase();
+  const texto = `${obra.titulo} ${obra.secretaria.nome} ${obra.areaTematica?.nome ?? ""}`.toLowerCase();
+  if (
+    texto.includes("saude") ||
+    texto.includes("hospital") ||
+    texto.includes("ubs") ||
+    texto.includes("posto")
+  ) {
+    return { categoria: "Saude", categoriaLabel: "Saúde" };
+  }
   if (texto.includes("educa") || texto.includes("escola"))
     return { categoria: "Educacao", categoriaLabel: "Educação" };
   if (
