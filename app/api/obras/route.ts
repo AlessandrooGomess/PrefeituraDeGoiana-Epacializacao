@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ObraItem } from "@/types/obra";
 import { createObraSchema } from "@/lib/validations/obra";
 import { serializeDate } from "@/lib/serializers/obra";
+import { validateObraRelations } from "@/lib/obras/validate-relations";
 
 export const dynamic = "force-dynamic";
 
@@ -118,41 +119,12 @@ export async function POST(request: Request) {
     }
 
     const data = result.data;
-    const [secretaria, eixo, areaTematica, engenheiro] = await Promise.all([
-      prisma.secretaria.findUnique({
-        where: { id: data.secretariaId },
-        select: { id: true },
-      }),
-      data.eixoId
-        ? prisma.eixoEstrategico.findUnique({
-            where: { id: data.eixoId },
-            select: { id: true },
-          })
-        : null,
-      data.areaTematicaId
-        ? prisma.areaTematica.findUnique({
-            where: { id: data.areaTematicaId },
-            select: { id: true, eixoId: true },
-          })
-        : null,
-      data.engenheiroId
-        ? prisma.usuario.findUnique({
-            where: { id: data.engenheiroId },
-            select: { id: true, role: true },
-          })
-        : null,
-    ]);
-
-    const missingRelations = [
-      !secretaria && "secretariaId",
-      data.eixoId && !eixo && "eixoId",
-      data.areaTematicaId && !areaTematica && "areaTematicaId",
-      data.engenheiroId && !engenheiro && "engenheiroId",
-      data.engenheiroId && engenheiro && engenheiro.role !== "ENGENHEIRO"
-        && "engenheiroId",
-      data.eixoId && areaTematica && areaTematica.eixoId !== data.eixoId
-        && "areaTematicaId",
-    ].filter((field): field is string => Boolean(field));
+    const missingRelations = await validateObraRelations({
+      secretariaId: data.secretariaId,
+      eixoId: data.eixoId ?? null,
+      areaTematicaId: data.areaTematicaId ?? null,
+      engenheiroId: data.engenheiroId ?? null,
+    });
 
     if (missingRelations.length > 0) {
       return NextResponse.json(

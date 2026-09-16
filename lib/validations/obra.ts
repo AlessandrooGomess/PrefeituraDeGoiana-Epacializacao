@@ -2,6 +2,13 @@ import { z } from "zod";
 
 const optionalText = z.string().trim().optional().nullable();
 const optionalUuid = z.uuid().optional().nullable();
+const statusInput = z.enum([
+  "PLANEJADA",
+  "ORDEM_EMITIDA",
+  "EM_ANDAMENTO",
+  "PARALISADA",
+  "CONCLUIDA",
+]);
 
 const dateInput = z
   .string()
@@ -25,13 +32,7 @@ const obraFields = {
   dataOrdemServico: dateInput,
   previsaoConclusao: dateInput,
   dataConclusaoReal: dateInput,
-  status: z.enum([
-    "PLANEJADA",
-    "ORDEM_EMITIDA",
-    "EM_ANDAMENTO",
-    "PARALISADA",
-    "CONCLUIDA",
-  ]).default("PLANEJADA"),
+  status: statusInput.default("PLANEJADA"),
   secretariaId: z.uuid("A secretaria deve ter um identificador válido."),
   eixoId: optionalUuid,
   areaTematicaId: optionalUuid,
@@ -40,7 +41,12 @@ const obraFields = {
 
 export const createObraSchema = z.object(obraFields).strict();
 
-export const updateObraSchema = createObraSchema.partial().strict();
+export const updateObraSchema = z.object({
+  ...obraFields,
+  status: statusInput.optional(),
+}).partial().strict().refine((data) => Object.keys(data).length > 0, {
+  message: "Informe ao menos um campo para atualizar.",
+});
 
 export type CreateObraInput = z.infer<typeof createObraSchema>;
 export type UpdateObraInput = z.infer<typeof updateObraSchema>;
