@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import type { ObraItem as ObraApiItem, StatusObra } from "@/types/obra";
 import {
   Search,
@@ -276,6 +276,7 @@ export default function PaginaCarteiraProjetos() {
               >
                 Projetos
               </Link>
+
               <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white rounded-t-full" />
             </div>
 
