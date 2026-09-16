@@ -14,6 +14,7 @@ import {
   Route,
   CheckCircle2,
   Layers,
+  Building2,
   X,
 } from "lucide-react";
 
@@ -24,6 +25,7 @@ interface ProjetoItem {
   categoria:
     | "Saude"
     | "Mobilidade"
+    | "Infraestrutura"
     | "Educacao"
     | "MeioAmbiente"
     | "Energia"
@@ -81,7 +83,7 @@ function getCategoria(
     texto.includes("paviment")
   )
     return { categoria: "Rodovias", categoriaLabel: "Rodovias" };
-  return { categoria: "Mobilidade", categoriaLabel: "Mobilidade" };
+  return { categoria: "Infraestrutura", categoriaLabel: "Infraestrutura" };
 }
 
 function mapearObra(obra: ObraApiItem): ProjetoItem {
@@ -122,6 +124,13 @@ function getCategoriaBadge(categoria: ProjetoItem["categoria"], label: string) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-[#2563eb] shadow-sm">
           <Route className="w-3 h-3" />
+          {label}
+        </span>
+      );
+    case "Infraestrutura":
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-white bg-[#475569] shadow-sm">
+          <Building2 className="w-3 h-3" />
           {label}
         </span>
       );
@@ -242,6 +251,17 @@ export default function PaginaCarteiraProjetos() {
       montado = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!projetoSelecionado) return;
+
+    const fecharComEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setProjetoSelecionado(null);
+    };
+
+    document.addEventListener("keydown", fecharComEscape);
+    return () => document.removeEventListener("keydown", fecharComEscape);
+  }, [projetoSelecionado]);
 
   const projetosFiltrados = useMemo(() => {
     return projetos.filter((item) => {
@@ -399,8 +419,9 @@ export default function PaginaCarteiraProjetos() {
               Nenhum projeto encontrado
             </h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              Não encontramos nenhuma obra com o termo pesquisado. Tente alterar
-              o filtro ou limpar o campo de busca.
+              {projetos.length === 0
+                ? "Ainda não há obras cadastradas para exibir."
+                : "Não encontramos nenhuma obra com os filtros atuais. Tente alterar o filtro ou limpar a busca."}
             </p>
             <button
               type="button"
@@ -419,6 +440,14 @@ export default function PaginaCarteiraProjetos() {
               <div
                 key={obra.id}
                 onClick={() => setProjetoSelecionado(obra)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setProjetoSelecionado(obra);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
                 className="group bg-white rounded-lg border border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-md hover:border-slate-300 transition-all duration-200 flex flex-col overflow-hidden cursor-pointer"
               >
                 <div className="relative aspect-16/10 w-full bg-slate-100 overflow-hidden">
@@ -508,6 +537,8 @@ export default function PaginaCarteiraProjetos() {
                 </div>
               )}
               <button
+                type="button"
+                aria-label="Fechar detalhes da obra"
                 onClick={() => setProjetoSelecionado(null)}
                 className="absolute top-3 right-3 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition"
               >
@@ -577,20 +608,13 @@ export default function PaginaCarteiraProjetos() {
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end gap-2">
+              <div className="mt-6 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setProjetoSelecionado(null)}
                   className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-md transition"
                 >
                   Fechar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setProjetoSelecionado(null)}
-                  className="px-4 py-2 text-xs font-medium text-white bg-(--cor-principal) hover:bg-(--cor-principal) rounded-md transition shadow-sm"
-                >
-                  Ver Relatório Completo
                 </button>
               </div>
             </div>
