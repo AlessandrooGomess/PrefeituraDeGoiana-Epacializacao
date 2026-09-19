@@ -1,5 +1,6 @@
 .portal-shell {
   min-height: 100vh;
+  padding-top: 58px;
   display: flex;
   flex-direction: column;
   background: #f4f7fb;
@@ -257,6 +258,7 @@
 }
 
 @media (max-width: 720px) {
+  .portal-shell { padding-top: 56px; }
   .portal-shell {
     height: 100dvh;
     min-height: 0;

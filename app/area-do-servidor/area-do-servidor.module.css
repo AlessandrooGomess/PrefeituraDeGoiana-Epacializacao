@@ -1,5 +1,6 @@
 .shell {
   min-height: 100vh;
+  padding-top: 58px;
   background: #f7f9fc;
   color: #182437;
   font-size: 13px;
@@ -179,6 +180,7 @@
 }
 
 @media (max-width: 680px) {
+  .shell { padding-top: 56px; }
   .header { min-height: 56px; gap: 9px; }
   .logoMark { width: 50px; height: 34px; font-size: 12px; }
   .brand { font-size: 13px; }

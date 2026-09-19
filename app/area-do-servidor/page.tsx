@@ -4,21 +4,18 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import {
   BarChart3,
-  Bell,
   Building2,
   ClipboardList,
   FileText,
   Gavel,
   HelpCircle,
   LayoutDashboard,
-  Menu,
   Save,
   Send,
   Settings,
-  ShieldCheck,
   Upload,
-  X,
 } from "lucide-react";
+import Sidebar from "@/components/sidebar/Sidebar";
 import styles from "./area-do-servidor.module.css";
 
 type FormState = {
@@ -88,7 +85,6 @@ function Field({
 
 export default function AreaDoServidor() {
   const [form, setForm] = useState(initialForm);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "saved" | "error" | "sending">("idle");
   const [message, setMessage] = useState("");
 
@@ -135,25 +131,10 @@ export default function AreaDoServidor() {
 
   return (
     <div className={styles.shell}>
-      <header className={styles.header}>
-        <div className={styles.logoMark} aria-label="Prefeitura de Goiana">GOIANA</div>
-        <Link className={styles.brand} href="/">Portal de Infraestrutura</Link>
-        <nav className={styles.topNav}>
-          <Link href="/">Mapa</Link>
-          <Link href="/projetos">Projetos</Link>
-          <Link className={styles.topActive} href="/area-do-servidor">Área do Servidor</Link>
-        </nav>
-        <div className={styles.userSummary}>
-          <span>Carla Mendes</span>
-          <small>Secretária Municipal</small>
-        </div>
-        <button className={styles.menuButton} type="button" aria-label="Abrir menu" onClick={() => setMenuOpen((open) => !open)}>
-          {menuOpen ? <X size={19} /> : <Menu size={19} />}
-        </button>
-      </header>
+      <Sidebar />
 
       <div className={styles.body}>
-        <aside className={`${styles.sidebar} ${menuOpen ? styles.sidebarOpen : ""}`}>
+        <aside className={styles.sidebar}>
           <div className={styles.profile}>
             <div className={styles.profileIcon}><Building2 size={21} /></div>
             <div><strong>Gestão Pública</strong><small>Sec. de Infraestrutura</small></div>
@@ -243,7 +224,6 @@ export default function AreaDoServidor() {
       </div>
 
       <footer className={styles.footer}><span>Portal de Infraestrutura · Prefeitura de Goiana</span><div><Link href="#privacidade">Privacidade</Link><Link href="#suporte">Suporte</Link><Link href="#acessibilidade">Acessibilidade</Link></div></footer>
-      <div className={styles.accessibility}><Bell size={14} /><span>Ambiente administrativo</span><ShieldCheck size={14} /></div>
     </div>
   );
 }
