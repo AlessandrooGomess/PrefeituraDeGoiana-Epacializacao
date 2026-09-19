@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Sidebar from "@/components/sidebar/Sidebar";
 import styles from "./portal.module.css";
 import type { ObraItem, StatusObra } from "@/types/obra";
 import WorkCard from "@/components/map/WorkCard";
@@ -48,7 +49,6 @@ export default function Home() {
   const [selected, setSelected] = useState<ObraItem | null>(null);
   const [nearMeRequest, setNearMeRequest] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -90,8 +90,6 @@ export default function Home() {
   const toggle = <T,>(value: T, values: T[], setter: (next: T[]) => void) =>
     setter(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
 
-  const closeMenu = () => setMenuOpen(false);
-
   useEffect(() => {
     if (!filtersOpen) return;
 
@@ -108,39 +106,7 @@ export default function Home() {
 
   return (
     <div className={styles["portal-shell"]}>
-      <header className={styles["portal-header"]}>
-        <div className={styles["portal-logo-slot"]} aria-label="Espaço reservado para a logo da Prefeitura de Goiana" />
-        <div className={styles["portal-brand"]}>PORTAL DE INFRAESTRUTURA</div>
-
-        <button
-          className={styles["menu-toggle"]}
-          type="button"
-          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
-          aria-expanded={menuOpen}
-          aria-controls="main-navigation"
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          <Image src="/icons/menu.svg" alt="" width={22} height={19} />
-        </button>
-
-        <nav id="main-navigation" className={menuOpen ? styles["is-open"] : ""}>
-          <a className={styles.active} href="#mapa" onClick={closeMenu}>Mapa</a>
-          <a href="/projetos" onClick={closeMenu}>Projetos</a>
-          <a href="/area-do-servidor" onClick={closeMenu}>Área do Servidor</a>
-        </nav>
-
-        <div className={styles["portal-tools"]}>
-          <label className={styles.search}>
-            <Image src="/icons/lupa.svg" alt="" width={16} height={16} />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar projeto..."
-              aria-label="Buscar projeto"
-            />
-          </label>
-        </div>
-      </header>
+      <Sidebar />
 
       <main id="mapa" className={styles["portal-content"]}>
         <aside
