@@ -117,6 +117,7 @@ async function main() {
       sigla: "SEINFRA",
       corIdentificacao: "#2563EB",
       eixoId: eixoSocial.id,
+      areaTematicaId: areaInfra.id,
     },
   });
 
@@ -126,6 +127,7 @@ async function main() {
       sigla: "SEDUC",
       corIdentificacao: "#EAB308",
       eixoId: eixoSocial.id,
+      areaTematicaId: areaEducacao.id,
     },
   });
 
