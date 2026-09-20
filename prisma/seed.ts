@@ -153,10 +153,9 @@ async function main() {
         eixoId: eixoSocial.id,
       },
       { nome: "Mulher", sigla: "SEMUL", eixoId: eixoSocial.id },
-      { nome: "Segurança Cidadã", sigla: "SSC", eixoId: eixoSocial.id },
       {
-        nome: "Trânsito e Transportes Urbanos",
-        sigla: "STTU",
+        nome: "Segurança Cidadã, Trânsito e Transportes Urbanos",
+        sigla: "SESTRAN",
         eixoId: eixoSocial.id,
       },
       {
