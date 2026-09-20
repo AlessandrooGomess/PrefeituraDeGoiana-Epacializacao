@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   obraFindMany: vi.fn(),
   obraCount: vi.fn(),
+  requireUser: vi.fn(),
+  canAccessSecretaria: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -14,11 +16,24 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/auth/authorization", () => ({
+  requireUser: mocks.requireUser,
+  canAccessSecretaria: mocks.canAccessSecretaria,
+}));
+
 import { GET } from "./route";
 
 describe("GET /api/obras", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.requireUser.mockResolvedValue({
+      user: {
+        id: "usuario-1",
+        role: "GESTAO",
+        secretariaId: null,
+      },
+    });
+    mocks.canAccessSecretaria.mockReturnValue(true);
   });
 
   it("aplica filtro por status", async () => {
@@ -157,5 +172,47 @@ describe("GET /api/obras", () => {
 
     expect(mocks.obraFindMany).toHaveBeenCalledOnce();
     expect(mocks.obraCount).not.toHaveBeenCalled();
+  });
+
+  it("retorna 401 ao criar obra sem autenticação", async () => {
+    mocks.requireUser.mockResolvedValue({
+      response: new Response(
+        JSON.stringify({ message: "Autenticação necessária." }),
+        { status: 401 },
+      ),
+    });
+
+    const { POST } = await import("./route");
+    const response = await POST(
+      new Request("http://localhost/api/obras", {
+        method: "POST",
+        body: "{}",
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(mocks.obraFindMany).not.toHaveBeenCalled();
+  });
+
+  it("retorna 403 quando a secretaria não pertence ao usuário", async () => {
+    mocks.canAccessSecretaria.mockReturnValue(false);
+
+    const { POST } = await import("./route");
+    const response = await POST(
+      new Request("http://localhost/api/obras", {
+        method: "POST",
+        body: JSON.stringify({
+          titulo: "Obra de teste",
+          endereco: "Rua Central",
+          bairro: "Centro",
+          latitude: -7.55,
+          longitude: -35,
+          secretariaId: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.canAccessSecretaria).toHaveBeenCalledOnce();
   });
 });

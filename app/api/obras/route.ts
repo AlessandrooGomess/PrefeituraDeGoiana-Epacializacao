@@ -1,6 +1,8 @@
 import { Prisma } from "@prisma/client";
+import { Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
 import { ObraItem } from "@/types/obra";
 import { createObraSchema, listObrasQuerySchema } from "@/lib/validations/obra";
 import { serializeDate } from "@/lib/serializers/obra";
@@ -189,6 +191,16 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const authorization = await requireUser([
+    Role.SUPER_ADMIN,
+    Role.GESTAO,
+    Role.ADM_SECRETARIA,
+  ]);
+
+  if (authorization.response) {
+    return authorization.response;
+  }
+
   try {
     let body: unknown;
 
@@ -214,6 +226,14 @@ export async function POST(request: Request) {
     }
 
     const data = result.data;
+
+    if (!canAccessSecretaria(authorization.user, data.secretariaId)) {
+      return NextResponse.json(
+        { message: "Você não tem permissão para esta secretaria." },
+        { status: 403 },
+      );
+    }
+
     const missingRelations = await validateObraRelations({
       secretariaId: data.secretariaId,
       eixoId: data.eixoId ?? null,
