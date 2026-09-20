@@ -210,7 +210,7 @@ async function main() {
       },
       {
         nome: "Fazenda Municipal",
-        sigla: "SFM",
+        sigla: "SEFAZ",
         eixoId: eixoModernizacao.id,
       },
       {
