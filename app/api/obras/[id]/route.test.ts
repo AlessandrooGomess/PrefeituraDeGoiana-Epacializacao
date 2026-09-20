@@ -34,4 +34,26 @@ describe("GET /api/obras/[id]", () => {
 
     expect(mocks.obraFindUnique).not.toHaveBeenCalled();
   });
+
+  it("retorna 404 quando a obra não existe", async () => {
+    mocks.obraFindUnique.mockResolvedValue(null);
+
+    const response = await GET(
+      new Request(
+        "http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000",
+      ),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      message: "Obra não encontrada.",
+    });
+
+    expect(mocks.obraFindUnique).toHaveBeenCalledOnce();
+  });
 });
