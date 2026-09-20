@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   obraFindUnique: vi.fn(),
   usuarioFindUnique: vi.fn(),
   medicaoCreate: vi.fn(),
+  requireUser: vi.fn(),
+  canAccessSecretaria: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -18,6 +20,11 @@ vi.mock("@/lib/prisma", () => ({
       create: mocks.medicaoCreate,
     },
   },
+}));
+
+vi.mock("@/lib/auth/authorization", () => ({
+  requireUser: mocks.requireUser,
+  canAccessSecretaria: mocks.canAccessSecretaria,
 }));
 
 import { POST } from "./route";
@@ -35,6 +42,14 @@ function request(body: unknown) {
 describe("POST /api/obras/[id]/medicoes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.requireUser.mockResolvedValue({
+      user: {
+        id: engenheiroId,
+        role: "ENGENHEIRO",
+        secretariaId: "secretaria-1",
+      },
+    });
+    mocks.canAccessSecretaria.mockReturnValue(true);
   });
 
   it("rejeita identificador de obra inválido", async () => {
@@ -67,7 +82,10 @@ describe("POST /api/obras/[id]/medicoes", () => {
   });
 
   it("cria uma medição para engenheiro ativo", async () => {
-    mocks.obraFindUnique.mockResolvedValue({ id: obraId });
+    mocks.obraFindUnique.mockResolvedValue({
+      id: obraId,
+      secretariaId: "secretaria-1",
+    });
     mocks.usuarioFindUnique.mockResolvedValue({
       id: engenheiroId,
       role: "ENGENHEIRO",
@@ -104,5 +122,56 @@ describe("POST /api/obras/[id]/medicoes", () => {
       createdAt: "2026-02-10T00:00:00.000Z",
     });
     expect(mocks.medicaoCreate).toHaveBeenCalledOnce();
+  });
+
+  it("retorna 401 sem autenticação", async () => {
+    mocks.requireUser.mockResolvedValue({
+      response: new Response(
+        JSON.stringify({ message: "Autenticação necessária." }),
+        { status: 401 },
+      ),
+    });
+
+    const response = await POST(
+      request({ percentualExecutado: 40, engenheiroId }),
+      { params: Promise.resolve({ id: obraId }) },
+    );
+
+    expect(response.status).toBe(401);
+    expect(mocks.obraFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("retorna 403 quando o engenheiro tenta registrar em outra secretaria", async () => {
+    mocks.obraFindUnique.mockResolvedValue({
+      id: obraId,
+      secretariaId: "secretaria-2",
+    });
+    mocks.canAccessSecretaria.mockReturnValue(false);
+
+    const response = await POST(
+      request({ percentualExecutado: 40, engenheiroId }),
+      { params: Promise.resolve({ id: obraId }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.medicaoCreate).not.toHaveBeenCalled();
+  });
+
+  it("retorna 403 quando o engenheiro informado não é o autenticado", async () => {
+    mocks.obraFindUnique.mockResolvedValue({
+      id: obraId,
+      secretariaId: "secretaria-1",
+    });
+
+    const response = await POST(
+      request({
+        percentualExecutado: 40,
+        engenheiroId: "770e8400-e29b-41d4-a716-446655440000",
+      }),
+      { params: Promise.resolve({ id: obraId }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.medicaoCreate).not.toHaveBeenCalled();
   });
 });

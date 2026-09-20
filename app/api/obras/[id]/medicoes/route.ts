@@ -1,7 +1,8 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
 import { serializeDate } from "@/lib/serializers/obra";
 import { createMedicaoSchema } from "@/lib/validations/medicao";
 
@@ -17,6 +18,12 @@ export async function POST(request: Request, context: RouteContext) {
       { message: "O identificador da obra é inválido." },
       { status: 400 },
     );
+  }
+
+  const authorization = await requireUser([Role.ENGENHEIRO]);
+
+  if (authorization.response) {
+    return authorization.response;
   }
 
   let body: unknown;
@@ -45,13 +52,27 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const obra = await prisma.obra.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, secretariaId: true },
     });
 
     if (!obra) {
       return NextResponse.json(
         { message: "Obra não encontrada." },
         { status: 404 },
+      );
+    }
+
+    if (!canAccessSecretaria(authorization.user, obra.secretariaId)) {
+      return NextResponse.json(
+        { message: "Você não tem permissão para registrar medição nesta obra." },
+        { status: 403 },
+      );
+    }
+
+    if (result.data.engenheiroId !== authorization.user.id) {
+      return NextResponse.json(
+        { message: "A medição deve ser registrada pelo engenheiro autenticado." },
+        { status: 403 },
       );
     }
 
