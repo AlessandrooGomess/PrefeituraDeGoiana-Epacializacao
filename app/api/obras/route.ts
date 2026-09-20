@@ -41,6 +41,45 @@ const page = query.page ?? 1;
 const pageSize = query.pageSize ?? 20;
 
   try {
+    const where: Prisma.ObraWhereInput = {
+  ...(query.status ? { status: query.status } : {}),
+  ...(query.secretariaId ? { secretariaId: query.secretariaId } : {}),
+  ...(query.eixoId ? { eixoId: query.eixoId } : {}),
+  ...(query.areaTematicaId
+    ? { areaTematicaId: query.areaTematicaId }
+    : {}),
+  ...(query.search
+    ? {
+        OR: [
+          {
+            titulo: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            endereco: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            bairro: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            empresaContratada: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
+        ],
+      }
+    : {}),
+};
+
     const obrasDb = await prisma.obra.findMany({
       include: {
         secretaria: {
