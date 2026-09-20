@@ -223,10 +223,10 @@ async function main() {
         sigla: "SLCP",
         eixoId: eixoModernizacao.id,
       },
-      { nome: "Ouvidoria", sigla: "OUV", eixoId: eixoModernizacao.id },
+      { nome: "Ouvidoria", sigla: "OGM", eixoId: eixoModernizacao.id },
       { nome: "Goiana Previ", sigla: "GP", eixoId: eixoModernizacao.id },
-      { nome: "Controladoria", sigla: "CGM", eixoId: eixoModernizacao.id },
-      { nome: "Comunicação", sigla: "ASCOM", eixoId: eixoModernizacao.id },
+      { nome: "Controladoria", sigla: "CCI", eixoId: eixoModernizacao.id },
+      { nome: "Comunicação", sigla: "SECOM", eixoId: eixoModernizacao.id },
       { nome: "Procuradoria", sigla: "PGM", eixoId: eixoModernizacao.id },
     ],
   });
