@@ -1,8 +1,9 @@
- import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   obraFindUnique: vi.fn(),
   obraUpdate: vi.fn(),
+  obraDelete: vi.fn(),
   validateObraRelations: vi.fn(),
   requireUser: vi.fn(),
   canAccessSecretaria: vi.fn(),
@@ -13,6 +14,7 @@ vi.mock("@/lib/prisma", () => ({
     obra: {
       findUnique: mocks.obraFindUnique,
       update: mocks.obraUpdate,
+      delete: mocks.obraDelete,
     },
   },
 }));
@@ -26,7 +28,7 @@ vi.mock("@/lib/auth/authorization", () => ({
   canAccessSecretaria: mocks.canAccessSecretaria,
 }));
 
-import { GET, PATCH } from "./route";
+import { DELETE, GET, PATCH } from "./route";
 
 describe("GET /api/obras/[id]", () => {
   beforeEach(() => {
@@ -225,30 +227,6 @@ describe("PATCH /api/obras/[id]", () => {
     expect(mocks.obraUpdate).not.toHaveBeenCalled();
   });
 
-  it("retorna 401 sem autenticação", async () => {
-    mocks.requireUser.mockResolvedValue({
-      response: new Response(
-        JSON.stringify({ message: "Autenticação necessária." }),
-        { status: 401 },
-      ),
-    });
-
-    const response = await PATCH(
-      new Request("http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000", {
-        method: "PATCH",
-        body: JSON.stringify({ titulo: "Novo título" }),
-      }),
-      {
-        params: Promise.resolve({
-          id: "550e8400-e29b-41d4-a716-446655440000",
-        }),
-      },
-    );
-
-    expect(response.status).toBe(401);
-    expect(mocks.obraFindUnique).not.toHaveBeenCalled();
-  });
-
   it("retorna 400 quando o corpo não contém JSON válido", async () => {
     const response = await PATCH(
       new Request(
@@ -327,31 +305,6 @@ describe("PATCH /api/obras/[id]", () => {
     });
 
     expect(mocks.obraFindUnique).toHaveBeenCalledOnce();
-    expect(mocks.obraUpdate).not.toHaveBeenCalled();
-  });
-
-  it("retorna 403 quando o usuário não acessa a secretaria da obra", async () => {
-    mocks.obraFindUnique.mockResolvedValue({
-      secretariaId: "secretaria-obra",
-      eixoId: null,
-      areaTematicaId: null,
-      engenheiroId: null,
-    });
-    mocks.canAccessSecretaria.mockReturnValue(false);
-
-    const response = await PATCH(
-      new Request("http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000", {
-        method: "PATCH",
-        body: JSON.stringify({ titulo: "Novo título" }),
-      }),
-      {
-        params: Promise.resolve({
-          id: "550e8400-e29b-41d4-a716-446655440000",
-        }),
-      },
-    );
-
-    expect(response.status).toBe(403);
     expect(mocks.obraUpdate).not.toHaveBeenCalled();
   });
 
@@ -523,5 +476,98 @@ describe("PATCH /api/obras/[id]", () => {
       }),
     );
     expect(mocks.obraUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("DELETE /api/obras/[id]", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.requireUser.mockResolvedValue({
+      user: {
+        id: "usuario-1",
+        role: "GESTAO",
+        secretariaId: null,
+      },
+    });
+    mocks.canAccessSecretaria.mockReturnValue(true);
+  });
+
+  it("retorna 401 sem autenticação", async () => {
+    mocks.requireUser.mockResolvedValue({
+      response: new Response(
+        JSON.stringify({ message: "Autenticação necessária." }),
+        { status: 401 },
+      ),
+    });
+
+    const response = await DELETE(
+      new Request("http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000"),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(401);
+    expect(mocks.obraDelete).not.toHaveBeenCalled();
+  });
+
+  it("retorna 404 quando a obra não existe", async () => {
+    mocks.obraFindUnique.mockResolvedValue(null);
+
+    const response = await DELETE(
+      new Request("http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000"),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(404);
+    expect(mocks.obraDelete).not.toHaveBeenCalled();
+  });
+
+  it("retorna 403 para papel que não pode excluir", async () => {
+    mocks.requireUser.mockResolvedValue({
+      response: new Response(
+        JSON.stringify({ message: "Você não tem permissão para executar esta ação." }),
+        { status: 403 },
+      ),
+    });
+
+    const response = await DELETE(
+      new Request("http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000"),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.obraDelete).not.toHaveBeenCalled();
+  });
+
+  it("exclui uma obra autorizada", async () => {
+    mocks.obraFindUnique.mockResolvedValue({
+      secretariaId: "secretaria-1",
+    });
+    mocks.obraDelete.mockResolvedValue({ id: "obra-1" });
+
+    const response = await DELETE(
+      new Request("http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000"),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(204);
+    expect(mocks.obraDelete).toHaveBeenCalledWith({
+      where: { id: "550e8400-e29b-41d4-a716-446655440000" },
+    });
   });
 });

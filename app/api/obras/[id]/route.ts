@@ -348,3 +348,62 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 }
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  const { id } = await context.params;
+
+  if (!z.uuid().safeParse(id).success) {
+    return NextResponse.json(
+      { message: "O identificador da obra é inválido." },
+      { status: 400 },
+    );
+  }
+
+  const authorization = await requireUser([Role.SUPER_ADMIN, Role.GESTAO]);
+
+  if (authorization.response) {
+    return authorization.response;
+  }
+
+  try {
+    const obra = await prisma.obra.findUnique({
+      where: { id },
+      select: { secretariaId: true },
+    });
+
+    if (!obra) {
+      return NextResponse.json(
+        { message: "Obra não encontrada." },
+        { status: 404 },
+      );
+    }
+
+    if (!canAccessSecretaria(authorization.user, obra.secretariaId)) {
+      return NextResponse.json(
+        { message: "Você não tem permissão para esta secretaria." },
+        { status: 403 },
+      );
+    }
+
+    await prisma.obra.delete({ where: { id } });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    console.error("Erro ao excluir obra:", error);
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { message: "Obra não encontrada para exclusão." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Erro interno ao excluir obra." },
+      { status: 500 },
+    );
+  }
+}
