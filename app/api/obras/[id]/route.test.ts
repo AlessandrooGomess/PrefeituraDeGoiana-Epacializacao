@@ -155,4 +155,24 @@ describe("GET /api/obras/[id]", () => {
     expect(body.fotos).toHaveLength(1);
     expect(mocks.obraFindUnique).toHaveBeenCalledOnce();
   });
+
+  it("retorna 500 quando ocorre erro ao buscar a obra", async () => {
+    mocks.obraFindUnique.mockRejectedValue(new Error("Erro de conexão"));
+
+    const response = await GET(
+      new Request(
+        "http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000",
+      ),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      message: "Erro interno ao carregar a obra.",
+    });
+  });
 });
