@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   obraFindMany: vi.fn(),
@@ -17,6 +17,60 @@ vi.mock("@/lib/prisma", () => ({
 import { GET } from "./route";
 
 describe("GET /api/obras", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("aplica filtro por status", async () => {
+    mocks.obraFindMany.mockResolvedValue([]);
+
+    const response = await GET(
+      new Request("http://localhost/api/obras?status=EM_ANDAMENTO"),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual([]);
+
+    expect(mocks.obraFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          status: "EM_ANDAMENTO",
+        },
+      }),
+    );
+  });
+
+  it("retorna obras paginadas com metadados", async () => {
+    mocks.obraFindMany.mockResolvedValue([]);
+    mocks.obraCount.mockResolvedValue(21);
+
+    const response = await GET(
+      new Request("http://localhost/api/obras?page=2&pageSize=10"),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      items: [],
+      pagination: {
+        page: 2,
+        pageSize: 10,
+        total: 21,
+        totalPages: 3,
+      },
+    });
+
+    expect(mocks.obraFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: 10,
+        take: 10,
+      }),
+    );
+
+    expect(mocks.obraCount).toHaveBeenCalledWith({
+      where: {},
+    });
+  });
+
   it("retorna a lista de obras sem paginação", async () => {
     mocks.obraFindMany.mockResolvedValue([
       {
@@ -47,9 +101,7 @@ describe("GET /api/obras", () => {
       },
     ]);
 
-    const response = await GET(
-      new Request("http://localhost/api/obras"),
-    );
+    const response = await GET(new Request("http://localhost/api/obras"));
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual([
