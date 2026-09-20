@@ -10,6 +10,13 @@ const statusInput = z.enum([
   "CONCLUIDA",
 ]);
 
+const GOIANA_BOUNDS = {
+  latMin: -7.80,
+  latMax: -7.40,
+  lngMin: -35.25,
+  lngMax: -35.80,
+}
+
 const dateInput = z
   .string()
   .trim()
