@@ -2,13 +2,9 @@ import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ObraItem } from "@/types/obra";
-import {
-  createObraSchema,
-  listObrasQuerySchema,
-} from "@/lib/validations/obra";
+import { createObraSchema, listObrasQuerySchema } from "@/lib/validations/obra";
 import { serializeDate } from "@/lib/serializers/obra";
 import { validateObraRelations } from "@/lib/obras/validate-relations";
-
 
 export const dynamic = "force-dynamic";
 
@@ -16,71 +12,70 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
 
   const queryResult = listObrasQuerySchema.safeParse({
-  page: url.searchParams.get("page") ?? undefined,
-  pageSize: url.searchParams.get("pageSize") ?? undefined,
-  status: url.searchParams.get("status") ?? undefined,
-  secretariaId: url.searchParams.get("secretariaId") ?? undefined,
-  eixoId: url.searchParams.get("eixoId") ?? undefined,
-  areaTematicaId: url.searchParams.get("areaTematicaId") ?? undefined,
-  search: url.searchParams.get("search") ?? undefined,
-});
+    page: url.searchParams.get("page") ?? undefined,
+    pageSize: url.searchParams.get("pageSize") ?? undefined,
+    status: url.searchParams.get("status") ?? undefined,
+    secretariaId: url.searchParams.get("secretariaId") ?? undefined,
+    eixoId: url.searchParams.get("eixoId") ?? undefined,
+    areaTematicaId: url.searchParams.get("areaTematicaId") ?? undefined,
+    search: url.searchParams.get("search") ?? undefined,
+  });
 
-if (!queryResult.success) {
-  return NextResponse.json(
-    {
-      message: "Os parâmetros da consulta são inválidos.",
-      errors: queryResult.error.issues,
-    },
-    { status: 400 },
-  );
-}
+  if (!queryResult.success) {
+    return NextResponse.json(
+      {
+        message: "Os parâmetros da consulta são inválidos.",
+        errors: queryResult.error.issues,
+      },
+      { status: 400 },
+    );
+  }
 
-const query = queryResult.data;
-const paginada = query.page !== undefined || query.pageSize !== undefined;
-const page = query.page ?? 1;
-const pageSize = query.pageSize ?? 20;
+  const query = queryResult.data;
+  const paginada = query.page !== undefined || query.pageSize !== undefined;
+  const page = query.page ?? 1;
+  const pageSize = query.pageSize ?? 20;
 
   try {
     const where: Prisma.ObraWhereInput = {
-  ...(query.status ? { status: query.status } : {}),
-  ...(query.secretariaId ? { secretariaId: query.secretariaId } : {}),
-  ...(query.eixoId ? { eixoId: query.eixoId } : {}),
-  ...(query.areaTematicaId
-    ? { areaTematicaId: query.areaTematicaId }
-    : {}),
-  ...(query.search
-    ? {
-        OR: [
-          {
-            titulo: {
-              contains: query.search,
-              mode: "insensitive",
-            },
-          },
-          {
-            endereco: {
-              contains: query.search,
-              mode: "insensitive",
-            },
-          },
-          {
-            bairro: {
-              contains: query.search,
-              mode: "insensitive",
-            },
-          },
-          {
-            empresaContratada: {
-              contains: query.search,
-              mode: "insensitive",
-            },
-          },
-        ],
-      }
-    : {}),
-};
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.secretariaId ? { secretariaId: query.secretariaId } : {}),
+      ...(query.eixoId ? { eixoId: query.eixoId } : {}),
+      ...(query.areaTematicaId ? { areaTematicaId: query.areaTematicaId } : {}),
+      ...(query.search
+        ? {
+            OR: [
+              {
+                titulo: {
+                  contains: query.search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                endereco: {
+                  contains: query.search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                bairro: {
+                  contains: query.search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                empresaContratada: {
+                  contains: query.search,
+                  mode: "insensitive",
+                },
+              },
+            ],
+          }
+        : {}),
+    };
 
     const obrasDb = await prisma.obra.findMany({
+      where,
       include: {
         secretaria: {
           select: {
@@ -123,9 +118,20 @@ const pageSize = query.pageSize ?? 20;
           },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [
+        {
+          createdAt: "desc",
+        },
+        {
+          id: "desc",
+        },
+      ],
+      ...(paginada
+        ? {
+            skip: (page - 1) * pageSize,
+            take: pageSize,
+          }
+        : {}),
     });
 
     const obras: ObraItem[] = obrasDb.map((obra) => ({
@@ -136,7 +142,8 @@ const pageSize = query.pageSize ?? 20;
       bairro: obra.bairro,
       latitude: obra.latitude,
       longitude: obra.longitude,
-      valorContrato: obra.valorContrato === null ? null : Number(obra.valorContrato),
+      valorContrato:
+        obra.valorContrato === null ? null : Number(obra.valorContrato),
       empresaContratada: obra.empresaContratada,
       numeroOrdemServico: obra.numeroOrdemServico,
 
@@ -150,8 +157,8 @@ const pageSize = query.pageSize ?? 20;
       areaTematica: obra.areaTematica,
 
       percentualExecutado: obra.medicoes[0]
-      ? Number(obra.medicoes[0].percentualExecutado)
-      : null,
+        ? Number(obra.medicoes[0].percentualExecutado)
+        : null,
     }));
 
     return NextResponse.json(obras, { status: 200 });
@@ -159,7 +166,7 @@ const pageSize = query.pageSize ?? 20;
     console.error("Erro ao buscar obras:", error);
     return NextResponse.json(
       { message: "Erro interno ao carregar listagem de obras." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
