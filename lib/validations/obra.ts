@@ -78,6 +78,13 @@ const obraFields = {
   .max(255, "A razão social da empresa contratada não pode ultrapassar 255 caracteres.")
   .optional()
   .nullable(),
+
+  numeroOrdemServico: z
+  .string()
+  .trim()
+  .max(100, "O número da ordem de serviço não pode ultrapassar 100 caracteres.")
+  .optional()
+  .nullable()
 };
 
 export const createObraSchema = z.object(obraFields).strict();
