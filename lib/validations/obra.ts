@@ -57,6 +57,12 @@ const obraFields = {
   .finite("A latitude deve ser um número decimal válido.")
   .min(GOIANA_BOUNDS.latMin, `Latitude fora dos limites de Goiana (mínimo permitido: ${GOIANA_BOUNDS.latMin})`)
   .max(GOIANA_BOUNDS.latMax, `Latitude fora dos limites de Goiana (máximo permitido: ${GOIANA_BOUNDS.latMax})`),
+
+  longitude: z
+  .number("A cordenada de longitude é obrigatória.")
+  .finite("A longitude deve ser um número decimal válido.")
+  .min(GOIANA_BOUNDS.lngMin, `Longitude fora dos limites de Goiana (mínimo permitido: ${GOIANA_BOUNDS.lngMin})`)
+  .max(GOIANA_BOUNDS.lngMax, `Longitude fora dos limites de Goiana (máximo permitido: ${GOIANA_BOUNDS.lngMax})`),
 };
 
 export const createObraSchema = z.object(obraFields).strict();
