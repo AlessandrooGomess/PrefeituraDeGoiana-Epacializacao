@@ -354,4 +354,40 @@ describe("PATCH /api/obras/[id]", () => {
       }),
     );
   });
+
+  it("retorna 400 quando as relações da obra são inválidas", async () => {
+    mocks.obraFindUnique.mockResolvedValue({
+      secretariaId: "11111111-1111-4111-8111-111111111111",
+      eixoId: "22222222-2222-4222-8222-222222222222",
+      areaTematicaId: null,
+      engenheiroId: null,
+    });
+    mocks.validateObraRelations.mockResolvedValue(["eixoId"]);
+
+    const response = await PATCH(
+      new Request(
+        "http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            eixoId: "33333333-3333-4333-8333-333333333333",
+          }),
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      message: "Uma ou mais referências relacionadas são inválidas.",
+      fields: ["eixoId"],
+    });
+
+    expect(mocks.validateObraRelations).toHaveBeenCalledOnce();
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
+  });
 });
