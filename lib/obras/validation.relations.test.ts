@@ -67,7 +67,7 @@ describe("validateObraRelations", () => {
     expect(result).toEqual(["secretariaId"]);
   });
 
-    it("identifica eixo inexistente", async () => {
+  it("identifica eixo inexistente", async () => {
     mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
     mocks.eixoFindUnique.mockResolvedValue(null);
 
@@ -97,13 +97,5 @@ describe("validateObraRelations", () => {
     });
 
     expect(result).toEqual(["areaTematicaId"]);
-  });
-
-  it("identifica eixo inexistente", async () => {
-    // ...
-  });
-
-  it("identifica área temática pertencente a outro eixo", async () => {
-    // ...
   });
 });
