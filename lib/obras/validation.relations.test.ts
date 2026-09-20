@@ -66,4 +66,44 @@ describe("validateObraRelations", () => {
 
     expect(result).toEqual(["secretariaId"]);
   });
+
+    it("identifica eixo inexistente", async () => {
+    mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
+    mocks.eixoFindUnique.mockResolvedValue(null);
+
+    const result = await validateObraRelations({
+      secretariaId: "secretaria-1",
+      eixoId: "eixo-inexistente",
+      areaTematicaId: null,
+      engenheiroId: null,
+    });
+
+    expect(result).toEqual(["eixoId"]);
+  });
+
+  it("identifica área temática pertencente a outro eixo", async () => {
+    mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
+    mocks.eixoFindUnique.mockResolvedValue({ id: "eixo-1" });
+    mocks.areaTematicaFindUnique.mockResolvedValue({
+      id: "area-1",
+      eixoId: "eixo-2",
+    });
+
+    const result = await validateObraRelations({
+      secretariaId: "secretaria-1",
+      eixoId: "eixo-1",
+      areaTematicaId: "area-1",
+      engenheiroId: null,
+    });
+
+    expect(result).toEqual(["areaTematicaId"]);
+  });
+
+  it("identifica eixo inexistente", async () => {
+    // ...
+  });
+
+  it("identifica área temática pertencente a outro eixo", async () => {
+    // ...
+  });
 });
