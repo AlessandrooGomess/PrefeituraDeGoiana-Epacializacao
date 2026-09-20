@@ -228,4 +228,31 @@ describe("PATCH /api/obras/[id]", () => {
     expect(mocks.obraFindUnique).not.toHaveBeenCalled();
     expect(mocks.obraUpdate).not.toHaveBeenCalled();
   });
+
+  it("retorna 400 quando não há campos para atualizar", async () => {
+    const response = await PATCH(
+      new Request(
+        "http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000",
+        {
+          method: "PATCH",
+          body: JSON.stringify({}),
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual(
+      expect.objectContaining({
+        message: "Os dados da obra são inválidos.",
+      }),
+    );
+
+    expect(mocks.obraFindUnique).not.toHaveBeenCalled();
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
+  });
 });
