@@ -145,8 +145,8 @@ async function main() {
 
   await prisma.usuario.create({
     data: {
-      nome: "Secretario de Obras - SEINFRA",
-      email: "gestor.seinfra@goiana.pe.gov.br",
+      nome: "Secretario de Obras - SEDUO",
+      email: "gestor.seduo@goiana.pe.gov.br",
       cargo: "Secretario Executivo de Infraestrutura",
       role: Role.ADM_SECRETARIA,
       secretariaId: seinfra.id,
