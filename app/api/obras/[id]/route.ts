@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { ObraDetalhe } from "@/types/obra";
 import { updateObraSchema } from "@/lib/validations/obra";
@@ -275,6 +275,22 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   } catch (error) {
     console.error("Erro ao atualizar obra:", error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return NextResponse.json(
+          { message: "Obra não encontrada para atualização." },
+          { status: 404 },
+        );
+      }
+      if (error.code === "P2002") {
+        return NextResponse.json(
+          { message: "Conflito com dados únicos já existentes no sistema." },
+          { status: 409 },
+        );
+      }
+    }
+
     return NextResponse.json(
       { message: "Erro interno ao atualizar obra." },
       { status: 500 },
