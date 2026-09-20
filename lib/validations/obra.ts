@@ -27,23 +27,11 @@ const dateInput = z
   .nullable();
 
 const obraFields = {
-  titulo: z.string().trim().min(1, "O título é obrigatório."),
-  descricao: optionalText,
-  endereco: z.string().trim().min(1, "O endereço é obrigatório."),
-  bairro: z.string().trim().min(1, "O bairro é obrigatório."),
-  latitude: z.number().finite().min(-90).max(90),
-  longitude: z.number().finite().min(-180).max(180),
-  valorContrato: z.number().finite().nonnegative().optional().nullable(),
-  empresaContratada: optionalText,
-  numeroOrdemServico: optionalText,
-  dataOrdemServico: dateInput,
-  previsaoConclusao: dateInput,
-  dataConclusaoReal: dateInput,
-  status: statusInput.default("PLANEJADA"),
-  secretariaId: z.uuid("A secretaria deve ter um identificador válido."),
-  eixoId: optionalUuid,
-  areaTematicaId: optionalUuid,
-  engenheiroId: optionalUuid,
+  titulo: z
+  .string()
+  .trim()
+  .min(3, "O título deve ter pelo menos 3 caracteres.")
+  .max(255, "O título da obra não pode ultrapassar 255 caracteres."),
 };
 
 export const createObraSchema = z.object(obraFields).strict();
