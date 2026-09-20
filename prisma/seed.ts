@@ -149,7 +149,7 @@ async function main() {
       },
       {
         nome: "Autarquia de Ensino Superior",
-        sigla: "AUESG",
+        sigla: "AMESG",
         eixoId: eixoSocial.id,
       },
       { nome: "Mulher", sigla: "SM", eixoId: eixoSocial.id },
