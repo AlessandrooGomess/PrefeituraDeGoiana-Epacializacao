@@ -152,7 +152,7 @@ async function main() {
         sigla: "AMESG",
         eixoId: eixoSocial.id,
       },
-      { nome: "Mulher", sigla: "SM", eixoId: eixoSocial.id },
+      { nome: "Mulher", sigla: "SEMUL", eixoId: eixoSocial.id },
       { nome: "Segurança Cidadã", sigla: "SSC", eixoId: eixoSocial.id },
       {
         nome: "Trânsito e Transportes Urbanos",
