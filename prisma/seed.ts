@@ -228,6 +228,28 @@ async function main() {
       { nome: "Controladoria", sigla: "CCI", eixoId: eixoModernizacao.id },
       { nome: "Comunicação", sigla: "SECOM", eixoId: eixoModernizacao.id },
       { nome: "Procuradoria", sigla: "PGM", eixoId: eixoModernizacao.id },
+
+      {
+        nome: "Instituto de Previdência - GOIANAPREVI",
+        sigla: "GOIANAPREVI",
+        eixoId: eixoModernizacao.id,
+      },
+
+      {
+        nome: "Coordenadoria Municipal de Proteção e Defesa Civil",
+        sigla: "COMPDEC",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Gabinete do Prefeito",
+        sigla: "GABPREF",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Gabinete da Vice-Prefeita",
+        sigla: "GABVP",
+        eixoId: eixoModernizacao.id,
+      },
     ],
   });
 
