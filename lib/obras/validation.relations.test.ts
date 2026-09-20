@@ -99,7 +99,7 @@ describe("validateObraRelations", () => {
     expect(result).toEqual(["areaTematicaId"]);
   });
 
-    it("identifica engenheiro inativo ou com papel incorreto", async () => {
+  it("identifica engenheiro inativo ou com papel incorreto", async () => {
     mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
     mocks.usuarioFindUnique.mockResolvedValue({
       id: "usuario-1",
