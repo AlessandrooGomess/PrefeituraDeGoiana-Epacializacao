@@ -161,7 +161,24 @@ export async function GET(request: Request) {
         : null,
     }));
 
-    return NextResponse.json(obras, { status: 200 });
+    if (!paginada) {
+      return NextResponse.json(obras, { status: 200 });
+    }
+
+    const total = await prisma.obra.count({ where });
+
+    return NextResponse.json(
+      {
+        items: obras,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+        },
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Erro ao buscar obras:", error);
     return NextResponse.json(
