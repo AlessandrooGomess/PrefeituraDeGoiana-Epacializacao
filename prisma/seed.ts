@@ -139,7 +139,7 @@ async function main() {
         sigla: "SEMANGES",
         eixoId: eixoSocial.id,
       },
-      { nome: "Esportes", sigla: "SESP", eixoId: eixoSocial.id },
+      { nome: "Esportes", sigla: "SEES", eixoId: eixoSocial.id },
       { nome: "Criança e Juventude", sigla: "SCJ", eixoId: eixoSocial.id },
       { nome: "Saúde", sigla: "SMS", eixoId: eixoSocial.id },
       {
