@@ -131,124 +131,176 @@ async function main() {
     },
   });
 
-  // Siglas provisórias, aguardando confirmação institucional.
+  // Secretarias associadas aos eixos estratégicos.
   await prisma.secretaria.createMany({
     data: [
       {
         nome: "Manutenção e Serviços Públicos",
         sigla: "SEMANGES",
         eixoId: eixoSocial.id,
+        areaTematicaId: areaInfra.id,
       },
-      { nome: "Esportes", sigla: "SEES", eixoId: eixoSocial.id },
-      { nome: "Criança e Juventude", sigla: "SECJ", eixoId: eixoSocial.id },
-      { nome: "Saúde", sigla: "SESAU", eixoId: eixoSocial.id },
+      {
+        nome: "Esportes",
+        sigla: "SEES",
+        eixoId: eixoSocial.id,
+        areaTematicaId: areaEsporte.id,
+      },
+      {
+        nome: "Criança e Juventude",
+        sigla: "SECJ",
+        eixoId: eixoSocial.id,
+        areaTematicaId: areaAssistencia.id,
+      },
+      {
+        nome: "Saúde",
+        sigla: "SESAU",
+        eixoId: eixoSocial.id,
+        areaTematicaId: areaSaude.id,
+      },
       {
         nome: "Assistência Social e Direitos Humanos",
         sigla: "SASDH",
         eixoId: eixoSocial.id,
+        areaTematicaId: areaAssistencia.id,
       },
       {
         nome: "Autarquia de Ensino Superior",
         sigla: "AMESG",
         eixoId: eixoSocial.id,
+        areaTematicaId: areaEducacao.id,
       },
-      { nome: "Mulher", sigla: "SEMUL", eixoId: eixoSocial.id },
+      {
+        nome: "Mulher",
+        sigla: "SEMUL",
+        eixoId: eixoSocial.id,
+        areaTematicaId: areaAssistencia.id,
+      },
       {
         nome: "Segurança Cidadã, Trânsito e Transportes Urbanos",
         sigla: "SESTRAN",
         eixoId: eixoSocial.id,
+        areaTematicaId: areaSeguranca.id,
       },
       {
         nome: "Habitação e Regularização Fundiária",
         sigla: "SEHAB",
         eixoId: eixoSocial.id,
+        areaTematicaId: areaDireitoCidade.id,
       },
       {
         nome: "Distritos",
         sigla: "SEDIS",
         eixoId: eixoSocial.id,
+        areaTematicaId: areaDireitoCidade.id,
       },
       {
         nome: "Turismo, Cultura e Proteção ao Patrimônio Histórico Cultural",
         sigla: "SETUR",
         eixoId: eixoEconomico.id,
+        areaTematicaId: areaPatrimonio.id,
       },
       {
         nome: "Agência de Desenvolvimento de Goiana",
         sigla: "AD",
         eixoId: eixoEconomico.id,
+        areaTematicaId: areaEconomia.id,
       },
       {
-        nome: "Desenvolvimento Econômico e Tecnologia",
+        nome: "Ciência, Tecnologia e Inovação",
         sigla: "SECTI",
         eixoId: eixoEconomico.id,
+        areaTematicaId: areaTecnologia.id,
       },
       {
         nome: "Agricultura, Pecuária, Pesca e Proteção Animal",
         sigla: "SEAPPA",
         eixoId: eixoEconomico.id,
+        areaTematicaId: areaAgricultura.id,
       },
       {
         nome: "Agência de Meio Ambiente",
         sigla: "AMAG",
         eixoId: eixoEconomico.id,
+        areaTematicaId: areaMeioAmbiente.id,
       },
       {
         nome: "Planejamento Estratégico, Orçamento e Gestão",
         sigla: "SEPLAN",
         eixoId: eixoModernizacao.id,
-      },
-      {
-        nome: "Orçamento e Gestão",
-        sigla: "SOG",
-        eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
       },
       {
         nome: "Administração e Gestão da Qualidade",
         sigla: "SECAD",
         eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
       },
       {
         nome: "Fazenda Municipal",
         sigla: "SEFAZ",
         eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
       },
       {
         nome: "Articulação Política, Governo e Participação Social",
         sigla: "SEAPOG",
         eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
       },
       {
         nome: "Licitações e Contratos Públicos",
         sigla: "SLCP",
         eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
       },
-      { nome: "Ouvidoria", sigla: "OGM", eixoId: eixoModernizacao.id },
-      { nome: "Goiana Previ", sigla: "GP", eixoId: eixoModernizacao.id },
-      { nome: "Controladoria", sigla: "CCI", eixoId: eixoModernizacao.id },
-      { nome: "Comunicação", sigla: "SECOM", eixoId: eixoModernizacao.id },
-      { nome: "Procuradoria", sigla: "PGM", eixoId: eixoModernizacao.id },
-
+      {
+        nome: "Ouvidoria",
+        sigla: "OGM",
+        eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
+      },
       {
         nome: "Instituto de Previdência - GOIANAPREVI",
         sigla: "GOIANAPREVI",
         eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
       },
-
+      {
+        nome: "Coordenadoria de Controle Interno",
+        sigla: "CCI",
+        eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
+      },
+      {
+        nome: "Comunicação",
+        sigla: "SECOM",
+        eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
+      },
+      {
+        nome: "Procuradoria",
+        sigla: "PGM",
+        eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
+      },
       {
         nome: "Coordenadoria Municipal de Proteção e Defesa Civil",
         sigla: "COMPDEC",
         eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
       },
       {
         nome: "Gabinete do Prefeito",
         sigla: "GABPREF",
         eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
       },
       {
         nome: "Gabinete da Vice-Prefeita",
         sigla: "GABVP",
         eixoId: eixoModernizacao.id,
+        areaTematicaId: areaGestao.id,
       },
     ],
   });
