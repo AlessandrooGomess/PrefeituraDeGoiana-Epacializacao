@@ -131,3 +131,12 @@ export const updateObraSchema = z
 
 export type CreateObraInput = z.infer<typeof createObraSchema>;
 export type UpdateObraInput = z.infer<typeof updateObraSchema>;
+export const listObrasQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  pageSize: z.coerce.number().int().min(1).max(100).optional(),
+  status: statusInput.optional(),
+  secretariaId: z.uuid().optional(),
+  eixoId: z.uuid().optional(),
+  areaTematicaId: z.uuid().optional(),
+  search: z.string().trim().max(100).optional(),
+})
