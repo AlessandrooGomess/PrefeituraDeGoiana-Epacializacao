@@ -32,6 +32,13 @@ const obraFields = {
   .trim()
   .min(3, "O título deve ter pelo menos 3 caracteres.")
   .max(255, "O título da obra não pode ultrapassar 255 caracteres."),
+
+  descricao: z
+  .string()
+  .trim()
+  .max(5000, "A descrição do escopo não pode ultrapassar 5000 caracteres.")
+  .optional()
+  .nullable(),
 };
 
 export const createObraSchema = z.object(obraFields).strict();
