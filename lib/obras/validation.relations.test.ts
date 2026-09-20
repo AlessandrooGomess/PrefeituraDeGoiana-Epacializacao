@@ -32,7 +32,10 @@ describe("validateObraRelations", () => {
   });
 
   it("retorna nenhuma inconsistência quando todas as relações são válidas", async () => {
-    mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
+    mocks.secretariaFindUnique.mockResolvedValue({
+      id: "secretaria-1",
+      eixoId: "eixo-1",
+    });
     mocks.eixoFindUnique.mockResolvedValue({ id: "eixo-1" });
     mocks.areaTematicaFindUnique.mockResolvedValue({
       id: "area-1",
@@ -81,8 +84,28 @@ describe("validateObraRelations", () => {
     expect(result).toEqual(["eixoId"]);
   });
 
+  it("identifica eixo diferente do eixo da secretaria", async () => {
+    mocks.secretariaFindUnique.mockResolvedValue({
+      id: "secretaria-1",
+      eixoId: "eixo-1",
+    });
+    mocks.eixoFindUnique.mockResolvedValue({ id: "eixo-2" });
+
+    const result = await validateObraRelations({
+      secretariaId: "secretaria-1",
+      eixoId: "eixo-2",
+      areaTematicaId: null,
+      engenheiroId: null,
+    });
+
+    expect(result).toEqual(["eixoId"]);
+  });
+
   it("identifica área temática pertencente a outro eixo", async () => {
-    mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
+    mocks.secretariaFindUnique.mockResolvedValue({
+      id: "secretaria-1",
+      eixoId: "eixo-1",
+    });
     mocks.eixoFindUnique.mockResolvedValue({ id: "eixo-1" });
     mocks.areaTematicaFindUnique.mockResolvedValue({
       id: "area-1",
