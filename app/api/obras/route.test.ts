@@ -59,6 +59,21 @@ describe("GET /api/obras", () => {
       },
     });
 
+    it("retorna 400 quando a página é inválida", async () => {
+      const response = await GET(
+        new Request("http://localhost/api/obras?page=0"),
+      );
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual(
+        expect.objectContaining({
+          message: "Os parâmetros da consulta são inválidos.",
+        }),
+      );
+
+      expect(mocks.obraFindMany).not.toHaveBeenCalled();
+    });
+
     expect(mocks.obraFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         skip: 10,
