@@ -169,13 +169,8 @@ async function main() {
         eixoId: eixoSocial.id,
       },
       {
-        nome: "Turismo",
+        nome: "Turismo, Cultura e Proteção ao Patrimônio Histórico Cultural",
         sigla: "SETUR",
-        eixoId: eixoEconomico.id,
-      },
-      {
-        nome: "Cultura e Proteção ao Patrimônio Histórico Cultural",
-        sigla: "SCPPHC",
         eixoId: eixoEconomico.id,
       },
       {
