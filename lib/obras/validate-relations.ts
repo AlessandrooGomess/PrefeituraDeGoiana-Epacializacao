@@ -43,8 +43,7 @@ export async function validateObraRelations({
     eixoId && !eixo && "eixoId",
     areaTematicaId && !areaTematica && "areaTematicaId",
     engenheiroId && !engenheiro && "engenheiroId",
-    engenheiroId && engenheiro && engenheiro.role !== "ENGENHEIRO"
-      && "engenheiroId",
+    engenheiroId && engenheiro && (engenheiro.role !== "ENGENHEIRO" || !engenheiro.ativo) && "engenheiroId",
     eixoId && areaTematica && areaTematica.eixoId !== eixoId
       && "areaTematicaId",
   ].filter((field): field is string => Boolean(field));
