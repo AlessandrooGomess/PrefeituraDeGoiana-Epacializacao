@@ -185,7 +185,7 @@ async function main() {
       },
       {
         nome: "Agricultura, Pecuária, Pesca e Proteção Animal",
-        sigla: "SAPPA",
+        sigla: "SEAPPA",
         eixoId: eixoEconomico.id,
       },
       {
