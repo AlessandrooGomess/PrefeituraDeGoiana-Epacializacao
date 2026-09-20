@@ -1,9 +1,4 @@
-import {
-  PrismaClient,
-  Role,
-  StatusObra,
-  TipoFoto,
-} from "@prisma/client";
+import { PrismaClient, Role, StatusObra, TipoFoto } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -76,6 +71,46 @@ async function main() {
 
   console.log("📍 [3/4] Criando Secretarias Municipais...");
 
+  const areaInfra = eixoSocial.areas.find(
+    (area) => area.nome === "Infraestrutura Urbana",
+  )!;
+  const areaDireitoCidade = eixoSocial.areas.find(
+    (area) => area.nome === "Direito à Cidade",
+  )!;
+  const areaAssistencia = eixoSocial.areas.find(
+    (area) => area.nome === "Assistência Social",
+  )!;
+  const areaSaude = eixoSocial.areas.find((area) => area.nome === "Saúde")!;
+  const areaEsporte = eixoSocial.areas.find(
+    (area) => area.nome === "Esporte e Lazer",
+  )!;
+  const areaEducacao = eixoSocial.areas.find(
+    (area) => area.nome === "Educação",
+  )!;
+  const areaSeguranca = eixoSocial.areas.find(
+    (area) => area.nome === "Segurança Pública e Mobilidade Urbana",
+  )!;
+
+  const areaEconomia = eixoEconomico.areas.find(
+    (area) => area.nome === "Economia Local",
+  )!;
+  const areaTecnologia = eixoEconomico.areas.find(
+    (area) => area.nome === "Ciência e Tecnologia",
+  )!;
+  const areaAgricultura = eixoEconomico.areas.find(
+    (area) => area.nome === "Agricultura e Pesca",
+  )!;
+  const areaPatrimonio = eixoEconomico.areas.find(
+    (area) => area.nome === "Patrimônio Histórico",
+  )!;
+  const areaMeioAmbiente = eixoEconomico.areas.find(
+    (area) => area.nome === "Meio Ambiente",
+  )!;
+
+  const areaGestao = eixoModernizacao.areas.find(
+    (area) => area.nome === "Inovação e Gestão Administrativa",
+  )!;
+
   const seinfra = await prisma.secretaria.create({
     data: {
       nome: "Secretaria de Infraestrutura e Serviços Públicos",
@@ -85,16 +120,6 @@ async function main() {
     },
   });
 
-  const areaInfra = eixoSocial.areas.find(
-    (a) => a.nome === "Infraestrutura Urbana",
-  )!;
-  const areaEducacao = eixoSocial.areas.find((a) => a.nome === "Educação")!;
-  const areaPatrimonio = eixoEconomico.areas.find(
-    (a) => a.nome === "Patrimônio Histórico",
-  )!;
-  const areaEconomia = eixoEconomico.areas.find(
-    (a) => a.nome === "Economia Local",
-  )!;
   const seduc = await prisma.secretaria.create({
     data: {
       nome: "Secretaria de Educação",
@@ -524,7 +549,8 @@ async function main() {
       obraId: obraEscolaAngelo.id,
       usuarioId: engenheiroSeduc.id,
       url: "/fotos/obra-escola-angelo.jpg",
-      descricao: "Registro fotográfico da reforma da Escola Municipal Prefeito Ângelo Jordão.",
+      descricao:
+        "Registro fotográfico da reforma da Escola Municipal Prefeito Ângelo Jordão.",
     },
   });
 
