@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   obraFindUnique: vi.fn(),
   obraUpdate: vi.fn(),
+  validateObraRelations: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -12,6 +13,10 @@ vi.mock("@/lib/prisma", () => ({
       update: mocks.obraUpdate,
     },
   },
+}));
+
+vi.mock("@/lib/obras/validate-relations", () => ({
+  validateObraRelations: mocks.validateObraRelations,
 }));
 
 import { GET, PATCH } from "./route";
@@ -180,6 +185,7 @@ describe("GET /api/obras/[id]", () => {
 describe("PATCH /api/obras/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.validateObraRelations.mockResolvedValue([]);
   });
 
   it("retorna 400 quando o identificador é inválido", async () => {
@@ -283,5 +289,69 @@ describe("PATCH /api/obras/[id]", () => {
 
     expect(mocks.obraFindUnique).toHaveBeenCalledOnce();
     expect(mocks.obraUpdate).not.toHaveBeenCalled();
+  });
+
+  it("atualiza uma obra válida", async () => {
+    mocks.obraFindUnique.mockResolvedValue({
+      secretariaId: "secretaria-1",
+      eixoId: "eixo-1",
+      areaTematicaId: "area-1",
+      engenheiroId: null,
+    });
+    mocks.obraUpdate.mockResolvedValue({
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      titulo: "Novo título",
+      status: "EM_ANDAMENTO",
+      secretariaId: "secretaria-1",
+      eixoId: "eixo-1",
+      areaTematicaId: "area-1",
+      engenheiroId: null,
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-02-01T00:00:00.000Z"),
+    });
+
+    const response = await PATCH(
+      new Request(
+        "http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            titulo: "Novo título",
+            status: "EM_ANDAMENTO",
+          }),
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      titulo: "Novo título",
+      status: "EM_ANDAMENTO",
+      secretariaId: "secretaria-1",
+      eixoId: "eixo-1",
+      areaTematicaId: "area-1",
+      engenheiroId: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-02-01T00:00:00.000Z",
+    });
+
+    expect(mocks.validateObraRelations).toHaveBeenCalledOnce();
+    expect(mocks.obraUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        },
+        data: {
+          titulo: "Novo título",
+          status: "EM_ANDAMENTO",
+        },
+      }),
+    );
   });
 });
