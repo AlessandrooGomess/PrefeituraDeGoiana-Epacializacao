@@ -54,3 +54,16 @@ describe("validateObraRelations", () => {
     });
   });
 });
+
+  it("identifica secretaria inexistente", async () => {
+    mocks.secretariaFindUnique.mockResolvedValue(null);
+
+    const result = await validateObraRelations({
+      secretariaId: "secretaria-inexistente",
+      eixoId: null,
+      areaTematicaId: null,
+      engenheiroId: null,
+    });
+
+    expect(result).toEqual(["secretariaId"]);
+  });
