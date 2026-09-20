@@ -89,6 +89,17 @@ describe("GET /api/obras", () => {
       expect(mocks.obraFindMany).not.toHaveBeenCalled();
     });
 
+    it("retorna 500 quando ocorre erro ao buscar obras", async () => {
+      mocks.obraFindMany.mockRejectedValue(new Error("Erro de conexão"));
+
+      const response = await GET(new Request("http://localhost/api/obras"));
+
+      expect(response.status).toBe(500);
+      expect(await response.json()).toEqual({
+        message: "Erro interno ao carregar listagem de obras.",
+      });
+    });
+
     expect(mocks.obraFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         skip: 10,
