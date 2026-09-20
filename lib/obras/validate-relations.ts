@@ -33,7 +33,7 @@ export async function validateObraRelations({
     engenheiroId
       ? prisma.usuario.findUnique({
           where: { id: engenheiroId },
-          select: { id: true, role: true },
+          select: { id: true, role: true, ativo: true },
         })
       : null,
   ]);
