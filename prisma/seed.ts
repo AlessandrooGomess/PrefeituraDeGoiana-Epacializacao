@@ -135,13 +135,8 @@ async function main() {
   await prisma.secretaria.createMany({
     data: [
       {
-        nome: "Desenvolvimento Urbano e Obras",
-        sigla: "SDUO",
-        eixoId: eixoSocial.id,
-      },
-      {
         nome: "Manutenção e Serviços Públicos",
-        sigla: "SMSP",
+        sigla: "SEMANGES",
         eixoId: eixoSocial.id,
       },
       { nome: "Esportes", sigla: "SESP", eixoId: eixoSocial.id },
@@ -150,11 +145,6 @@ async function main() {
       {
         nome: "Assistência Social e Direitos Humanos",
         sigla: "SASDH",
-        eixoId: eixoSocial.id,
-      },
-      {
-        nome: "Educação e Inovação Pedagógica",
-        sigla: "SEIP",
         eixoId: eixoSocial.id,
       },
       {
