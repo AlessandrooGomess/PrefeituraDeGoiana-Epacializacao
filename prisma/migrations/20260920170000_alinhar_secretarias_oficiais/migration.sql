@@ -1,5 +1,3 @@
-BEGIN;
-
 -- Preserva os registros que possuem obras e usuários vinculados.
 UPDATE "secretarias"
 SET
@@ -14,6 +12,22 @@ SET
 WHERE "id" = 'b22db1a5-2227-4996-a8df-c35c304aab33';
 
 -- Remove duplicidades criadas anteriormente sem vínculos.
+UPDATE "usuarios"
+SET "secretaria_id" = 'a741b3c8-28fb-4c30-a2bb-a953c4ec7d6d'
+WHERE "secretaria_id" = 'f630267b-4bcb-4d17-824a-a740d2a6a5da';
+
+UPDATE "obras"
+SET "secretaria_id" = 'a741b3c8-28fb-4c30-a2bb-a953c4ec7d6d'
+WHERE "secretaria_id" = 'f630267b-4bcb-4d17-824a-a740d2a6a5da';
+
+UPDATE "usuarios"
+SET "secretaria_id" = 'b22db1a5-2227-4996-a8df-c35c304aab33'
+WHERE "secretaria_id" = '9016ab67-05ee-412b-92c8-695678d9884a';
+
+UPDATE "obras"
+SET "secretaria_id" = 'b22db1a5-2227-4996-a8df-c35c304aab33'
+WHERE "secretaria_id" = '9016ab67-05ee-412b-92c8-695678d9884a';
+
 DELETE FROM "secretarias"
 WHERE "id" IN (
   'f630267b-4bcb-4d17-824a-a740d2a6a5da',
@@ -154,4 +168,3 @@ WHERE "id" = '3f2523c7-a26f-4e87-b16e-aab783d55760';
 DELETE FROM "secretarias"
 WHERE "id" = '9ccd305e-d39b-4c55-ba35-e1a28ae33bf8';
 
-COMMIT;
