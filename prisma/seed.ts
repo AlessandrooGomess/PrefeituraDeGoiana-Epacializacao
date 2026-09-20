@@ -164,6 +164,11 @@ async function main() {
         eixoId: eixoSocial.id,
       },
       {
+        nome: "Distritos",
+        sigla: "SEDIS",
+        eixoId: eixoSocial.id,
+      },
+      {
         nome: "Turismo",
         sigla: "SETUR",
         eixoId: eixoEconomico.id,
