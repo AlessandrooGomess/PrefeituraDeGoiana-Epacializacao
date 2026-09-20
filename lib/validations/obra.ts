@@ -14,7 +14,7 @@ const GOIANA_BOUNDS = {
   latMin: -7.8,
   latMax: -7.4,
   lngMin: -35.25,
-  lngMax: -35.8,
+  lngMax: -34.8,
 };
 
 const dateInput = z
@@ -109,9 +109,9 @@ const obraFields = {
 
   dataOrdemServico: dateInput,
   previsaoConclusao: dateInput,
-  dataConclusao: dateInput,
+  dataConclusaoReal: dateInput,
   status: statusInput.default("PLANEJADA"),
-  secretaria: z.uuid("A secretaria vinculada deve possuir um identificador UUID válido."),
+  secretariaId: z.uuid("A secretaria vinculada deve possuir um identificador UUID válido."),
   eixoId: optionalUuid,
   areaTematicaId: optionalUuid,
   engenheiroId: optionalUuid,
