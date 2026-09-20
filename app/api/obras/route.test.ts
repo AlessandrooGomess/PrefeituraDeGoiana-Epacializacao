@@ -74,6 +74,21 @@ describe("GET /api/obras", () => {
       expect(mocks.obraFindMany).not.toHaveBeenCalled();
     });
 
+    it("retorna 400 quando pageSize ultrapassa o limite", async () => {
+      const response = await GET(
+        new Request("http://localhost/api/obras?pageSize=101"),
+      );
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual(
+        expect.objectContaining({
+          message: "Os parâmetros da consulta são inválidos.",
+        }),
+      );
+
+      expect(mocks.obraFindMany).not.toHaveBeenCalled();
+    });
+
     expect(mocks.obraFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         skip: 10,
