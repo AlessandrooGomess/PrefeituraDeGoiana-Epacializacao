@@ -214,13 +214,8 @@ async function main() {
         eixoId: eixoModernizacao.id,
       },
       {
-        nome: "Articulação Política",
-        sigla: "SAP",
-        eixoId: eixoModernizacao.id,
-      },
-      {
-        nome: "Governo e Participação Social",
-        sigla: "SGPS",
+        nome: "Articulação Política, Governo e Participação Social",
+        sigla: "SEAPOG",
         eixoId: eixoModernizacao.id,
       },
       {
