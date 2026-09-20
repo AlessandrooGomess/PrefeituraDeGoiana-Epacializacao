@@ -113,8 +113,8 @@ async function main() {
 
   const seinfra = await prisma.secretaria.create({
     data: {
-      nome: "Secretaria de Infraestrutura e Serviços Públicos",
-      sigla: "SEINFRA",
+      nome: "Desenvolvimento Urbano e Obras",
+      sigla: "SEDUO",
       corIdentificacao: "#2563EB",
       eixoId: eixoSocial.id,
       areaTematicaId: areaInfra.id,
