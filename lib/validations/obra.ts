@@ -39,6 +39,12 @@ const obraFields = {
   .max(5000, "A descrição do escopo não pode ultrapassar 5000 caracteres.")
   .optional()
   .nullable(),
+
+  endereco: z
+  .string()
+  .trim()
+  .min(3, "Informe um endereço ou logradouro válido (ao menos 3 caracteres).")
+  .max(255, "O endereço não pode ultrapassar 255 caracteres."),
 };
 
 export const createObraSchema = z.object(obraFields).strict();
