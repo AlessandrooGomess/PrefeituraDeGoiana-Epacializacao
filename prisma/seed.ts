@@ -180,7 +180,7 @@ async function main() {
       },
       {
         nome: "Desenvolvimento Econômico e Tecnologia",
-        sigla: "SDET",
+        sigla: "SECTI",
         eixoId: eixoEconomico.id,
       },
       {
