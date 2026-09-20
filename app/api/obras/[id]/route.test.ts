@@ -390,4 +390,36 @@ describe("PATCH /api/obras/[id]", () => {
     expect(mocks.validateObraRelations).toHaveBeenCalledOnce();
     expect(mocks.obraUpdate).not.toHaveBeenCalled();
   });
+
+  it("retorna 500 quando ocorre erro ao atualizar a obra", async () => {
+    mocks.obraFindUnique.mockResolvedValue({
+      secretariaId: "11111111-1111-4111-8111-111111111111",
+      eixoId: "22222222-2222-4222-8222-222222222222",
+      areaTematicaId: null,
+      engenheiroId: null,
+    });
+    mocks.obraUpdate.mockRejectedValue(new Error("Erro de conexão"));
+
+    const response = await PATCH(
+      new Request(
+        "http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            titulo: "Novo título",
+          }),
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      message: "Erro interno ao atualizar obra.",
+    });
+  });
 });
