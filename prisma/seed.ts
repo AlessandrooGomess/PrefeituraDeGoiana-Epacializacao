@@ -175,7 +175,7 @@ async function main() {
       },
       {
         nome: "Agência de Desenvolvimento de Goiana",
-        sigla: "ADG",
+        sigla: "AD",
         eixoId: eixoEconomico.id,
       },
       {
