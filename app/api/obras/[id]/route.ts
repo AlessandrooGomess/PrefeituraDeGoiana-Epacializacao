@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
 import type { ObraDetalhe } from "@/types/obra";
 import {
   getObraBusinessRuleIssues,
@@ -154,6 +155,16 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
+  const authorization = await requireUser([
+    Role.SUPER_ADMIN,
+    Role.GESTAO,
+    Role.ADM_SECRETARIA,
+  ]);
+
+  if (authorization.response) {
+    return authorization.response;
+  }
+
   try {
     let body: unknown;
 
@@ -196,6 +207,13 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json(
         { message: "Obra não encontrada." },
         { status: 404 },
+      );
+    }
+
+    if (!canAccessSecretaria(authorization.user, currentObra.secretariaId)) {
+      return NextResponse.json(
+        { message: "Você não tem permissão para esta secretaria." },
+        { status: 403 },
       );
     }
 
