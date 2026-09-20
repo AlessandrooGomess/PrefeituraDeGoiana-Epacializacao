@@ -49,6 +49,15 @@ export interface ObraItem {
   percentualExecutado: number | null;
 }
 
+export interface ObrasPaginadas {
+  items: ObraItem[];
+  pagination: {
+    page: number;
+    total: number;
+    totalPages: number;
+  }
+}
+
 export interface ObraDetalhe extends ObraItem {
   dataConclusaoReal: string | null;
   createdAt: string;

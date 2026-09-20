@@ -1,4 +1,4 @@
-# Espacialização de Obras Públicas — Prefeitura de Goiana/PE
+# Espacialização de Obras Públicas da Prefeitura de Goiana/PE
 
 Plataforma web para mapeamento georreferenciado, monitoramento e transparência das obras públicas municipais de Goiana - PE.
 
