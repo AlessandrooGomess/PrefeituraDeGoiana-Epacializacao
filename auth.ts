@@ -18,6 +18,7 @@ const authenticatedRoles = new Set<Role>([
 ]);
 
 export const { handlers, auth } = NextAuth({
+  trustHost: true,
   session: {
     strategy: "jwt",
   },
