@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-const optionalText = z.string().trim().optional().nullable();
 const optionalUuid = z.uuid().optional().nullable();
 const statusInput = z.enum([
   "PLANEJADA",
