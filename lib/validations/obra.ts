@@ -50,7 +50,13 @@ const obraFields = {
   .string()
   .trim()
   .min(2, "O nome do bairro ou distrito deve ter ao menos 2 caracteres.")
-  .max(255, "O nome do bairro não pode ultrapassar 255 caracteres."),
+  .max(255, "O nome do bairro não pode ultrapassar 255 caracteres."),  
+
+  latitude: z
+  .number("A cordenada de latitude é obrigatória.")
+  .finite("A latitude deve ser um número decimal válido.")
+  .min(GOIANA_BOUNDS.latMin, `Latitude fora dos limites de Goiana (mínimo permitido: ${GOIANA_BOUNDS.latMin})`)
+  .max(GOIANA_BOUNDS.latMax, `Latitude fora dos limites de Goiana (máximo permitido: ${GOIANA_BOUNDS.latMax})`),
 };
 
 export const createObraSchema = z.object(obraFields).strict();
