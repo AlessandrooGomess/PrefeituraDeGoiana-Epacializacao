@@ -116,7 +116,52 @@ const obraFields = {
   engenheiroId: optionalUuid,
 };
 
-export const createObraSchema = z.object(obraFields).strict();
+export const createObraSchema = z
+  .object(obraFields)
+  .strict()
+  .superRefine((data, context) => {
+    const dataOrdemServico = data.dataOrdemServico
+      ? new Date(data.dataOrdemServico)
+      : null;
+    const previsaoConclusao = data.previsaoConclusao
+      ? new Date(data.previsaoConclusao)
+      : null;
+    const dataConclusaoReal = data.dataConclusaoReal
+      ? new Date(data.dataConclusaoReal)
+      : null;
+
+    if (
+      dataOrdemServico &&
+      previsaoConclusao &&
+      previsaoConclusao < dataOrdemServico
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["previsaoConclusao"],
+        message: "A previsão de conclusão não pode ser anterior à ordem de serviço.",
+      });
+    }
+
+    if (
+      dataOrdemServico &&
+      dataConclusaoReal &&
+      dataConclusaoReal < dataOrdemServico
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["dataConclusaoReal"],
+        message: "A conclusão real não pode ser anterior à ordem de serviço.",
+      });
+    }
+
+    if (data.status === "CONCLUIDA" && !dataConclusaoReal) {
+      context.addIssue({
+        code: "custom",
+        path: ["dataConclusaoReal"],
+        message: "Uma obra concluída deve informar a data de conclusão real.",
+      });
+    }
+  });
 
 export const updateObraSchema = z
   .object({
