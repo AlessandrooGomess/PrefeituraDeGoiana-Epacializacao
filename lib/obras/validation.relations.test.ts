@@ -98,4 +98,22 @@ describe("validateObraRelations", () => {
 
     expect(result).toEqual(["areaTematicaId"]);
   });
+
+    it("identifica engenheiro inativo ou com papel incorreto", async () => {
+    mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
+    mocks.usuarioFindUnique.mockResolvedValue({
+      id: "usuario-1",
+      role: "CIDADAO",
+      ativo: false,
+    });
+
+    const result = await validateObraRelations({
+      secretariaId: "secretaria-1",
+      eixoId: null,
+      areaTematicaId: null,
+      engenheiroId: "usuario-1",
+    });
+
+    expect(result).toEqual(["engenheiroId"]);
+  });
 });
