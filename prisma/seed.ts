@@ -194,8 +194,8 @@ async function main() {
         eixoId: eixoEconomico.id,
       },
       {
-        nome: "Planejamento Estratégico",
-        sigla: "SPE",
+        nome: "Planejamento Estratégico, Orçamento e Gestão",
+        sigla: "SEPLAN",
         eixoId: eixoModernizacao.id,
       },
       {
