@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "auth:set-password": "tsx scripts/set-user-password.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
