@@ -63,6 +63,14 @@ const obraFields = {
   .finite("A longitude deve ser um número decimal válido.")
   .min(GOIANA_BOUNDS.lngMin, `Longitude fora dos limites de Goiana (mínimo permitido: ${GOIANA_BOUNDS.lngMin})`)
   .max(GOIANA_BOUNDS.lngMax, `Longitude fora dos limites de Goiana (máximo permitido: ${GOIANA_BOUNDS.lngMax})`),
+
+  valorContrato: z
+  .number("O valor contratual deve ser um número válido.")
+  .finite("O valor contratual deve ser um número válido.")
+  .nonnegative("O valor contratual não pode ser negativo.")
+  .max(9_999_999_999.99, "O valor do contrato ultrapassa o teto máximo permitido."),
+  .optional()
+  .nullable()
 };
 
 export const createObraSchema = z.object(obraFields).strict();
