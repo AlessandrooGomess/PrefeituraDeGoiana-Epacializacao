@@ -53,9 +53,10 @@ export interface ObrasPaginadas {
   items: ObraItem[];
   pagination: {
     page: number;
+    pageSize: number;
     total: number;
     totalPages: number;
-  }
+  };
 }
 
 export interface ObraDetalhe extends ObraItem {
