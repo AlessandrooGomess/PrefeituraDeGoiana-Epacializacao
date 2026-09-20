@@ -14,7 +14,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-import { GET } from "./route";
+import { GET, PATCH } from "./route";
 
 describe("GET /api/obras/[id]", () => {
   beforeEach(() => {
@@ -174,5 +174,58 @@ describe("GET /api/obras/[id]", () => {
     expect(await response.json()).toEqual({
       message: "Erro interno ao carregar a obra.",
     });
+  });
+});
+
+describe("PATCH /api/obras/[id]", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("retorna 400 quando o identificador é inválido", async () => {
+    const response = await PATCH(
+      new Request("http://localhost/api/obras/id-invalido", {
+        method: "PATCH",
+        body: JSON.stringify({ titulo: "Novo título" }),
+      }),
+      {
+        params: Promise.resolve({
+          id: "id-invalido",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      message: "O identificador da obra é inválido.",
+    });
+
+    expect(mocks.obraFindUnique).not.toHaveBeenCalled();
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
+  });
+
+  it("retorna 400 quando o corpo não contém JSON válido", async () => {
+    const response = await PATCH(
+      new Request(
+        "http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000",
+        {
+          method: "PATCH",
+          body: "{json-invalido",
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      message: "O corpo da requisição deve conter um JSON válido.",
+    });
+
+    expect(mocks.obraFindUnique).not.toHaveBeenCalled();
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
   });
 });
