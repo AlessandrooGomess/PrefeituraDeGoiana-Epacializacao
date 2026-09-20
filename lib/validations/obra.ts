@@ -139,4 +139,4 @@ export const listObrasQuerySchema = z.object({
   eixoId: z.uuid().optional(),
   areaTematicaId: z.uuid().optional(),
   search: z.string().trim().max(100).optional(),
-})
+});
