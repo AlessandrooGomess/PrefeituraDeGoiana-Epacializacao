@@ -68,9 +68,16 @@ const obraFields = {
   .number("O valor contratual deve ser um número válido.")
   .finite("O valor contratual deve ser um número válido.")
   .nonnegative("O valor contratual não pode ser negativo.")
-  .max(9_999_999_999.99, "O valor do contrato ultrapassa o teto máximo permitido."),
+  .max(9_999_999_999.99, "O valor do contrato ultrapassa o teto máximo permitido.")
   .optional()
-  .nullable()
+  .nullable(),
+
+  empresaContratada: z
+  .string()
+  .trim()
+  .max(255, "A razão social da empresa contratada não pode ultrapassar 255 caracteres.")
+  .optional()
+  .nullable(),
 };
 
 export const createObraSchema = z.object(obraFields).strict();
