@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ObraItem } from "@/types/obra";
 import { createObraSchema } from "@/lib/validations/obra";
@@ -185,6 +186,15 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("Erro ao criar obra:", error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return NextResponse.json(
+          { message: "Já existe uma obra cadastrada com esses dados únicos." },
+          { status: 409 },
+        );
+      }
+    }
     return NextResponse.json(
       { message: "Erro interno ao criar obra." },
       { status: 500 },
