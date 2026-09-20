@@ -25,6 +25,57 @@ const dateInput = z
   .optional()
   .nullable();
 
+type ObraBusinessRulesInput = {
+  dataOrdemServico?: string | null;
+  previsaoConclusao?: string | null;
+  dataConclusaoReal?: string | null;
+  status?: z.infer<typeof statusInput>;
+};
+
+export function getObraBusinessRuleIssues(data: ObraBusinessRulesInput) {
+  const dataOrdemServico = data.dataOrdemServico
+    ? new Date(data.dataOrdemServico)
+    : null;
+  const previsaoConclusao = data.previsaoConclusao
+    ? new Date(data.previsaoConclusao)
+    : null;
+  const dataConclusaoReal = data.dataConclusaoReal
+    ? new Date(data.dataConclusaoReal)
+    : null;
+  const issues: Array<{ path: string[]; message: string }> = [];
+
+  if (
+    dataOrdemServico &&
+    previsaoConclusao &&
+    previsaoConclusao < dataOrdemServico
+  ) {
+    issues.push({
+      path: ["previsaoConclusao"],
+      message: "A previsão de conclusão não pode ser anterior à ordem de serviço.",
+    });
+  }
+
+  if (
+    dataOrdemServico &&
+    dataConclusaoReal &&
+    dataConclusaoReal < dataOrdemServico
+  ) {
+    issues.push({
+      path: ["dataConclusaoReal"],
+      message: "A conclusão real não pode ser anterior à ordem de serviço.",
+    });
+  }
+
+  if (data.status === "CONCLUIDA" && !dataConclusaoReal) {
+    issues.push({
+      path: ["dataConclusaoReal"],
+      message: "Uma obra concluída deve informar a data de conclusão real.",
+    });
+  }
+
+  return issues;
+}
+
 const obraFields = {
   titulo: z
     .string()
@@ -116,7 +167,18 @@ const obraFields = {
   engenheiroId: optionalUuid,
 };
 
-export const createObraSchema = z.object(obraFields).strict();
+export const createObraSchema = z
+  .object(obraFields)
+  .strict()
+  .superRefine((data, context) => {
+    for (const issue of getObraBusinessRuleIssues(data)) {
+      context.addIssue({
+        code: "custom",
+        path: issue.path,
+        message: issue.message,
+      });
+    }
+  });
 
 export const updateObraSchema = z
   .object({
@@ -131,3 +193,12 @@ export const updateObraSchema = z
 
 export type CreateObraInput = z.infer<typeof createObraSchema>;
 export type UpdateObraInput = z.infer<typeof updateObraSchema>;
+export const listObrasQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  pageSize: z.coerce.number().int().min(1).max(100).optional(),
+  status: statusInput.optional(),
+  secretariaId: z.uuid().optional(),
+  eixoId: z.uuid().optional(),
+  areaTematicaId: z.uuid().optional(),
+  search: z.string().trim().max(100).optional(),
+});

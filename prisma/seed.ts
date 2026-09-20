@@ -1,9 +1,4 @@
-import {
-  PrismaClient,
-  Role,
-  StatusObra,
-  TipoFoto,
-} from "@prisma/client";
+import { PrismaClient, Role, StatusObra, TipoFoto } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -76,146 +71,62 @@ async function main() {
 
   console.log("📍 [3/4] Criando Secretarias Municipais...");
 
+  const areaInfra = eixoSocial.areas.find(
+    (area) => area.nome === "Infraestrutura Urbana",
+  )!;
+  const areaEducacao = eixoSocial.areas.find(
+    (area) => area.nome === "Educação",
+  )!;
+  const areaEconomia = eixoEconomico.areas.find(
+    (area) => area.nome === "Economia Local",
+  )!;
+  const areaPatrimonio = eixoEconomico.areas.find(
+    (area) => area.nome === "Patrimônio Histórico",
+  )!;
+
   const seinfra = await prisma.secretaria.create({
     data: {
-      nome: "Secretaria de Infraestrutura e Serviços Públicos",
-      sigla: "SEINFRA",
+      nome: "Desenvolvimento Urbano e Obras",
+      sigla: "SEDUO",
       corIdentificacao: "#2563EB",
       eixoId: eixoSocial.id,
     },
   });
 
-  const areaInfra = eixoSocial.areas.find(
-    (a) => a.nome === "Infraestrutura Urbana",
-  )!;
-  const areaEducacao = eixoSocial.areas.find((a) => a.nome === "Educação")!;
-  const areaPatrimonio = eixoEconomico.areas.find(
-    (a) => a.nome === "Patrimônio Histórico",
-  )!;
-  const areaEconomia = eixoEconomico.areas.find(
-    (a) => a.nome === "Economia Local",
-  )!;
   const seduc = await prisma.secretaria.create({
     data: {
-      nome: "Secretaria de Educação",
-      sigla: "SEDUC",
+      nome: "Educação e Inovação Pedagógica",
+      sigla: "SECEDIP",
       corIdentificacao: "#EAB308",
       eixoId: eixoSocial.id,
     },
   });
 
-  // Siglas provisórias, aguardando confirmação institucional.
   await prisma.secretaria.createMany({
     data: [
-      {
-        nome: "Desenvolvimento Urbano e Obras",
-        sigla: "SDUO",
-        eixoId: eixoSocial.id,
-      },
-      {
-        nome: "Manutenção e Serviços Públicos",
-        sigla: "SMSP",
-        eixoId: eixoSocial.id,
-      },
-      { nome: "Esportes", sigla: "SESP", eixoId: eixoSocial.id },
-      { nome: "Criança e Juventude", sigla: "SCJ", eixoId: eixoSocial.id },
-      { nome: "Saúde", sigla: "SMS", eixoId: eixoSocial.id },
-      {
-        nome: "Assistência Social e Direitos Humanos",
-        sigla: "SASDH",
-        eixoId: eixoSocial.id,
-      },
-      {
-        nome: "Educação e Inovação Pedagógica",
-        sigla: "SEIP",
-        eixoId: eixoSocial.id,
-      },
-      {
-        nome: "Autarquia de Ensino Superior",
-        sigla: "AUESG",
-        eixoId: eixoSocial.id,
-      },
-      { nome: "Mulher", sigla: "SM", eixoId: eixoSocial.id },
-      { nome: "Segurança Cidadã", sigla: "SSC", eixoId: eixoSocial.id },
-      {
-        nome: "Trânsito e Transportes Urbanos",
-        sigla: "STTU",
-        eixoId: eixoSocial.id,
-      },
-      {
-        nome: "Habitação e Regularização Fundiária",
-        sigla: "SHRF",
-        eixoId: eixoSocial.id,
-      },
-      {
-        nome: "Turismo",
-        sigla: "SETUR",
-        eixoId: eixoEconomico.id,
-      },
-      {
-        nome: "Cultura e Proteção ao Patrimônio Histórico Cultural",
-        sigla: "SCPPHC",
-        eixoId: eixoEconomico.id,
-      },
-      {
-        nome: "Agência de Desenvolvimento de Goiana",
-        sigla: "ADG",
-        eixoId: eixoEconomico.id,
-      },
-      {
-        nome: "Desenvolvimento Econômico e Tecnologia",
-        sigla: "SDET",
-        eixoId: eixoEconomico.id,
-      },
-      {
-        nome: "Agricultura, Pecuária, Pesca e Proteção Animal",
-        sigla: "SAPPA",
-        eixoId: eixoEconomico.id,
-      },
-      {
-        nome: "Agência de Meio Ambiente",
-        sigla: "AMAG",
-        eixoId: eixoEconomico.id,
-      },
-      {
-        nome: "Planejamento Estratégico",
-        sigla: "SPE",
-        eixoId: eixoModernizacao.id,
-      },
-      {
-        nome: "Orçamento e Gestão",
-        sigla: "SOG",
-        eixoId: eixoModernizacao.id,
-      },
-      {
-        nome: "Administração e Gestão da Qualidade",
-        sigla: "SAGQ",
-        eixoId: eixoModernizacao.id,
-      },
-      {
-        nome: "Fazenda Municipal",
-        sigla: "SFM",
-        eixoId: eixoModernizacao.id,
-      },
-      {
-        nome: "Articulação Política",
-        sigla: "SAP",
-        eixoId: eixoModernizacao.id,
-      },
-      {
-        nome: "Governo e Participação Social",
-        sigla: "SGPS",
-        eixoId: eixoModernizacao.id,
-      },
-      {
-        nome: "Licitações e Contratos Públicos",
-        sigla: "SLCP",
-        eixoId: eixoModernizacao.id,
-      },
-      { nome: "Ouvidoria", sigla: "OUV", eixoId: eixoModernizacao.id },
-      { nome: "Goiana Previ", sigla: "GP", eixoId: eixoModernizacao.id },
-      { nome: "Controladoria", sigla: "CGM", eixoId: eixoModernizacao.id },
-      { nome: "Comunicação", sigla: "ASCOM", eixoId: eixoModernizacao.id },
+      { nome: "Manutenção e Serviços Públicos", sigla: "SEMANGES", eixoId: eixoSocial.id },
+      { nome: "Esportes", sigla: "SEES", eixoId: eixoSocial.id },
+      { nome: "Criança e Juventude", sigla: "SECJ", eixoId: eixoSocial.id },
+      { nome: "Saúde", sigla: "SESAU", eixoId: eixoSocial.id },
+      { nome: "Assistência Social e Direitos Humanos", sigla: "SASDH", eixoId: eixoSocial.id },
+      { nome: "Autarquia de Ensino Superior de Ensino", sigla: "AMESG", eixoId: eixoSocial.id },
+      { nome: "Mulher", sigla: "SEMUL", eixoId: eixoSocial.id },
+      { nome: "Segurança Cidadã, Trânsito e Transportes Urbanos", sigla: "SESTRAN", eixoId: eixoSocial.id },
+      { nome: "Habitação e Regularização Fundiária", sigla: "SEHAB", eixoId: eixoSocial.id },
+      { nome: "Turismo, Cultura e Proteção ao Patrimônio Histórico Cultural", sigla: "SETUR", eixoId: eixoEconomico.id },
+      { nome: "Agência de Desenvolvimento de Goiana", sigla: "AD", eixoId: eixoEconomico.id },
+      { nome: "Desenvolvimento Econômico e Tecnologia", sigla: "SECTI", eixoId: eixoEconomico.id },
+      { nome: "Agricultura, Pecuária, Pesca e Proteção Animal", sigla: "SEAPPA", eixoId: eixoEconomico.id },
+      { nome: "Agência de Meio Ambiente", sigla: "AMAG", eixoId: eixoEconomico.id },
+      { nome: "Planejamento Estratégico, Orçamento e Gestão", sigla: "SEPLAN", eixoId: eixoModernizacao.id },
+      { nome: "Administração e Gestão da Qualidade", sigla: "SECAD", eixoId: eixoModernizacao.id },
+      { nome: "Fazenda Municipal", sigla: "SEFAZ", eixoId: eixoModernizacao.id },
+      { nome: "Articulação Política, Governo e Participação Social", sigla: "SEAPOG", eixoId: eixoModernizacao.id },
+      { nome: "Licitações e Contratos Públicos", sigla: "SLCP", eixoId: eixoModernizacao.id },
+      { nome: "Ouvidoria", sigla: "OGM", eixoId: eixoModernizacao.id },
+      { nome: "Goiana Previ", sigla: "GOIANAPREVI", eixoId: eixoModernizacao.id },
+      { nome: "Controladoria", sigla: "CCI", eixoId: eixoModernizacao.id },
+      { nome: "Comunicação", sigla: "SECOM", eixoId: eixoModernizacao.id },
       { nome: "Procuradoria", sigla: "PGM", eixoId: eixoModernizacao.id },
     ],
   });
@@ -234,8 +145,8 @@ async function main() {
 
   await prisma.usuario.create({
     data: {
-      nome: "Secretario de Obras - SEINFRA",
-      email: "gestor.seinfra@goiana.pe.gov.br",
+      nome: "Secretario de Obras - SEDUO",
+      email: "gestor.seduo@goiana.pe.gov.br",
       cargo: "Secretario Executivo de Infraestrutura",
       role: Role.ADM_SECRETARIA,
       secretariaId: seinfra.id,
@@ -524,7 +435,8 @@ async function main() {
       obraId: obraEscolaAngelo.id,
       usuarioId: engenheiroSeduc.id,
       url: "/fotos/obra-escola-angelo.jpg",
-      descricao: "Registro fotográfico da reforma da Escola Municipal Prefeito Ângelo Jordão.",
+      descricao:
+        "Registro fotográfico da reforma da Escola Municipal Prefeito Ângelo Jordão.",
     },
   });
 

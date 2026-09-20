@@ -16,7 +16,10 @@ export async function validateObraRelations({
   const [secretaria, eixo, areaTematica, engenheiro] = await Promise.all([
     prisma.secretaria.findUnique({
       where: { id: secretariaId },
-      select: { id: true },
+      select: {
+        id: true,
+        eixoId: true,
+      },
     }),
     eixoId
       ? prisma.eixoEstrategico.findUnique({
@@ -41,10 +44,16 @@ export async function validateObraRelations({
   return [
     !secretaria && "secretariaId",
     eixoId && !eixo && "eixoId",
+    eixoId && eixo && secretaria && secretaria.eixoId !== eixoId && "eixoId",
     areaTematicaId && !areaTematica && "areaTematicaId",
     engenheiroId && !engenheiro && "engenheiroId",
-    engenheiroId && engenheiro && (engenheiro.role !== "ENGENHEIRO" || !engenheiro.ativo) && "engenheiroId",
-    eixoId && areaTematica && areaTematica.eixoId !== eixoId
-      && "areaTematicaId",
+    engenheiroId &&
+      engenheiro &&
+      (engenheiro.role !== "ENGENHEIRO" || !engenheiro.ativo) &&
+      "engenheiroId",
+    eixoId &&
+      areaTematica &&
+      areaTematica.eixoId !== eixoId &&
+      "areaTematicaId",
   ].filter((field): field is string => Boolean(field));
 }
