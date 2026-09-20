@@ -161,7 +161,7 @@ async function main() {
       },
       {
         nome: "Habitação e Regularização Fundiária",
-        sigla: "SHRF",
+        sigla: "SEHAB",
         eixoId: eixoSocial.id,
       },
       {
