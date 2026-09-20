@@ -141,7 +141,7 @@ async function main() {
       },
       { nome: "Esportes", sigla: "SEES", eixoId: eixoSocial.id },
       { nome: "Criança e Juventude", sigla: "SECJ", eixoId: eixoSocial.id },
-      { nome: "Saúde", sigla: "SMS", eixoId: eixoSocial.id },
+      { nome: "Saúde", sigla: "SESAU", eixoId: eixoSocial.id },
       {
         nome: "Assistência Social e Direitos Humanos",
         sigla: "SASDH",
