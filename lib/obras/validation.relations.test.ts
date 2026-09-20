@@ -29,31 +29,30 @@ import { validateObraRelations } from "./validate-relations";
 describe("validateObraRelations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    it("retorna nenhuma inconsistência quando todas as relações são válidas", async () => {
-      mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
-      mocks.eixoFindUnique.mockResolvedValue({ id: "eixo-1" });
-      mocks.areaTematicaFindUnique.mockResolvedValue({
-        id: "area-1",
-        eixoId: "eixo-1",
-      });
-      mocks.usuarioFindUnique.mockResolvedValue({
-        id: "engenheiro-1",
-        role: "ENGENHEIRO",
-        ativo: true,
-      });
-
-      const result = await validateObraRelations({
-        secretariaId: "secretaria-1",
-        eixoId: "eixo-1",
-        areaTematicaId: "area-1",
-        engenheiroId: "engenheiro-1",
-      });
-
-      expect(result).toEqual([]);
-    });
   });
-});
+
+  it("retorna nenhuma inconsistência quando todas as relações são válidas", async () => {
+    mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
+    mocks.eixoFindUnique.mockResolvedValue({ id: "eixo-1" });
+    mocks.areaTematicaFindUnique.mockResolvedValue({
+      id: "area-1",
+      eixoId: "eixo-1",
+    });
+    mocks.usuarioFindUnique.mockResolvedValue({
+      id: "engenheiro-1",
+      role: "ENGENHEIRO",
+      ativo: true,
+    });
+
+    const result = await validateObraRelations({
+      secretariaId: "secretaria-1",
+      eixoId: "eixo-1",
+      areaTematicaId: "area-1",
+      engenheiroId: "engenheiro-1",
+    });
+
+    expect(result).toEqual([]);
+  });
 
   it("identifica secretaria inexistente", async () => {
     mocks.secretariaFindUnique.mockResolvedValue(null);
@@ -67,3 +66,4 @@ describe("validateObraRelations", () => {
 
     expect(result).toEqual(["secretariaId"]);
   });
+});
