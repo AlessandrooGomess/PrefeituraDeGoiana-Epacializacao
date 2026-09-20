@@ -205,7 +205,7 @@ async function main() {
       },
       {
         nome: "Administração e Gestão da Qualidade",
-        sigla: "SAGQ",
+        sigla: "SECAD",
         eixoId: eixoModernizacao.id,
       },
       {
