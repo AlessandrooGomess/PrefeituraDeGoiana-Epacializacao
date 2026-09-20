@@ -422,4 +422,42 @@ describe("PATCH /api/obras/[id]", () => {
       message: "Erro interno ao atualizar obra.",
     });
   });
+
+  it("rejeita conclusão sem data real no PATCH", async () => {
+    mocks.obraFindUnique.mockResolvedValue({
+      secretariaId: "11111111-1111-4111-8111-111111111111",
+      eixoId: "22222222-2222-4222-8222-222222222222",
+      areaTematicaId: null,
+      engenheiroId: null,
+      dataOrdemServico: new Date("2026-01-10T00:00:00.000Z"),
+      previsaoConclusao: new Date("2026-12-20T00:00:00.000Z"),
+      dataConclusaoReal: null,
+      status: "EM_ANDAMENTO",
+    });
+
+    const response = await PATCH(
+      new Request(
+        "http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            status: "CONCLUIDA",
+          }),
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual(
+      expect.objectContaining({
+        message: "Os dados da obra são inválidos.",
+      }),
+    );
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
+  });
 });

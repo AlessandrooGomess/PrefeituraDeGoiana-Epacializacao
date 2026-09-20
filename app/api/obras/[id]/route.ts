@@ -3,7 +3,10 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { ObraDetalhe } from "@/types/obra";
-import { updateObraSchema } from "@/lib/validations/obra";
+import {
+  getObraBusinessRuleIssues,
+  updateObraSchema,
+} from "@/lib/validations/obra";
 import { serializeDate } from "@/lib/serializers/obra";
 import { validateObraRelations } from "@/lib/obras/validate-relations";
 
@@ -182,6 +185,10 @@ export async function PATCH(request: Request, context: RouteContext) {
         eixoId: true,
         areaTematicaId: true,
         engenheiroId: true,
+        dataOrdemServico: true,
+        previsaoConclusao: true,
+        dataConclusaoReal: true,
+        status: true,
       },
     });
 
@@ -208,6 +215,32 @@ export async function PATCH(request: Request, context: RouteContext) {
         {
           message: "Uma ou mais referências relacionadas são inválidas.",
           fields: relationErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    const businessRuleErrors = getObraBusinessRuleIssues({
+      dataOrdemServico:
+        data.dataOrdemServico === undefined
+          ? currentObra.dataOrdemServico?.toISOString() ?? null
+          : data.dataOrdemServico,
+      previsaoConclusao:
+        data.previsaoConclusao === undefined
+          ? currentObra.previsaoConclusao?.toISOString() ?? null
+          : data.previsaoConclusao,
+      dataConclusaoReal:
+        data.dataConclusaoReal === undefined
+          ? currentObra.dataConclusaoReal?.toISOString() ?? null
+          : data.dataConclusaoReal,
+      status: data.status ?? currentObra.status,
+    });
+
+    if (businessRuleErrors.length > 0) {
+      return NextResponse.json(
+        {
+          message: "Os dados da obra são inválidos.",
+          errors: businessRuleErrors,
         },
         { status: 400 },
       );

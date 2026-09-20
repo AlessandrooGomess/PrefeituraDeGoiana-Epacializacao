@@ -25,6 +25,57 @@ const dateInput = z
   .optional()
   .nullable();
 
+type ObraBusinessRulesInput = {
+  dataOrdemServico?: string | null;
+  previsaoConclusao?: string | null;
+  dataConclusaoReal?: string | null;
+  status?: z.infer<typeof statusInput>;
+};
+
+export function getObraBusinessRuleIssues(data: ObraBusinessRulesInput) {
+  const dataOrdemServico = data.dataOrdemServico
+    ? new Date(data.dataOrdemServico)
+    : null;
+  const previsaoConclusao = data.previsaoConclusao
+    ? new Date(data.previsaoConclusao)
+    : null;
+  const dataConclusaoReal = data.dataConclusaoReal
+    ? new Date(data.dataConclusaoReal)
+    : null;
+  const issues: Array<{ path: string[]; message: string }> = [];
+
+  if (
+    dataOrdemServico &&
+    previsaoConclusao &&
+    previsaoConclusao < dataOrdemServico
+  ) {
+    issues.push({
+      path: ["previsaoConclusao"],
+      message: "A previsão de conclusão não pode ser anterior à ordem de serviço.",
+    });
+  }
+
+  if (
+    dataOrdemServico &&
+    dataConclusaoReal &&
+    dataConclusaoReal < dataOrdemServico
+  ) {
+    issues.push({
+      path: ["dataConclusaoReal"],
+      message: "A conclusão real não pode ser anterior à ordem de serviço.",
+    });
+  }
+
+  if (data.status === "CONCLUIDA" && !dataConclusaoReal) {
+    issues.push({
+      path: ["dataConclusaoReal"],
+      message: "Uma obra concluída deve informar a data de conclusão real.",
+    });
+  }
+
+  return issues;
+}
+
 const obraFields = {
   titulo: z
     .string()
@@ -120,45 +171,11 @@ export const createObraSchema = z
   .object(obraFields)
   .strict()
   .superRefine((data, context) => {
-    const dataOrdemServico = data.dataOrdemServico
-      ? new Date(data.dataOrdemServico)
-      : null;
-    const previsaoConclusao = data.previsaoConclusao
-      ? new Date(data.previsaoConclusao)
-      : null;
-    const dataConclusaoReal = data.dataConclusaoReal
-      ? new Date(data.dataConclusaoReal)
-      : null;
-
-    if (
-      dataOrdemServico &&
-      previsaoConclusao &&
-      previsaoConclusao < dataOrdemServico
-    ) {
+    for (const issue of getObraBusinessRuleIssues(data)) {
       context.addIssue({
         code: "custom",
-        path: ["previsaoConclusao"],
-        message: "A previsão de conclusão não pode ser anterior à ordem de serviço.",
-      });
-    }
-
-    if (
-      dataOrdemServico &&
-      dataConclusaoReal &&
-      dataConclusaoReal < dataOrdemServico
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["dataConclusaoReal"],
-        message: "A conclusão real não pode ser anterior à ordem de serviço.",
-      });
-    }
-
-    if (data.status === "CONCLUIDA" && !dataConclusaoReal) {
-      context.addIssue({
-        code: "custom",
-        path: ["dataConclusaoReal"],
-        message: "Uma obra concluída deve informar a data de conclusão real.",
+        path: issue.path,
+        message: issue.message,
       });
     }
   });
