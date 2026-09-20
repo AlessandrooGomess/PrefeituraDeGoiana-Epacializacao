@@ -57,8 +57,11 @@ model Secretaria {
   corIdentificacao String?  @map("cor_identificacao")
   createdAt        DateTime @default(now()) @map("created_at")
 
-  eixoId String? @map("eixo_id")
-  eixo EixoEstrategico? @relation(fields: [eixoId], references: [id], onDelete: SetNull)
+  eixoId String?          @map("eixo_id")
+  eixo   EixoEstrategico? @relation(fields: [eixoId], references: [id], onDelete: SetNull)
+
+  areaTematicaId String?       @map("area_tematica_id")
+  areaTematica   AreaTematica? @relation(fields: [areaTematicaId], references: [id], onDelete: SetNull)
 
   obras    Obra[]
   usuarios Usuario[]
@@ -67,29 +70,31 @@ model Secretaria {
 }
 
 model EixoEstrategico {
-  id String @id @default(uuid())
-  nome String @unique
-  slug String @unique
-  cor String? @default("#3182CE")
-  descricao String? @db.Text
+  id        String   @id @default(uuid())
+  nome      String   @unique
+  slug      String   @unique
+  cor       String?  @default("#3182CE")
+  descricao String?  @db.Text
   createdAt DateTime @default(now()) @map("created_at")
 
-  areas AreaTematica[]
-  obras Obra[]
+  areas       AreaTematica[]
+  obras       Obra[]
   secretarias Secretaria[]
-  
+
   @@map("eixos_estrategicos")
 }
 
 model AreaTematica {
-  id String @id @default(uuid())
-  nome String @unique
+  id        String   @id @default(uuid())
+  nome      String   @unique
   createdAt DateTime @default(now()) @map("created_at")
 
-  eixoId String @map("eixo_id")
+  eixoId String          @map("eixo_id")
   eixo   EixoEstrategico @relation(fields: [eixoId], references: [id], onDelete: Cascade)
 
-  obras Obra[]
+  obras       Obra[]
+  secretarias Secretaria[]
+
   @@map("areas_tematicas")
 }
 
@@ -112,10 +117,10 @@ model Obra {
   secretariaId String     @map("secretaria_id")
   secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
 
-  eixoId String?     @map("eixo_id")
-  eixo    EixoEstrategico? @relation(fields: [eixoId], references: [id], onDelete: SetNull)
+  eixoId String?          @map("eixo_id")
+  eixo   EixoEstrategico? @relation(fields: [eixoId], references: [id], onDelete: SetNull)
 
-  areaTematicaId String?     @map("area_tematica_id")
+  areaTematicaId String?       @map("area_tematica_id")
   areaTematica   AreaTematica? @relation(fields: [areaTematicaId], references: [id], onDelete: SetNull)
 
   engenheiroId String?  @map("engenheiro_id")
