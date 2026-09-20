@@ -123,8 +123,8 @@ async function main() {
 
   const seduc = await prisma.secretaria.create({
     data: {
-      nome: "Secretaria de Educação",
-      sigla: "SEDUC",
+      nome: "Educação e Inovação Pedagógica",
+      sigla: "SECEDIP",
       corIdentificacao: "#EAB308",
       eixoId: eixoSocial.id,
       areaTematicaId: areaEducacao.id,
