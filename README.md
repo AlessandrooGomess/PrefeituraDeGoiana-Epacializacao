@@ -78,6 +78,8 @@ A página `/projetos` também consome `GET /api/obras` para apresentar uma lista
 | `/api/obras/[id]` | `DELETE` | Exclui logicamente uma obra. Requer `SUPER_ADMIN` ou `GESTAO`. |
 | `/api/obras/[id]/medicoes` | `POST` | Registra uma medição para a obra. Requer engenheiro autenticado da secretaria da obra. |
 | `/api/obras/[id]/medicoes` | `GET` | Retorna o histórico de medições da obra, ordenado pela data da vistoria. |
+| `/api/obras/[id]/fotos` | `GET` | Retorna as fotos cadastradas da obra, ordenadas pela data da foto. |
+| `/api/obras/[id]/fotos` | `POST` | Cadastra uma referência de foto para a obra com usuário autenticado. Upload físico ainda não faz parte deste contrato. |
 | `/api/auth/[...nextauth]` | `GET`, `POST` | Handlers do Auth.js para sessão e login por credenciais. |
 
 As datas são retornadas em formato ISO 8601 e valores `Decimal` do Prisma são serializados como números JSON. O `GET /api/obras` aceita filtros e paginação opcionais; sem parâmetros, mantém o retorno em array para compatibilidade com o mapa.
@@ -135,6 +137,8 @@ Autenticação e autorização são implementadas com Auth.js, sessão JWT e `bc
 | `/api/obras/[id]` | `DELETE` | Exclui logicamente uma obra com autorização. |
 | `/api/obras/[id]/medicoes` | `POST` | Registra uma medição com autorização. |
 | `/api/obras/[id]/medicoes` | `GET` | Retorna o histórico de medições da obra. |
+| `/api/obras/[id]/fotos` | `GET` | Retorna as fotos cadastradas da obra. |
+| `/api/obras/[id]/fotos` | `POST` | Cadastra uma referência de foto com autorização. |
 
 Upload de fotos, gerenciamento de usuários e dashboards analíticos ainda estão previstos no roadmap.
 
