@@ -49,6 +49,7 @@ describe("GET /api/obras", () => {
     expect(mocks.obraFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
+          deletedAt: null,
           status: "EM_ANDAMENTO",
         },
       }),
@@ -82,7 +83,7 @@ describe("GET /api/obras", () => {
     );
 
     expect(mocks.obraCount).toHaveBeenCalledWith({
-      where: {},
+      where: { deletedAt: null },
     });
   });
 

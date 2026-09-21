@@ -10,6 +10,68 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
+export async function GET(_request: Request, context: RouteContext) {
+  const { id } = await context.params;
+
+  if (!z.uuid().safeParse(id).success) {
+    return NextResponse.json(
+      { message: "O identificador da obra é inválido." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const obra = await prisma.obra.findUnique({
+      where: { id },
+      select: { id: true, deletedAt: true },
+    });
+
+    if (!obra || obra.deletedAt) {
+      return NextResponse.json(
+        { message: "Obra não encontrada." },
+        { status: 404 },
+      );
+    }
+
+    const medicoes = await prisma.medicao.findMany({
+      where: { obraId: id },
+      orderBy: { dataVistoria: "desc" },
+      select: {
+        id: true,
+        obraId: true,
+        engenheiroId: true,
+        dataVistoria: true,
+        percentualExecutado: true,
+        observacoesTecnicas: true,
+        createdAt: true,
+        engenheiro: {
+          select: {
+            id: true,
+            nome: true,
+            cargo: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(
+      medicoes.map((medicao) => ({
+        ...medicao,
+        dataVistoria: serializeDate(medicao.dataVistoria),
+        percentualExecutado: Number(medicao.percentualExecutado),
+        createdAt: serializeDate(medicao.createdAt),
+      })),
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("Erro ao buscar medições:", error);
+    return NextResponse.json(
+      { message: "Erro interno ao carregar as medições da obra." },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: Request, context: RouteContext) {
   const { id } = await context.params;
 
@@ -52,10 +114,10 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const obra = await prisma.obra.findUnique({
       where: { id },
-      select: { id: true, secretariaId: true },
+      select: { id: true, secretariaId: true, deletedAt: true },
     });
 
-    if (!obra) {
+    if (!obra || obra.deletedAt) {
       return NextResponse.json(
         { message: "Obra não encontrada." },
         { status: 404 },

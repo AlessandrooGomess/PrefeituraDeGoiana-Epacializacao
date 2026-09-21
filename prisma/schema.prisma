@@ -114,6 +114,7 @@ model Obra {
   previsaoConclusao  DateTime?  @map("previsao_conclusao")
   dataConclusaoReal  DateTime?  @map("data_conclusao_real")
   status             StatusObra @default(PLANEJADA)
+  deletedAt          DateTime?  @map("deleted_at")
 
   secretariaId String     @map("secretaria_id")
   secretaria   Secretaria @relation(fields: [secretariaId], references: [id])

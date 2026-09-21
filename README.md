@@ -75,8 +75,9 @@ A página `/projetos` também consome `GET /api/obras` para apresentar uma lista
 | `/api/obras` | `POST` | Valida e cria uma obra; retorna os campos básicos e os identificadores dos relacionamentos. |
 | `/api/obras/[id]` | `GET` | Retorna os detalhes de uma obra, incluindo medições, fotos e engenheiro relacionado. |
 | `/api/obras/[id]` | `PATCH` | Valida e atualiza parcialmente uma obra existente. Requer usuário autorizado. |
-| `/api/obras/[id]` | `DELETE` | Exclui uma obra. Requer `SUPER_ADMIN` ou `GESTAO`. |
+| `/api/obras/[id]` | `DELETE` | Exclui logicamente uma obra. Requer `SUPER_ADMIN` ou `GESTAO`. |
 | `/api/obras/[id]/medicoes` | `POST` | Registra uma medição para a obra. Requer engenheiro autenticado da secretaria da obra. |
+| `/api/obras/[id]/medicoes` | `GET` | Retorna o histórico de medições da obra, ordenado pela data da vistoria. |
 | `/api/auth/[...nextauth]` | `GET`, `POST` | Handlers do Auth.js para sessão e login por credenciais. |
 
 As datas são retornadas em formato ISO 8601 e valores `Decimal` do Prisma são serializados como números JSON. O `GET /api/obras` aceita filtros e paginação opcionais; sem parâmetros, mantém o retorno em array para compatibilidade com o mapa.
@@ -131,8 +132,9 @@ Autenticação e autorização são implementadas com Auth.js, sessão JWT e `bc
 | `/api/obras` | `POST` | Cria uma obra após validação dos dados recebidos. |
 | `/api/obras/[id]` | `GET` | Retorna os detalhes de uma obra. |
 | `/api/obras/[id]` | `PATCH` | Atualiza parcialmente uma obra com autorização. |
-| `/api/obras/[id]` | `DELETE` | Exclui uma obra com autorização. |
+| `/api/obras/[id]` | `DELETE` | Exclui logicamente uma obra com autorização. |
 | `/api/obras/[id]/medicoes` | `POST` | Registra uma medição com autorização. |
+| `/api/obras/[id]/medicoes` | `GET` | Retorna o histórico de medições da obra. |
 
 Upload de fotos, gerenciamento de usuários e dashboards analíticos ainda estão previstos no roadmap.
 
