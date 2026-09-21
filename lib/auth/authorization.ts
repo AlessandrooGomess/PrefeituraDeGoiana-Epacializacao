@@ -1,6 +1,7 @@
 import { Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 export interface AuthenticatedUser {
   id: string;
@@ -35,11 +36,39 @@ export async function requireUser(
     };
   }
 
+  const usuario = await prisma.usuario.findUnique({
+    where: { id: sessionUser.id },
+    select: {
+      id: true,
+      role: true,
+      secretariaId: true,
+      ativo: true,
+    },
+  });
+
+  if (!usuario || !usuario.ativo) {
+    return {
+      response: NextResponse.json(
+        { message: "Autenticação necessária." },
+        { status: 401 },
+      ),
+    };
+  }
+
+  if (allowedRoles && !allowedRoles.includes(usuario.role)) {
+    return {
+      response: NextResponse.json(
+        { message: "Você não tem permissão para executar esta ação." },
+        { status: 403 },
+      ),
+    };
+  }
+
   return {
     user: {
-      id: sessionUser.id,
-      role: sessionUser.role,
-      secretariaId: sessionUser.secretariaId,
+      id: usuario.id,
+      role: usuario.role,
+      secretariaId: usuario.secretariaId,
     },
   };
 }
