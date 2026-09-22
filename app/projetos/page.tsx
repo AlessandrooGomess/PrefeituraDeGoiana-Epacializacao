@@ -44,6 +44,10 @@ interface ProjetoItem {
   bairro?: string;
   secretaria?: string;
   descricao?: string | null;
+  eixoId: string | null;
+  eixoNome: string | null;
+  areaTematicaId: string | null;
+  areaTematicaNome: string | null;
 }
 
 const STATUS_LABEL: Record<StatusObra, ProjetoItem["status"]> = {
@@ -108,6 +112,10 @@ function mapearObra(obra: ObraApiItem): ProjetoItem {
     bairro: obra.bairro,
     secretaria: obra.secretaria.nome,
     descricao: obra.descricao,
+    eixoId: obra.eixo?.id ?? null,
+    eixoNome: obra.eixo?.nome ?? null,
+    areaTematicaId: obra.areaTematica?.id ?? null,
+    areaTematicaNome: obra.areaTematica?.nome ?? null,
   };
 }
 
@@ -217,6 +225,8 @@ export default function PaginaCarteiraProjetos() {
   const [termoBusca, setTermoBusca] = useState("");
   const [statusFiltro, setStatusFiltro] = useState<string>("Todos");
   const [mostrarFiltrosMenu, setMostrarFiltrosMenu] = useState(false);
+  const [eixosSelecionados, setEixosSelecionados] = useState<string[]>([]);
+  const [areasSelecionadas, setAreasSelecionadas] = useState<string[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [projetoSelecionado, setProjetoSelecionado] =
@@ -264,18 +274,36 @@ export default function PaginaCarteiraProjetos() {
   }, [projetoSelecionado]);
 
   const projetosFiltrados = useMemo(() => {
+    const termo = termoBusca.toLowerCase();
+    const buscaSomenteEspacos = termoBusca.length > 0 && !termoBusca.trim();
+
     return projetos.filter((item) => {
       const matchTexto =
-        item.titulo.toLowerCase().includes(termoBusca.toLowerCase()) ||
-        item.codigo.toLowerCase().includes(termoBusca.toLowerCase()) ||
-        item.categoriaLabel.toLowerCase().includes(termoBusca.toLowerCase());
+        !buscaSomenteEspacos && (
+          item.titulo.toLowerCase().includes(termo) ||
+          item.codigo.toLowerCase().includes(termo) ||
+          item.categoriaLabel.toLowerCase().includes(termo)
+        );
 
       const matchStatus =
         statusFiltro === "Todos" || item.status === statusFiltro;
 
-      return matchTexto && matchStatus;
+      const matchEixo = !eixosSelecionados.length || (item.eixoId && eixosSelecionados.includes(item.eixoId));
+      const matchArea = !areasSelecionadas.length || (item.areaTematicaId && areasSelecionadas.includes(item.areaTematicaId));
+
+      return matchTexto && matchStatus && matchEixo && matchArea;
     });
-  }, [projetos, termoBusca, statusFiltro]);
+  }, [projetos, termoBusca, statusFiltro, eixosSelecionados, areasSelecionadas]);
+
+  const eixos = useMemo(
+    () => Array.from(new Map(projetos.filter((item) => item.eixoId).map((item) => [item.eixoId, { id: item.eixoId!, nome: item.eixoNome! }])).values()),
+    [projetos],
+  );
+
+  const areas = useMemo(
+    () => Array.from(new Map(projetos.filter((item) => item.areaTematicaId && (!eixosSelecionados.length || (item.eixoId && eixosSelecionados.includes(item.eixoId)))).map((item) => [item.areaTematicaId, { id: item.areaTematicaId!, nome: item.areaTematicaNome! }])).values()),
+    [projetos, eixosSelecionados],
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbfcfd] text-[#0f172a] font-sans antialiased selection:bg-blue-100">
@@ -356,7 +384,7 @@ export default function PaginaCarteiraProjetos() {
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Filtros</span>
-                {statusFiltro !== "Todos" && (
+                {(statusFiltro !== "Todos" || eixosSelecionados.length > 0 || areasSelecionadas.length > 0) && (
                   <span className="w-2 h-2 rounded-full bg-blue-400 ml-1"></span>
                 )}
               </button>
@@ -393,6 +421,30 @@ export default function PaginaCarteiraProjetos() {
                       )}
                     </button>
                   ))}
+                  <div className="px-3 pt-3 pb-1.5 font-semibold text-slate-400 uppercase tracking-wider text-[10px]">
+                    Eixo Estratégico
+                  </div>
+                  {eixos.map((eixo) => (
+                    <label key={eixo.id} className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={eixosSelecionados.includes(eixo.id)}
+                        onChange={() => setEixosSelecionados((current) => current.includes(eixo.id) ? current.filter((id) => id !== eixo.id) : [...current, eixo.id])}
+                      />
+                      {eixo.nome}
+                    </label>
+                  ))}
+                  {areas.length > 0 && <div className="px-3 pt-3 pb-1.5 font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Áreas Temáticas</div>}
+                  {areas.map((area) => (
+                    <label key={area.id} className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={areasSelecionadas.includes(area.id)}
+                        onChange={() => setAreasSelecionadas((current) => current.includes(area.id) ? current.filter((id) => id !== area.id) : [...current, area.id])}
+                      />
+                      {area.nome}
+                    </label>
+                  ))}
                 </div>
               )}
             </div>
@@ -428,6 +480,8 @@ export default function PaginaCarteiraProjetos() {
               onClick={() => {
                 setTermoBusca("");
                 setStatusFiltro("Todos");
+                setEixosSelecionados([]);
+                setAreasSelecionadas([]);
               }}
               className="mt-4 px-4 py-1.5 text-xs font-semibold text-(--cor-principal) border border-slate-300 rounded hover:bg-slate-50 transition"
             >

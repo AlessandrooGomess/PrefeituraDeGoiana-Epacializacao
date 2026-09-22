@@ -17,13 +17,6 @@ const MapContainer = dynamic(() => import("@/components/map/MapContainer"), {
   ),
 });
 
-const thematicCategories = [
-  { id: "saude", label: "Saúde", color: "#ef4444", terms: ["saúde", "hospital", "ubs"] },
-  { id: "educacao", label: "Educação", color: "#f97316", terms: ["educação", "escola", "creche"] },
-  { id: "mobilidade", label: "Mobilidade", color: "#2383d9", terms: ["mobilidade", "pavimentação", "drenagem", "ponte"] },
-  { id: "esportes", label: "Esportes", color: "#16a34a", terms: ["esporte", "quadra", "campo"] },
-];
-
 function distanceInKilometers(
   first: [number, number],
   second: [number, number],
@@ -50,7 +43,8 @@ export default function Home() {
   const [notice, setNotice] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedEixoIds, setSelectedEixoIds] = useState<string[]>([]);
+  const [selectedAreaIds, setSelectedAreaIds] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
   const onObrasLoaded = useCallback((items: ObraItem[]) => setObras(items), []);
@@ -61,6 +55,22 @@ export default function Home() {
     [obras],
   );
 
+  const eixos = useMemo(
+    () => Array.from(new Map(obras.flatMap((obra) => obra.eixo ? [[obra.eixo.id, obra.eixo]] : [])).values()),
+    [obras],
+  );
+
+  const areas = useMemo(
+    () => selectedEixoIds.length
+      ? Array.from(new Map(
+          obras
+            .filter((obra) => obra.eixo && selectedEixoIds.includes(obra.eixo.id))
+            .flatMap((obra) => obra.areaTematica ? [[obra.areaTematica.id, obra.areaTematica]] : []),
+        ).values())
+      : [],
+    [obras, selectedEixoIds],
+  );
+
   const filtered = useMemo(
     () =>
       obras.filter((obra) => {
@@ -68,27 +78,39 @@ export default function Home() {
           .filter(Boolean)
           .join(" ")
           .toLocaleLowerCase("pt-BR");
+        const searchTerm = query.toLocaleLowerCase("pt-BR");
 
         return (
-          (!query || haystack.includes(query.toLocaleLowerCase("pt-BR"))) &&
+          (!(query && !query.trim()) && (!query || haystack.includes(searchTerm))) &&
           (!secretarias.length || secretarias.includes(obra.secretaria.id)) &&
           (!statuses.length || statuses.includes(obra.status)) &&
           (!userLocation || distanceInKilometers(
             userLocation,
             [obra.latitude, obra.longitude],
           ) <= 10) &&
-          (!categories.length || categories.some((categoryId) => {
-            const category = thematicCategories.find((item) => item.id === categoryId);
-            const thematicText = obra.areaTematica?.nome.toLocaleLowerCase("pt-BR") || "";
-            return category?.terms.some((term) => `${haystack} ${thematicText}`.includes(term));
-          }))
+          (!selectedEixoIds.length || (obra.eixo && selectedEixoIds.includes(obra.eixo.id))) &&
+          (!selectedAreaIds.length || (obra.areaTematica && selectedAreaIds.includes(obra.areaTematica.id)))
         );
       }),
-    [obras, query, secretarias, statuses, categories, userLocation],
+    [obras, query, secretarias, statuses, selectedEixoIds, selectedAreaIds, userLocation],
   );
 
   const toggle = <T,>(value: T, values: T[], setter: (next: T[]) => void) =>
     setter(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
+
+  const toggleEixo = (eixoId: string) => {
+    const nextEixoIds = selectedEixoIds.includes(eixoId)
+      ? selectedEixoIds.filter((id) => id !== eixoId)
+      : [...selectedEixoIds, eixoId];
+    const availableAreaIds = new Set(
+      obras
+        .filter((obra) => obra.eixo && nextEixoIds.includes(obra.eixo.id))
+        .flatMap((obra) => obra.areaTematica?.id ?? []),
+    );
+
+    setSelectedEixoIds(nextEixoIds);
+    setSelectedAreaIds((current) => current.filter((areaId) => availableAreaIds.has(areaId)));
+  };
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -170,16 +192,16 @@ export default function Home() {
             </button>
           </div>
 
-          <div className={styles["mobile-category-list"]} aria-label="Secretarias e áreas temáticas">
-            {thematicCategories.map((category) => (
+          <div className={styles["mobile-category-list"]} aria-label="Eixos estratégicos">
+            {eixos.map((eixo) => (
               <button
-                className={`${styles["mobile-category-chip"]} ${categories.includes(category.id) ? styles["is-selected"] : ""}`}
-                key={category.id}
+                className={`${styles["mobile-category-chip"]} ${selectedEixoIds.includes(eixo.id) ? styles["is-selected"] : ""}`}
+                key={eixo.id}
                 type="button"
-                onClick={() => toggle(category.id, categories, setCategories)}
+                onClick={() => toggleEixo(eixo.id)}
               >
-                <span style={{ background: category.color }} />
-                {category.label}
+                <span style={{ background: eixo.cor || "#2383d9" }} />
+                {eixo.nome}
               </button>
             ))}
           </div>
@@ -197,6 +219,34 @@ export default function Home() {
             <Image src="/icons/mira-perto-de-mim.svg" alt="" width={18} height={18} />
             Perto de Mim
           </button>
+
+          <section>
+            <h2>Eixo Estratégico</h2>
+            {eixos.map((eixo) => (
+              <label className={styles["check-row"]} key={eixo.id}>
+                <input
+                  type="checkbox"
+                  checked={selectedEixoIds.includes(eixo.id)}
+                  onChange={() => toggleEixo(eixo.id)}
+                />
+                {eixo.nome}
+              </label>
+            ))}
+          </section>
+
+          <section>
+            <h2>Áreas Temáticas</h2>
+            {areas.map((area) => (
+              <label className={styles["check-row"]} key={area.id}>
+                <input
+                  type="checkbox"
+                  checked={selectedAreaIds.includes(area.id)}
+                  onChange={() => toggle(area.id, selectedAreaIds, setSelectedAreaIds)}
+                />
+                {area.nome}
+              </label>
+            ))}
+          </section>
 
           <section>
             <h2>Categorias</h2>
