@@ -40,6 +40,7 @@ export async function GET(request: Request) {
 
   try {
     const where: Prisma.ObraWhereInput = {
+      deletedAt: null,
       ...(query.status ? { status: query.status } : {}),
       ...(query.secretariaId ? { secretariaId: query.secretariaId } : {}),
       ...(query.eixoId ? { eixoId: query.eixoId } : {}),

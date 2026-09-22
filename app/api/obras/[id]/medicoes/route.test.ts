@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   obraFindUnique: vi.fn(),
   usuarioFindUnique: vi.fn(),
   medicaoCreate: vi.fn(),
+  medicaoFindMany: vi.fn(),
   requireUser: vi.fn(),
   canAccessSecretaria: vi.fn(),
 }));
@@ -18,6 +19,7 @@ vi.mock("@/lib/prisma", () => ({
     },
     medicao: {
       create: mocks.medicaoCreate,
+      findMany: mocks.medicaoFindMany,
     },
   },
 }));
@@ -27,10 +29,99 @@ vi.mock("@/lib/auth/authorization", () => ({
   canAccessSecretaria: mocks.canAccessSecretaria,
 }));
 
-import { POST } from "./route";
+import { GET, POST } from "./route";
 
 const obraId = "550e8400-e29b-41d4-a716-446655440000";
 const engenheiroId = "660e8400-e29b-41d4-a716-446655440000";
+
+describe("GET /api/obras/[id]/medicoes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejeita identificador de obra inválido", async () => {
+    const response = await GET(
+      new Request("http://localhost/api/obras/id-invalido/medicoes"),
+      { params: Promise.resolve({ id: "id-invalido" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.obraFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("retorna 404 quando a obra não existe", async () => {
+    mocks.obraFindUnique.mockResolvedValue(null);
+
+    const response = await GET(
+      new Request(`http://localhost/api/obras/${obraId}/medicoes`),
+      { params: Promise.resolve({ id: obraId }) },
+    );
+
+    expect(response.status).toBe(404);
+    expect(mocks.medicaoFindMany).not.toHaveBeenCalled();
+  });
+
+  it("retorna o histórico de medições serializado", async () => {
+    mocks.obraFindUnique.mockResolvedValue({ id: obraId, deletedAt: null });
+    mocks.medicaoFindMany.mockResolvedValue([
+      {
+        id: "770e8400-e29b-41d4-a716-446655440000",
+        obraId,
+        engenheiroId,
+        dataVistoria: new Date("2026-02-10T00:00:00.000Z"),
+        percentualExecutado: 40,
+        observacoesTecnicas: "Execução em andamento.",
+        createdAt: new Date("2026-02-10T00:00:00.000Z"),
+        engenheiro: {
+          id: engenheiroId,
+          nome: "Engenheiro Teste",
+          cargo: "Engenheiro Civil",
+        },
+      },
+    ]);
+
+    const response = await GET(
+      new Request(`http://localhost/api/obras/${obraId}/medicoes`),
+      { params: Promise.resolve({ id: obraId }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual([
+      {
+        id: "770e8400-e29b-41d4-a716-446655440000",
+        obraId,
+        engenheiroId,
+        dataVistoria: "2026-02-10T00:00:00.000Z",
+        percentualExecutado: 40,
+        observacoesTecnicas: "Execução em andamento.",
+        createdAt: "2026-02-10T00:00:00.000Z",
+        engenheiro: {
+          id: engenheiroId,
+          nome: "Engenheiro Teste",
+          cargo: "Engenheiro Civil",
+        },
+      },
+    ]);
+    expect(mocks.medicaoFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { obraId },
+        orderBy: { dataVistoria: "desc" },
+      }),
+    );
+  });
+
+  it("retorna 500 quando ocorre erro ao buscar medições", async () => {
+    mocks.obraFindUnique.mockResolvedValue({ id: obraId, deletedAt: null });
+    mocks.medicaoFindMany.mockRejectedValue(new Error("Erro de conexão"));
+
+    const response = await GET(
+      new Request(`http://localhost/api/obras/${obraId}/medicoes`),
+      { params: Promise.resolve({ id: obraId }) },
+    );
+
+    expect(response.status).toBe(500);
+  });
+});
 
 function request(body: unknown) {
   return new Request(`http://localhost/api/obras/${obraId}/medicoes`, {

@@ -94,6 +94,13 @@ export async function GET(_request: Request, context: RouteContext) {
       );
     }
 
+    if (obra.deletedAt) {
+      return NextResponse.json(
+        { message: "Obra não encontrada." },
+        { status: 404 },
+      );
+    }
+
     const detalhe: ObraDetalhe = {
       id: obra.id,
       titulo: obra.titulo,
@@ -200,10 +207,18 @@ export async function PATCH(request: Request, context: RouteContext) {
         previsaoConclusao: true,
         dataConclusaoReal: true,
         status: true,
+        deletedAt: true,
       },
     });
 
     if (!currentObra) {
+      return NextResponse.json(
+        { message: "Obra não encontrada." },
+        { status: 404 },
+      );
+    }
+
+    if (currentObra.deletedAt) {
       return NextResponse.json(
         { message: "Obra não encontrada." },
         { status: 404 },
@@ -368,10 +383,17 @@ export async function DELETE(_request: Request, context: RouteContext) {
   try {
     const obra = await prisma.obra.findUnique({
       where: { id },
-      select: { secretariaId: true },
+      select: { secretariaId: true, deletedAt: true },
     });
 
     if (!obra) {
+      return NextResponse.json(
+        { message: "Obra não encontrada." },
+        { status: 404 },
+      );
+    }
+
+    if (obra.deletedAt) {
       return NextResponse.json(
         { message: "Obra não encontrada." },
         { status: 404 },
@@ -385,7 +407,10 @@ export async function DELETE(_request: Request, context: RouteContext) {
       );
     }
 
-    await prisma.obra.delete({ where: { id } });
+    await prisma.obra.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

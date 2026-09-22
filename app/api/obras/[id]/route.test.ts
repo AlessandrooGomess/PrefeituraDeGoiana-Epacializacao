@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   obraFindUnique: vi.fn(),
   obraUpdate: vi.fn(),
-  obraDelete: vi.fn(),
   validateObraRelations: vi.fn(),
   requireUser: vi.fn(),
   canAccessSecretaria: vi.fn(),
@@ -14,7 +13,6 @@ vi.mock("@/lib/prisma", () => ({
     obra: {
       findUnique: mocks.obraFindUnique,
       update: mocks.obraUpdate,
-      delete: mocks.obraDelete,
     },
   },
 }));
@@ -224,6 +222,25 @@ describe("PATCH /api/obras/[id]", () => {
     });
 
     expect(mocks.obraFindUnique).not.toHaveBeenCalled();
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
+  });
+
+  it("retorna 404 quando a obra já foi excluída logicamente", async () => {
+    mocks.obraFindUnique.mockResolvedValue({
+      secretariaId: "secretaria-1",
+      deletedAt: new Date("2026-09-21T00:00:00.000Z"),
+    });
+
+    const response = await DELETE(
+      new Request("http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000"),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(404);
     expect(mocks.obraUpdate).not.toHaveBeenCalled();
   });
 
@@ -510,7 +527,7 @@ describe("DELETE /api/obras/[id]", () => {
     );
 
     expect(response.status).toBe(401);
-    expect(mocks.obraDelete).not.toHaveBeenCalled();
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
   });
 
   it("retorna 404 quando a obra não existe", async () => {
@@ -526,7 +543,7 @@ describe("DELETE /api/obras/[id]", () => {
     );
 
     expect(response.status).toBe(404);
-    expect(mocks.obraDelete).not.toHaveBeenCalled();
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
   });
 
   it("retorna 403 para papel que não pode excluir", async () => {
@@ -547,14 +564,14 @@ describe("DELETE /api/obras/[id]", () => {
     );
 
     expect(response.status).toBe(403);
-    expect(mocks.obraDelete).not.toHaveBeenCalled();
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
   });
 
   it("exclui uma obra autorizada", async () => {
     mocks.obraFindUnique.mockResolvedValue({
       secretariaId: "secretaria-1",
     });
-    mocks.obraDelete.mockResolvedValue({ id: "obra-1" });
+    mocks.obraUpdate.mockResolvedValue({ id: "obra-1" });
 
     const response = await DELETE(
       new Request("http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000"),
@@ -566,8 +583,9 @@ describe("DELETE /api/obras/[id]", () => {
     );
 
     expect(response.status).toBe(204);
-    expect(mocks.obraDelete).toHaveBeenCalledWith({
+    expect(mocks.obraUpdate).toHaveBeenCalledWith({
       where: { id: "550e8400-e29b-41d4-a716-446655440000" },
+      data: { deletedAt: expect.any(Date) },
     });
   });
 });
