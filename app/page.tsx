@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./portal.module.css";
-import type { ObraItem, StatusObra } from "@/types/obra";
+import type { EixoComSecretarias, ObraItem, StatusObra } from "@/types/obra";
 import WorkCard from "@/components/map/WorkCard";
 import { STATUS_PRESENTATION } from "@/components/map/workPresentation";
 
@@ -35,6 +35,7 @@ function distanceInKilometers(
 
 export default function Home() {
   const [obras, setObras] = useState<ObraItem[]>([]);
+  const [eixos, setEixos] = useState<EixoComSecretarias[]>([]);
   const [query, setQuery] = useState("");
   const [secretarias, setSecretarias] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<StatusObra[]>(["EM_ANDAMENTO"]);
@@ -44,31 +45,17 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedEixoIds, setSelectedEixoIds] = useState<string[]>([]);
-  const [selectedAreaIds, setSelectedAreaIds] = useState<string[]>([]);
+  const [expandedEixoIds, setExpandedEixoIds] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
   const onObrasLoaded = useCallback((items: ObraItem[]) => setObras(items), []);
   const onSelectObra = useCallback((obra: ObraItem) => setSelected(obra), []);
 
-  const secretaries = useMemo(
-    () => Array.from(new Map(obras.map((obra) => [obra.secretaria.id, obra.secretaria])).values()),
-    [obras],
-  );
-
-  const eixos = useMemo(
-    () => Array.from(new Map(obras.flatMap((obra) => obra.eixo ? [[obra.eixo.id, obra.eixo]] : [])).values()),
-    [obras],
-  );
-
-  const areas = useMemo(
-    () => selectedEixoIds.length
-      ? Array.from(new Map(
-          obras
-            .filter((obra) => obra.eixo && selectedEixoIds.includes(obra.eixo.id))
-            .flatMap((obra) => obra.areaTematica ? [[obra.areaTematica.id, obra.areaTematica]] : []),
-        ).values())
-      : [],
-    [obras, selectedEixoIds],
+  const eixoBySecretariaId = useMemo(
+    () => new Map(
+      eixos.flatMap((eixo) => eixo.secretarias.map((secretaria) => [secretaria.id, eixo.id] as const)),
+    ),
+    [eixos],
   );
 
   const filtered = useMemo(
@@ -88,29 +75,21 @@ export default function Home() {
             userLocation,
             [obra.latitude, obra.longitude],
           ) <= 10) &&
-          (!selectedEixoIds.length || (obra.eixo && selectedEixoIds.includes(obra.eixo.id))) &&
-          (!selectedAreaIds.length || (obra.areaTematica && selectedAreaIds.includes(obra.areaTematica.id)))
+          (!selectedEixoIds.length || selectedEixoIds.includes(eixoBySecretariaId.get(obra.secretaria.id) ?? ""))
         );
       }),
-    [obras, query, secretarias, statuses, selectedEixoIds, selectedAreaIds, userLocation],
+    [obras, eixoBySecretariaId, query, secretarias, statuses, selectedEixoIds, userLocation],
   );
 
   const toggle = <T,>(value: T, values: T[], setter: (next: T[]) => void) =>
     setter(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
 
   const toggleEixo = (eixoId: string) => {
-    const nextEixoIds = selectedEixoIds.includes(eixoId)
-      ? selectedEixoIds.filter((id) => id !== eixoId)
-      : [...selectedEixoIds, eixoId];
-    const availableAreaIds = new Set(
-      obras
-        .filter((obra) => obra.eixo && nextEixoIds.includes(obra.eixo.id))
-        .flatMap((obra) => obra.areaTematica?.id ?? []),
-    );
-
-    setSelectedEixoIds(nextEixoIds);
-    setSelectedAreaIds((current) => current.filter((areaId) => availableAreaIds.has(areaId)));
+    toggle(eixoId, selectedEixoIds, setSelectedEixoIds);
   };
+
+  const toggleExpandedEixo = (eixoId: string) =>
+    toggle(eixoId, expandedEixoIds, setExpandedEixoIds);
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -192,20 +171,6 @@ export default function Home() {
             </button>
           </div>
 
-          <div className={styles["mobile-category-list"]} aria-label="Eixos estratégicos">
-            {eixos.map((eixo) => (
-              <button
-                className={`${styles["mobile-category-chip"]} ${selectedEixoIds.includes(eixo.id) ? styles["is-selected"] : ""}`}
-                key={eixo.id}
-                type="button"
-                onClick={() => toggleEixo(eixo.id)}
-              >
-                <span style={{ background: eixo.cor || "#2383d9" }} />
-                {eixo.nome}
-              </button>
-            ))}
-          </div>
-
           <h1>Filtros</h1>
 
           <button
@@ -221,45 +186,37 @@ export default function Home() {
           </button>
 
           <section>
-            <h2>Eixo Estratégico</h2>
+            <h2>Áreas de interesse</h2>
             {eixos.map((eixo) => (
-              <label className={styles["check-row"]} key={eixo.id}>
-                <input
-                  type="checkbox"
-                  checked={selectedEixoIds.includes(eixo.id)}
-                  onChange={() => toggleEixo(eixo.id)}
-                />
-                {eixo.nome}
-              </label>
-            ))}
-          </section>
-
-          <section>
-            <h2>Áreas Temáticas</h2>
-            {areas.map((area) => (
-              <label className={styles["check-row"]} key={area.id}>
-                <input
-                  type="checkbox"
-                  checked={selectedAreaIds.includes(area.id)}
-                  onChange={() => toggle(area.id, selectedAreaIds, setSelectedAreaIds)}
-                />
-                {area.nome}
-              </label>
-            ))}
-          </section>
-
-          <section>
-            <h2>Categorias</h2>
-            {secretaries.map((secretaria) => (
-              <label className={styles["check-row"]} key={secretaria.id}>
-                <input
-                  type="checkbox"
-                  checked={secretarias.includes(secretaria.id)}
-                  onChange={() => toggle(secretaria.id, secretarias, setSecretarias)}
-                />
-                <span className="color-dot" style={{ background: secretaria.corIdentificacao || "#2383d9" }} />
-                {secretaria.nome.replace("Secretaria de ", "")}
-              </label>
+              <div className={styles["filter-group"]} key={eixo.id}>
+                <div className={styles["filter-group-heading"]}>
+                  <label className={styles["check-row"]}>
+                    <input type="checkbox" checked={selectedEixoIds.includes(eixo.id)} onChange={() => toggleEixo(eixo.id)} />
+                    <span className={styles["color-dot"]} style={{ background: eixo.cor || "#2383d9" }} />
+                    {eixo.nome}
+                  </label>
+                  <button
+                    className={styles["filter-group-toggle"]}
+                    type="button"
+                    aria-label={expandedEixoIds.includes(eixo.id) ? `Recolher ${eixo.nome}` : `Expandir ${eixo.nome}`}
+                    aria-expanded={expandedEixoIds.includes(eixo.id)}
+                    onClick={() => toggleExpandedEixo(eixo.id)}
+                  >
+                    <span aria-hidden="true">{expandedEixoIds.includes(eixo.id) ? "⌃" : "⌄"}</span>
+                  </button>
+                </div>
+                {expandedEixoIds.includes(eixo.id) && (
+                  <div className={styles["secretary-list"]}>
+                    {eixo.secretarias.map((secretaria) => (
+                      <label className={styles["check-row"]} key={secretaria.id}>
+                        <input type="checkbox" checked={secretarias.includes(secretaria.id)} onChange={() => toggle(secretaria.id, secretarias, setSecretarias)} />
+                        <span className={styles["color-dot"]} style={{ background: secretaria.corIdentificacao || eixo.cor || "#2383d9" }} />
+                        {secretaria.nome.replace("Secretaria de ", "")}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </section>
 
@@ -290,6 +247,7 @@ export default function Home() {
         <div className={styles["map-area"]}>
           <MapContainer
             onObrasLoaded={onObrasLoaded}
+            onFiltersLoaded={setEixos}
             onSelectObra={onSelectObra}
             selectedObraId={selected?.id}
             visibleObraIds={filtered.map((obra) => obra.id)}

@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { ObraItem } from "@/types/obra";
+import type { EixoComSecretarias, ObraItem } from "@/types/obra";
 
 interface MapContainerProps {
   initialCenter?: [number, number]; // [longitude, latitude]
   initialZoom?: number;
   className?: string;
   onObrasLoaded?: (obras: ObraItem[]) => void;
+  onFiltersLoaded?: (eixos: EixoComSecretarias[]) => void;
   onSelectObra?: (obra: ObraItem) => void;
   selectedObraId?: string;
   visibleObraIds?: string[];
@@ -48,6 +49,7 @@ export default function MapContainer({
   initialZoom = GOIANA_DEFAULT_ZOOM,
   className = "w-full h-full min-h-[500px]",
   onObrasLoaded,
+  onFiltersLoaded,
   onSelectObra,
   selectedObraId,
   visibleObraIds,
@@ -168,15 +170,22 @@ export default function MapContainer({
         setLoading(true);
         setError(null);
 
-        const response = await fetch("/api/obras");
-        if (!response.ok) {
-          throw new Error(`Falha ao carregar obras (status: ${response.status})`);
+        const [obrasResponse, filtersResponse] = await Promise.all([
+          fetch("/api/obras"),
+          fetch("/api/filtros"),
+        ]);
+        if (!obrasResponse.ok || !filtersResponse.ok) {
+          throw new Error("Falha ao carregar dados do mapa.");
         }
 
-        const dados: ObraItem[] = await response.json();
+        const [dados, eixos]: [ObraItem[], EixoComSecretarias[]] = await Promise.all([
+          obrasResponse.json(),
+          filtersResponse.json(),
+        ]);
         if (isMounted) {
           setObras(dados);
           onObrasLoaded?.(dados);
+          onFiltersLoaded?.(eixos);
         }
       } catch (err) {
         console.error("Erro na busca de obras:", err);
@@ -197,7 +206,7 @@ export default function MapContainer({
     return () => {
       isMounted = false;
     };
-  }, [onObrasLoaded]);
+  }, [onFiltersLoaded, onObrasLoaded]);
 
   // 3. Renderização dos Marcadores e Popups no Mapa
   useEffect(() => {
