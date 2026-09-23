@@ -69,13 +69,13 @@ export default function Home() {
 
         return (
           (!(query && !query.trim()) && (!query || haystack.includes(searchTerm))) &&
-          (!secretarias.length || secretarias.includes(obra.secretaria.id)) &&
+          (!secretarias.length || (obra.secretaria?.id ? secretarias.includes(obra.secretaria.id) : false)) &&
           (!statuses.length || statuses.includes(obra.status)) &&
           (!userLocation || distanceInKilometers(
             userLocation,
             [obra.latitude, obra.longitude],
           ) <= 10) &&
-          (!selectedEixoIds.length || selectedEixoIds.includes(eixoBySecretariaId.get(obra.secretaria.id) ?? ""))
+          (!selectedEixoIds.length || (obra.secretaria?.id ? selectedEixoIds.includes(eixoBySecretariaId.get(obra.secretaria.id) ?? "") : false))
         );
       }),
     [obras, eixoBySecretariaId, query, secretarias, statuses, selectedEixoIds, userLocation],
@@ -156,7 +156,7 @@ export default function Home() {
               onClick={() => setFiltersOpen((open) => !open)}
             >
               Filtros
-              <span className={styles["filter-toggle-chevron"]} aria-hidden="true">⌄</span>
+              <span className={styles["filter-toggle-chevron"]} aria-hidden="true">{filtersOpen ? "⌃" : "⌄"}</span>
             </button>
             <button
               className={`${styles["near-button"]} ${styles["near-button-mobile"]}`}
