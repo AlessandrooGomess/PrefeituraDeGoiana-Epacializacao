@@ -1,6 +1,7 @@
 .shell {
   min-height: 100vh;
   padding-top: 58px;
+  overflow-x: hidden;
   background: #f7f9fc;
   color: #182437;
   font-size: 13px;
@@ -74,7 +75,11 @@
 .userSummary small { color: rgb(255 255 255 / 72%); font-size: 9px; }
 .menuButton { display: none; border: 0; background: transparent; color: white; cursor: pointer; }
 
-.body { display: flex; min-height: calc(100vh - 106px); }
+.body {
+  display: flex;
+  min-height: calc(100vh - 106px);
+  align-items: stretch;
+}
 
 .sidebar {
   width: 254px;
@@ -120,7 +125,12 @@
 .navItem:hover, .navItemActive { background: #dceaff; color: #126bcc; font-weight: 600; }
 .sidebarBottom { display: grid; gap: 2px; margin-top: auto; padding-top: 18px; border-top: 1px solid #dce5f5; }
 
-.main { width: min(1120px, 100%); margin: 0 auto; padding: 38px clamp(20px, 4vw, 58px) 48px; }
+.main {
+  width: min(1120px, 100%);
+  min-width: 0;
+  margin: 0 auto;
+  padding: 38px clamp(20px, 4vw, 58px) 48px;
+}
 .pageHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 25px; }
 .breadcrumb { margin-bottom: 12px; color: #8490a4; font-size: 10px; }
 .breadcrumb span { padding: 0 6px; color: #b4bdca; }

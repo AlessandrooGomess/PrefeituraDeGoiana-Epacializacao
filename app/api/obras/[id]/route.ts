@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import type { Prisma } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
 import type { ObraDetalhe } from "@/types/obra";
-import { updateObraSchema } from "@/lib/validations/obra";
+import {
+  getObraBusinessRuleIssues,
+  updateObraSchema,
+} from "@/lib/validations/obra";
 import { serializeDate } from "@/lib/serializers/obra";
 import { validateObraRelations } from "@/lib/obras/validate-relations";
 
@@ -151,6 +155,16 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
+  const authorization = await requireUser([
+    Role.SUPER_ADMIN,
+    Role.GESTAO,
+    Role.ADM_SECRETARIA,
+  ]);
+
+  if (authorization.response) {
+    return authorization.response;
+  }
+
   try {
     let body: unknown;
 
@@ -182,6 +196,10 @@ export async function PATCH(request: Request, context: RouteContext) {
         eixoId: true,
         areaTematicaId: true,
         engenheiroId: true,
+        dataOrdemServico: true,
+        previsaoConclusao: true,
+        dataConclusaoReal: true,
+        status: true,
       },
     });
 
@@ -189,6 +207,13 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json(
         { message: "Obra não encontrada." },
         { status: 404 },
+      );
+    }
+
+    if (!canAccessSecretaria(authorization.user, currentObra.secretariaId)) {
+      return NextResponse.json(
+        { message: "Você não tem permissão para esta secretaria." },
+        { status: 403 },
       );
     }
 
@@ -208,6 +233,32 @@ export async function PATCH(request: Request, context: RouteContext) {
         {
           message: "Uma ou mais referências relacionadas são inválidas.",
           fields: relationErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    const businessRuleErrors = getObraBusinessRuleIssues({
+      dataOrdemServico:
+        data.dataOrdemServico === undefined
+          ? currentObra.dataOrdemServico?.toISOString() ?? null
+          : data.dataOrdemServico,
+      previsaoConclusao:
+        data.previsaoConclusao === undefined
+          ? currentObra.previsaoConclusao?.toISOString() ?? null
+          : data.previsaoConclusao,
+      dataConclusaoReal:
+        data.dataConclusaoReal === undefined
+          ? currentObra.dataConclusaoReal?.toISOString() ?? null
+          : data.dataConclusaoReal,
+      status: data.status ?? currentObra.status,
+    });
+
+    if (businessRuleErrors.length > 0) {
+      return NextResponse.json(
+        {
+          message: "Os dados da obra são inválidos.",
+          errors: businessRuleErrors,
         },
         { status: 400 },
       );
@@ -275,8 +326,83 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   } catch (error) {
     console.error("Erro ao atualizar obra:", error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return NextResponse.json(
+          { message: "Obra não encontrada para atualização." },
+          { status: 404 },
+        );
+      }
+      if (error.code === "P2002") {
+        return NextResponse.json(
+          { message: "Conflito com dados únicos já existentes no sistema." },
+          { status: 409 },
+        );
+      }
+    }
+
     return NextResponse.json(
       { message: "Erro interno ao atualizar obra." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  const { id } = await context.params;
+
+  if (!z.uuid().safeParse(id).success) {
+    return NextResponse.json(
+      { message: "O identificador da obra é inválido." },
+      { status: 400 },
+    );
+  }
+
+  const authorization = await requireUser([Role.SUPER_ADMIN, Role.GESTAO]);
+
+  if (authorization.response) {
+    return authorization.response;
+  }
+
+  try {
+    const obra = await prisma.obra.findUnique({
+      where: { id },
+      select: { secretariaId: true },
+    });
+
+    if (!obra) {
+      return NextResponse.json(
+        { message: "Obra não encontrada." },
+        { status: 404 },
+      );
+    }
+
+    if (!canAccessSecretaria(authorization.user, obra.secretariaId)) {
+      return NextResponse.json(
+        { message: "Você não tem permissão para esta secretaria." },
+        { status: 403 },
+      );
+    }
+
+    await prisma.obra.delete({ where: { id } });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    console.error("Erro ao excluir obra:", error);
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { message: "Obra não encontrada para exclusão." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Erro interno ao excluir obra." },
       { status: 500 },
     );
   }
