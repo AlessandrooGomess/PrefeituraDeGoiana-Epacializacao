@@ -9,8 +9,6 @@ import styles from "./area-do-servidor.module.css";
 export default async function AreaDoServidor() {
   const session = await auth();
   const allowedRoles: Role[] = [
-    Role.SUPER_ADMIN,
-    Role.GESTAO,
     Role.ADM_SECRETARIA,
     Role.ENGENHEIRO,
   ];
@@ -23,14 +21,18 @@ export default async function AreaDoServidor() {
     redirect("/");
   }
 
+  if (!session.user.secretariaId) redirect("/");
+
   const where = {
     deletedAt: null,
-    ...(session.user.role === Role.ADM_SECRETARIA || session.user.role === Role.ENGENHEIRO
-      ? { secretariaId: session.user.secretariaId ?? undefined }
-      : {}),
+    secretariaId: session.user.secretariaId,
   };
 
-  const [obras, totalObras, emAndamento, concluidas] = await Promise.all([
+  const [secretaria, obras, totalObras, emAndamento, concluidas] = await Promise.all([
+    prisma.secretaria.findUniqueOrThrow({
+      where: { id: session.user.secretariaId },
+      select: { nome: true, sigla: true },
+    }),
     prisma.obra.findMany({
       where,
       orderBy: { updatedAt: "desc" },
@@ -61,13 +63,13 @@ export default async function AreaDoServidor() {
       <Sidebar user={{ name: session.user.name ?? session.user.email ?? "Usuário", role: session.user.role }} />
       <div className={styles.body}>
         <aside className={styles.sidebar}>
-          <div className={styles.profile}><div className={styles.profileIcon}>GP</div><div><strong>Gestão Pública</strong><small>Área administrativa</small></div></div>
+          <div className={styles.profile}><div className={styles.profileIcon}>{secretaria.sigla.slice(0, 2)}</div><div><strong>{secretaria.sigla}</strong><small>{secretaria.nome}</small></div></div>
           <div className={styles.navList}><span className={`${styles.navItem} ${styles.navItemActive}`}>Visão geral</span><Link className={styles.navItem} href="/area-do-servidor/nova-obra">Cadastrar obra</Link></div>
         </aside>
         <main className={styles.main}>
           <div className={styles.pageHeading}>
-            <div><div className={styles.breadcrumb}>Área administrativa <span>/</span> Visão geral</div><h1 className={styles.pageTitle}>Obras e Projetos</h1><p>Acompanhe as obras sob sua responsabilidade e registre novos projetos.</p></div>
-            <Link className={styles.primaryButton} href="/area-do-servidor/nova-obra">Cadastrar obra</Link>
+            <div><div className={styles.breadcrumb}>{secretaria.sigla} <span>/</span> Visão geral</div><h1 className={styles.pageTitle}>Obras da {secretaria.nome}</h1><p>Acompanhe e registre as obras sob responsabilidade da sua secretaria.</p></div>
+            {session.user.role === Role.ADM_SECRETARIA && <Link className={styles.primaryButton} href="/area-do-servidor/nova-obra">Cadastrar obra</Link>}
           </div>
           <section className={styles.metrics} aria-label="Resumo das obras">
             <div className={styles.metric}><span>Total de obras</span><strong>{totalObras}</strong></div>
@@ -75,7 +77,7 @@ export default async function AreaDoServidor() {
             <div className={styles.metric}><span>Concluídas</span><strong>{concluidas}</strong></div>
           </section>
           <section className={styles.card}>
-            <div className={styles.cardHeading}><div><h2>Obras recentes</h2><p>Atualizadas mais recentemente</p></div></div>
+            <div className={styles.cardHeading}><div><h2>Obras recentes</h2><p>Atualizadas mais recentemente pela {secretaria.sigla}</p></div></div>
             {obras.length ? (
               <div className={styles.workList}>
                 {obras.map((obra) => <article className={styles.workRow} key={obra.id}><div><strong>{obra.titulo}</strong><span>{obra.secretaria.nome}</span></div><span className={styles.statusTag}>{statusLabel[obra.status]}</span></article>)}

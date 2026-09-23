@@ -150,6 +150,11 @@
 .metric span { color: #718096; font-size: 11px; }
 .metric strong { color: #0874d9; font-size: 28px; line-height: 1; }
 .workList { display: grid; }
+.secretariaList { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.secretariaLink { display: grid; gap: 5px; padding: 16px; border: 1px solid #dce5f5; border-radius: 5px; color: #26354a; text-decoration: none; }
+.secretariaLink:hover { border-color: #0874d9; background: #f4f8ff; }
+.secretariaLink strong { color: #0874d9; font-size: 12px; }
+.secretariaLink span { color: #53627b; font-size: 11px; }
 .workRow { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 0; border-top: 1px solid #e7edf5; }
 .workRow > div { display: grid; gap: 4px; }
 .workRow strong { color: #26354a; font-size: 12px; }
