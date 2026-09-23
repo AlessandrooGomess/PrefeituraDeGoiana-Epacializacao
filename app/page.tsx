@@ -7,6 +7,11 @@ import styles from "./portal.module.css";
 import type { EixoComSecretarias, ObraItem, StatusObra } from "@/types/obra";
 import WorkCard from "@/components/map/WorkCard";
 import { STATUS_PRESENTATION } from "@/components/map/workPresentation";
+import {
+  MAX_SEARCH_LENGTH,
+  matchesSearch,
+  sanitizeSearchInput,
+} from "@/lib/utils/search";
 
 const MapContainer = dynamic(() => import("@/components/map/MapContainer"), {
   ssr: false,
@@ -61,14 +66,20 @@ export default function Home() {
   const filtered = useMemo(
     () =>
       obras.filter((obra) => {
-        const haystack = [obra.titulo, obra.endereco, obra.bairro, obra.secretaria?.nome]
-          .filter(Boolean)
-          .join(" ")
-          .toLocaleLowerCase("pt-BR");
-        const searchTerm = query.toLocaleLowerCase("pt-BR");
+        const matchQuery = matchesSearch(
+          [
+            obra.titulo,
+            obra.endereco,
+            obra.bairro,
+            obra.secretaria?.nome,
+            obra.empresaContratada,
+            obra.numeroOrdemServico,
+          ],
+          query,
+        );
 
         return (
-          (!(query && !query.trim()) && (!query || haystack.includes(searchTerm))) &&
+          matchQuery &&
           (!secretarias.length || (obra.secretaria?.id ? secretarias.includes(obra.secretaria.id) : false)) &&
           (!statuses.length || statuses.includes(obra.status)) &&
           (!userLocation || distanceInKilometers(
@@ -135,10 +146,27 @@ export default function Home() {
             <Image src="/icons/lupa.svg" alt="" width={16} height={16} />
             <input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) =>
+                setQuery(sanitizeSearchInput(event.target.value))
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setQuery("");
+              }}
+              maxLength={MAX_SEARCH_LENGTH}
               placeholder="Buscar projeto..."
               aria-label="Buscar projeto"
             />
+            {query && (
+              <button
+                type="button"
+                className={styles["search-clear"]}
+                onClick={() => setQuery("")}
+                aria-label="Limpar pesquisa"
+                title="Limpar pesquisa"
+              >
+                ✕
+              </button>
+            )}
           </label>
         </div>
       </header>
