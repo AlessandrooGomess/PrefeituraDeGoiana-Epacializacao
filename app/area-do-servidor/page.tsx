@@ -1,6 +1,7 @@
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import ObraForm from "./ObraForm";
 
 export default async function AreaDoServidor() {
   const session = await auth();
@@ -19,10 +20,5 @@ export default async function AreaDoServidor() {
     redirect("/");
   }
 
-  return (
-    <main>
-      <h1>Área do servidor</h1>
-      <p>Usuário autenticado: {session.user.name ?? session.user.email}</p>
-    </main>
-  );
+  return <ObraForm />;
 }
