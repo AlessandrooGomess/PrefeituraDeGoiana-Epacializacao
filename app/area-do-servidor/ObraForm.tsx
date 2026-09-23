@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Building2, FileText, HelpCircle, Save, Send, Settings, Upload } from "lucide-react";
-import Sidebar from "@/components/sidebar/Sidebar";
+import Sidebar, { type SidebarUser } from "@/components/sidebar/Sidebar";
 import styles from "./area-do-servidor.module.css";
 
 type FormState = {
@@ -46,7 +46,7 @@ function Field({ label, required, children, wide = false }: { label: string; req
   return <label className={`${styles.field} ${wide ? styles.wide : ""}`}><span>{label}{required && <b aria-hidden="true"> *</b>}</span>{children}</label>;
 }
 
-export default function ObraForm() {
+export default function ObraForm({ user }: { user: SidebarUser }) {
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState<"idle" | "saved" | "error" | "sending">("idle");
   const [message, setMessage] = useState("");
@@ -72,7 +72,7 @@ export default function ObraForm() {
   };
   return (
     <div className={styles.shell}>
-      <Sidebar />
+      <Sidebar user={user} />
       <div className={styles.body}>
         <aside className={styles.sidebar}>
           <div className={styles.profile}><div className={styles.profileIcon}><Building2 size={21} /></div><div><strong>Gestão Pública</strong><small>Sec. de Infraestrutura</small></div></div>
