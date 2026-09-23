@@ -40,6 +40,7 @@ export async function GET(request: Request) {
 
   try {
     const where: Prisma.ObraWhereInput = {
+      deletedAt: null,
       ...(query.status ? { status: query.status } : {}),
       ...(query.secretariaId ? { secretariaId: query.secretariaId } : {}),
       ...(query.eixoId ? { eixoId: query.eixoId } : {}),
@@ -192,8 +193,6 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const authorization = await requireUser([
-    Role.SUPER_ADMIN,
-    Role.GESTAO,
     Role.ADM_SECRETARIA,
   ]);
 
@@ -205,7 +204,11 @@ export async function POST(request: Request) {
     let body: unknown;
 
     try {
-      body = await request.json();
+      const parsedBody: unknown = await request.json();
+      if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+        throw new Error("Corpo inválido");
+      }
+      body = { ...parsedBody, secretariaId: authorization.user.secretariaId };
     } catch {
       return NextResponse.json(
         { message: "O corpo da requisição deve conter um JSON válido." },
@@ -227,7 +230,7 @@ export async function POST(request: Request) {
 
     const data = result.data;
 
-    if (!canAccessSecretaria(authorization.user, data.secretariaId)) {
+    if (!authorization.user.secretariaId || !canAccessSecretaria(authorization.user, data.secretariaId)) {
       return NextResponse.json(
         { message: "Você não tem permissão para esta secretaria." },
         { status: 403 },

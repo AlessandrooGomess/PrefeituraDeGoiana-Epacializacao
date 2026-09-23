@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { ObraItem } from "@/types/obra";
+import type { EixoComSecretarias, ObraItem } from "@/types/obra";
 
 interface MapContainerProps {
   initialCenter?: [number, number]; // [longitude, latitude]
   initialZoom?: number;
   className?: string;
   onObrasLoaded?: (obras: ObraItem[]) => void;
+  onFiltersLoaded?: (eixos: EixoComSecretarias[]) => void;
   onSelectObra?: (obra: ObraItem) => void;
   selectedObraId?: string;
   visibleObraIds?: string[];
@@ -28,49 +29,6 @@ const GOIANA_BOUNDS: [[number, number], [number, number]] = [
   [-35.077806, -7.714654],
   [-34.806691, -7.462009],
 ];
-
-// Sanitização contra XSS para injeção segura no Popup do MapLibre
-function escapeHtml(text: string | null | undefined): string {
-  if (!text) return "";
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-// Formatadores seguros
-function formatarMoeda(valor: number | null): string | null {
-  if (valor === null || valor === undefined) return null;
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(valor);
-}
-
-function formatarData(dataIso: string | null): string | null {
-  if (!dataIso) return null;
-  try {
-    const data = new Date(dataIso);
-    return isNaN(data.getTime())
-      ? null
-      : data.toLocaleDateString("pt-BR", { timeZone: "UTC" });
-  } catch {
-    return null;
-  }
-}
-
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; bg: string; text: string }
-> = {
-  PLANEJADA: { label: "Planejada", bg: "#F1F5F9", text: "#475569" },
-  ORDEM_EMITIDA: { label: "Ordem Emitida", bg: "#E0F2FE", text: "#0369A1" },
-  EM_ANDAMENTO: { label: "Em Andamento", bg: "#FEF3C7", text: "#B45309" },
-  PARALISADA: { label: "Paralisada", bg: "#FEE2E2", text: "#B91C1C" },
-  CONCLUIDA: { label: "Concluída", bg: "#DCFCE7", text: "#15803D" },
-};
 
 // Validador estrito de coordenadas geográficas válidas
 function isValidCoordinate(lat: unknown, lng: unknown): boolean {
@@ -91,6 +49,7 @@ export default function MapContainer({
   initialZoom = GOIANA_DEFAULT_ZOOM,
   className = "w-full h-full min-h-[500px]",
   onObrasLoaded,
+  onFiltersLoaded,
   onSelectObra,
   selectedObraId,
   visibleObraIds,
@@ -211,15 +170,22 @@ export default function MapContainer({
         setLoading(true);
         setError(null);
 
-        const response = await fetch("/api/obras");
-        if (!response.ok) {
-          throw new Error(`Falha ao carregar obras (status: ${response.status})`);
+        const [obrasResponse, filtersResponse] = await Promise.all([
+          fetch("/api/obras"),
+          fetch("/api/filtros"),
+        ]);
+        if (!obrasResponse.ok || !filtersResponse.ok) {
+          throw new Error("Falha ao carregar dados do mapa.");
         }
 
-        const dados: ObraItem[] = await response.json();
+        const [dados, eixos]: [ObraItem[], EixoComSecretarias[]] = await Promise.all([
+          obrasResponse.json(),
+          filtersResponse.json(),
+        ]);
         if (isMounted) {
           setObras(dados);
           onObrasLoaded?.(dados);
+          onFiltersLoaded?.(eixos);
         }
       } catch (err) {
         console.error("Erro na busca de obras:", err);
@@ -240,7 +206,7 @@ export default function MapContainer({
     return () => {
       isMounted = false;
     };
-  }, [onObrasLoaded]);
+  }, [onFiltersLoaded, onObrasLoaded]);
 
   // 3. Renderização dos Marcadores e Popups no Mapa
   useEffect(() => {
@@ -260,80 +226,23 @@ export default function MapContainer({
         return;
       }
 
-      const status = STATUS_CONFIG[obra.status] || {
-        label: obra.status,
-        bg: "#F1F5F9",
-        text: "#475569",
-      };
-
-      const valorFormatado = formatarMoeda(obra.valorContrato);
-      const previsaoFormatada = formatarData(obra.previsaoConclusao);
       const corSecretaria = obra.secretaria?.corIdentificacao || "#2563EB";
-
-      // HTML estruturado e seguro para o Popup
-      const popupContent = `
-        <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 240px; max-width: 300px; padding: 2px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
-            <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 9999px; background: ${status.bg}; color: ${status.text};">
-              ${escapeHtml(status.label)}
-            </span>
-            <span style="font-size: 11px; font-weight: 700; color: ${corSecretaria};">
-              ${escapeHtml(obra.secretaria?.sigla || "")}
-            </span>
-          </div>
-
-          <h3 style="font-size: 13px; font-weight: 700; color: #0F172A; margin: 0 0 6px 0; line-height: 1.35;">
-            🏗️ ${escapeHtml(obra.titulo)}
-          </h3>
-
-          ${
-            obra.descricao
-              ? `<p style="font-size: 11px; color: #475569; margin: 0 0 8px 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${escapeHtml(obra.descricao)}</p>`
-              : ""
-          }
-
-          <div style="border-top: 1px solid #E2E8F0; padding-top: 6px; font-size: 11px; color: #334155; display: flex; flex-direction: column; gap: 3px;">
-            <div><strong>📍 Endereço:</strong> ${escapeHtml(obra.endereco)}</div>
-            <div><strong>🏘️ Bairro:</strong> ${escapeHtml(obra.bairro)}</div>
-            ${
-              obra.percentualExecutado !== null
-                ? `<div><strong>📊 Execução:</strong> ${obra.percentualExecutado.toFixed(1)}%</div>`
-                : ""
-            }
-            ${
-              previsaoFormatada
-                ? `<div><strong>📅 Previsão:</strong> ${previsaoFormatada}</div>`
-                : ""
-            }
-            ${
-              valorFormatado
-                ? `<div><strong>💰 Contrato:</strong> ${valorFormatado}</div>`
-                : ""
-            }
-          </div>
-        </div>
-      `;
-
-      const popup = new maplibregl.Popup({
-        offset: 25,
-        closeButton: true,
-        closeOnClick: true,
-        maxWidth: "320px",
-      }).setHTML(popupContent);
 
       // Marcador com cor temática da secretaria da obra
       const marker = new maplibregl.Marker({
         color: corSecretaria,
       })
         .setLngLat([obra.longitude, obra.latitude])
-        .setPopup(popup)
         .addTo(map);
 
       if (obra.id === selectedObraId) {
         marker.getElement().classList.add("map-marker-selected");
       }
 
-      marker.getElement().addEventListener("click", () => onSelectObra?.(obra));
+      marker.getElement().addEventListener("click", (event) => {
+        event.stopPropagation();
+        onSelectObra?.(obra);
+      });
 
       markersRef.current.push(marker);
     });

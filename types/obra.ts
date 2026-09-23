@@ -19,6 +19,10 @@ export interface EixoResumo {
   cor: string | null;
 }
 
+export interface EixoComSecretarias extends EixoResumo {
+  secretarias: SecretariaResumo[];
+}
+
 export interface AreaTematicaResumo {
   id: string;
   nome: string;

@@ -1,7 +1,8 @@
 .portal-shell {
-  min-height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: #f4f7fb;
   color: #172033;
 }
@@ -38,7 +39,7 @@
   width: 38px;
   height: 38px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   padding: 8px;
   border: 0;
   border-radius: 5px;
@@ -202,6 +203,51 @@
   accent-color: var(--cor-principal);
 }
 
+.filter-group {
+  border-bottom: 1px solid #e6edf5;
+}
+
+.filter-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filter-group-heading .check-row {
+  flex: 1;
+  font-weight: 600;
+}
+
+.filter-group-toggle {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #526178;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.filter-group-toggle:hover {
+  background: #edf4fc;
+  color: var(--cor-principal);
+}
+
+.secretary-list {
+  display: grid;
+  gap: 2px;
+  padding: 0 0 8px 24px;
+}
+
+.secretary-list .check-row {
+  min-height: 30px;
+  font-size: 0.78rem;
+}
+
 .color-dot {
   width: 9px;
   height: 9px;
@@ -217,7 +263,7 @@
 
 .map-area {
   position: relative;
-  min-height: calc(100vh - 112px);
+  min-height: 0;
   overflow: hidden;
   background: #dce8f5;
   display: flex;
@@ -246,12 +292,12 @@
   justify-content: center;
   gap: 24px;
   padding: 10px 20px;
-  background: #fff;
-  border-top: 1px solid #dce4ef;
+  background: var(--cor-header-footer);
+  border-top: 1px solid var(--cor-header-footer);
 }
 
 .portal-shell > footer a {
-  color: #718096;
+  color: rgb(255 255 255 / 86%);
   font-size: 0.7rem;
   text-decoration: none;
 }
@@ -534,6 +580,9 @@
   }
 
   .portal-shell > footer {
-    display: none;
+    min-height: 42px;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 8px 12px;
   }
 }

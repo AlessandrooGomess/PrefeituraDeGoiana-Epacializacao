@@ -4,7 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
 import { serializeDate } from "@/lib/serializers/obra";
-import { createMedicaoSchema } from "@/lib/validations/medicao";
+import { createFotoSchema } from "@/lib/validations/foto";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -33,40 +33,33 @@ export async function GET(_request: Request, context: RouteContext) {
       );
     }
 
-    const medicoes = await prisma.medicao.findMany({
+    const fotos = await prisma.foto.findMany({
       where: { obraId: id },
-      orderBy: { dataVistoria: "desc" },
+      orderBy: { dataFoto: "desc" },
       select: {
         id: true,
         obraId: true,
-        engenheiroId: true,
-        dataVistoria: true,
-        percentualExecutado: true,
-        observacoesTecnicas: true,
+        usuarioId: true,
+        url: true,
+        tipo: true,
+        descricao: true,
+        dataFoto: true,
         createdAt: true,
-        engenheiro: {
-          select: {
-            id: true,
-            nome: true,
-            cargo: true,
-          },
-        },
       },
     });
 
     return NextResponse.json(
-      medicoes.map((medicao) => ({
-        ...medicao,
-        dataVistoria: serializeDate(medicao.dataVistoria),
-        percentualExecutado: Number(medicao.percentualExecutado),
-        createdAt: serializeDate(medicao.createdAt),
+      fotos.map((foto) => ({
+        ...foto,
+        dataFoto: serializeDate(foto.dataFoto),
+        createdAt: serializeDate(foto.createdAt),
       })),
       { status: 200 },
     );
   } catch (error) {
-    console.error("Erro ao buscar medições:", error);
+    console.error("Erro ao buscar fotos:", error);
     return NextResponse.json(
-      { message: "Erro interno ao carregar as medições da obra." },
+      { message: "Erro interno ao carregar as fotos da obra." },
       { status: 500 },
     );
   }
@@ -82,7 +75,12 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  const authorization = await requireUser([Role.ENGENHEIRO]);
+  const authorization = await requireUser([
+    Role.SUPER_ADMIN,
+    Role.GESTAO,
+    Role.ADM_SECRETARIA,
+    Role.ENGENHEIRO,
+  ]);
 
   if (authorization.response) {
     return authorization.response;
@@ -99,12 +97,12 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  const result = createMedicaoSchema.safeParse(body);
+  const result = createFotoSchema.safeParse(body);
 
   if (!result.success) {
     return NextResponse.json(
       {
-        message: "Os dados da medição são inválidos.",
+        message: "Os dados da foto são inválidos.",
         errors: result.error.issues,
       },
       { status: 400 },
@@ -126,81 +124,56 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (!canAccessSecretaria(authorization.user, obra.secretariaId)) {
       return NextResponse.json(
-        { message: "Você não tem permissão para registrar medição nesta obra." },
+        { message: "Você não tem permissão para adicionar foto nesta obra." },
         { status: 403 },
       );
     }
 
-    if (result.data.engenheiroId !== authorization.user.id) {
-      return NextResponse.json(
-        { message: "A medição deve ser registrada pelo engenheiro autenticado." },
-        { status: 403 },
-      );
-    }
-
-    const engenheiro = await prisma.usuario.findUnique({
-      where: { id: result.data.engenheiroId },
-      select: { id: true, role: true, ativo: true },
-    });
-
-    if (
-      !engenheiro ||
-      engenheiro.role !== "ENGENHEIRO" ||
-      !engenheiro.ativo
-    ) {
-      return NextResponse.json(
-        {
-          message: "O engenheiro informado é inválido ou está inativo.",
-          fields: ["engenheiroId"],
-        },
-        { status: 400 },
-      );
-    }
-
-    const medicao = await prisma.medicao.create({
+    const foto = await prisma.foto.create({
       data: {
         obraId: id,
-        engenheiroId: result.data.engenheiroId,
-        dataVistoria: result.data.dataVistoria
-          ? new Date(result.data.dataVistoria)
+        usuarioId: authorization.user.id,
+        url: result.data.url,
+        tipo: result.data.tipo,
+        descricao: result.data.descricao ?? null,
+        dataFoto: result.data.dataFoto
+          ? new Date(result.data.dataFoto)
           : undefined,
-        percentualExecutado: result.data.percentualExecutado,
-        observacoesTecnicas: result.data.observacoesTecnicas ?? null,
       },
       select: {
         id: true,
         obraId: true,
-        engenheiroId: true,
-        dataVistoria: true,
-        percentualExecutado: true,
-        observacoesTecnicas: true,
+        usuarioId: true,
+        url: true,
+        tipo: true,
+        descricao: true,
+        dataFoto: true,
         createdAt: true,
       },
     });
 
     return NextResponse.json(
       {
-        ...medicao,
-        dataVistoria: serializeDate(medicao.dataVistoria),
-        percentualExecutado: Number(medicao.percentualExecutado),
-        createdAt: serializeDate(medicao.createdAt),
+        ...foto,
+        dataFoto: serializeDate(foto.dataFoto),
+        createdAt: serializeDate(foto.createdAt),
       },
       { status: 201 },
     );
   } catch (error) {
-    console.error("Erro ao criar medição:", error);
+    console.error("Erro ao criar foto:", error);
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2003") {
         return NextResponse.json(
-          { message: "A obra ou o engenheiro informado não existe." },
+          { message: "A obra ou o usuário informado não existe." },
           { status: 400 },
         );
       }
     }
 
     return NextResponse.json(
-      { message: "Erro interno ao criar medição." },
+      { message: "Erro interno ao criar foto." },
       { status: 500 },
     );
   }
