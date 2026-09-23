@@ -62,7 +62,7 @@ export default async function AreaDoServidor() {
       <div className={styles.body}>
         <aside className={styles.sidebar}>
           <div className={styles.profile}><div className={styles.profileIcon}>GP</div><div><strong>Gestão Pública</strong><small>Área administrativa</small></div></div>
-          <div className={styles.navList}><span className={`${styles.navItem} ${styles.navItemActive}`}>Dashboard</span><span className={styles.navItem}>Obras e Projetos</span><span className={styles.navItem}>Vistorias e Fiscalizações</span><span className={styles.navItem}>Contratos</span><span className={styles.navItem}>Relatórios</span></div>
+          <div className={styles.navList}><span className={`${styles.navItem} ${styles.navItemActive}`}>Visão geral</span><Link className={styles.navItem} href="/area-do-servidor/nova-obra">Cadastrar obra</Link></div>
         </aside>
         <main className={styles.main}>
           <div className={styles.pageHeading}>

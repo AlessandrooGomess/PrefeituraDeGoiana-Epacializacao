@@ -15,22 +15,6 @@
   padding: 0 28px;
 }
 
-.logo {
-  width: 70px;
-  height: 40px;
-  display: grid;
-  flex: 0 0 70px;
-  place-items: center;
-  border-right: 1px solid rgb(255 255 255 / 35%);
-  color: #f4d64a;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  text-decoration: none;
-}
-
-.logoImage { width: 70px; height: 40px; object-fit: contain; }
-
 .brand {
   color: white;
   font-size: 17px;
@@ -63,8 +47,7 @@
   color: white;
 }
 
-.user,
-.guest {
+.user {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -80,19 +63,16 @@
 .avatar,
 .avatarFallback { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
 .avatarFallback { display: grid; place-items: center; background: rgb(255 255 255 / 18%); color: white; }
-.guest { color: rgb(255 255 255 / 80%); font-size: 10px; }
 .menuButton { display: none; border: 0; background: transparent; color: white; cursor: pointer; }
 
 @media (max-width: 680px) {
   .inner { min-height: 56px; gap: 9px; padding: 0 16px; }
-  .logo { width: 50px; height: 34px; flex-basis: 50px; font-size: 12px; }
-  .logoImage { width: 50px; height: 34px; }
   .brand { font-size: 13px; }
   .navigation { position: absolute; top: 56px; right: 12px; left: 12px; display: none; height: auto; padding: 8px; border: 1px solid #dce4ef; border-radius: 6px; background: white; box-shadow: 0 8px 20px rgb(15 39 72 / 16%); }
   .navigationOpen { display: flex; flex-direction: column; align-items: stretch; gap: 2px; }
   .navigation a { height: auto; padding: 11px 12px; border: 0; border-radius: 4px; color: #53627b; font-size: 12px; }
   .navigation a:hover, .navigation .active { background: #eef5ff; color: #126bcc; }
-  .userText, .guest { display: none; }
-  .user, .guest { margin-left: auto; padding-left: 0; border-left: 0; }
+  .userText { display: none; }
+  .user { margin-left: auto; padding-left: 0; border-left: 0; }
   .menuButton { display: inline-grid; place-items: center; margin-left: 4px; }
 }

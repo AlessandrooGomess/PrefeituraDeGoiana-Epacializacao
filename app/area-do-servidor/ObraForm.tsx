@@ -77,7 +77,7 @@ export default function ObraForm({ user }: { user: SidebarUser }) {
         <aside className={styles.sidebar}>
           <div className={styles.profile}><div className={styles.profileIcon}><Building2 size={21} /></div><div><strong>Gestão Pública</strong><small>Sec. de Infraestrutura</small></div></div>
           <button className={styles.serviceButton} type="button"><FileText size={14} /> Ordens de Serviço</button>
-          <div className={styles.navList}>{["Dashboard", "Obras e Projetos", "Vistorias e Fiscalizações", "Contratos", "Relatórios"].map((label) => <button className={`${styles.navItem} ${label === "Obras e Projetos" ? styles.navItemActive : ""}`} key={label} type="button">{label}</button>)}</div>
+          <div className={styles.navList}><Link className={styles.navItem} href="/area-do-servidor">Visão geral</Link><span className={`${styles.navItem} ${styles.navItemActive}`}>Cadastrar obra</span></div>
           <div className={styles.sidebarBottom}><button className={styles.navItem} type="button"><Settings size={15} /> Configurações</button><button className={styles.navItem} type="button"><HelpCircle size={15} /> Ajuda e suporte</button></div>
         </aside>
         <main className={styles.main}>
