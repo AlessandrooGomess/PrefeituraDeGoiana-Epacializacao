@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Sidebar from "@/components/sidebar/Sidebar";
 import type { ObraItem as ObraApiItem, StatusObra } from "@/types/obra";
 import {
   Search,
@@ -306,37 +306,8 @@ export default function PaginaCarteiraProjetos() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fbfcfd] text-[#0f172a] font-sans antialiased selection:bg-blue-100">
-      <header className="bg-(--cor-header-footer) text-white sticky top-0 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <nav className="ml-auto flex items-center space-x-8 text-sm font-medium">
-            <Link
-              href="/"
-              className="text-slate-300 hover:text-white transition-colors duration-150"
-            >
-              Mapa
-            </Link>
-
-            <div className="relative py-5">
-              <Link
-                href="/projetos"
-                className="text-white font-semibold flex items-center gap-1"
-              >
-                Projetos
-              </Link>
-
-              <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white rounded-t-full" />
-            </div>
-
-            <Link
-              href="/area-do-servidor"
-              className="text-slate-300 hover:text-white transition-colors duration-150"
-            >
-              Área do Servidor
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col bg-[#fbfcfd] pt-14.5 text-[#0f172a] font-sans antialiased selection:bg-blue-100">
+      <Sidebar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-8 border-b border-slate-100">
