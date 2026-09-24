@@ -15,8 +15,10 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
+    // Hidrata o formulário a partir do localStorage; só é possível no cliente, após o mount.
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza estado inicial com storage externo
       setEmail(savedEmail);
       setRememberMe(true);
     }
@@ -51,15 +53,15 @@ export default function LoginPage() {
 
   return (
     <main 
-      className="min-h-[100dvh] md:h-screen w-full relative flex items-center justify-center bg-[#F9F9FF] p-4 sm:p-6 lg:p-12 md:overflow-hidden"
+      className="min-h-dvh md:h-screen w-full relative flex items-center justify-center bg-[#F9F9FF] p-4 sm:p-6 lg:p-12 md:overflow-hidden"
     >
       {/* Top blue bar */}
       <div className="absolute top-0 left-0 w-full h-2 bg-[#00346F]" />
 
-      <div className="flex w-full max-w-[1024px] h-auto md:h-full max-h-none md:max-h-[600px] bg-white overflow-hidden border border-[#C2C6D3] shadow-sm rounded-sm">
+      <div className="flex w-full max-w-5xl h-auto md:h-full max-h-none md:max-h-150 bg-white overflow-hidden border border-[#C2C6D3] shadow-sm rounded-sm">
         
         {/* Left Side */}
-        <div className="relative flex-1 p-8 lg:p-[48px] bg-[#EDEDF5] border-r border-[#C2C6D3] hidden md:flex flex-col justify-between items-start">
+        <div className="relative flex-1 p-8 lg:p-12 bg-[#EDEDF5] border-r border-[#C2C6D3] hidden md:flex flex-col justify-between items-start">
           {/* Background pattern image */}
           <div className="absolute inset-0 overflow-hidden flex items-center justify-center pointer-events-none">
              {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -79,7 +81,7 @@ export default function LoginPage() {
                 </svg>
               </div>
               <div className="inline-flex flex-col justify-center">
-                <h1 className="text-[32px] font-bold leading-[40px] font-sans">Prefeitura de Goiana</h1>
+                <h1 className="text-[32px] font-bold leading-10 font-sans">Prefeitura de Goiana</h1>
               </div>
             </div>
             
@@ -87,22 +89,22 @@ export default function LoginPage() {
               Portal de Infraestrutura
             </h2>
             
-            <p className="text-[#121C2C] text-[18px] leading-7 max-w-[448px] mt-4 font-sans">
+            <p className="text-[#121C2C] text-[18px] leading-7 max-w-md mt-4 font-sans">
               Sistema centralizado para gestão, monitoramento<br />e transparência de obras públicas e infraestrutura.
             </p>
           </div>
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="flex-1 p-6 sm:p-8 lg:p-[48px] bg-white flex flex-col justify-center items-start w-full">
-          <div className="mb-6 lg:mb-[32px] w-full">
+        <div className="flex-1 p-6 sm:p-8 lg:p-12 bg-white flex flex-col justify-center items-start w-full">
+          <div className="mb-6 lg:mb-8 w-full">
              {/* eslint-disable-next-line @next/next/no-img-element */}
-             <img src="/logo-goiana.png" alt="Goiana Logo" className="h-[76px] w-auto object-contain mb-6" />
+             <img src="/logo-goiana.png" alt="Goiana Logo" className="h-19 w-auto object-contain mb-6" />
              <h3 className="text-[#191C21] text-[32px] font-semibold leading-8 mb-1 font-sans">Acesso ao Sistema</h3>
              <p className="text-[#121C2C] text-[16px] font-sans">Insira suas credenciais para continuar.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="w-full max-w-[415px] flex flex-col gap-3">
+          <form onSubmit={handleSubmit} className="w-full max-w-103.75 flex flex-col gap-3">
             
             {/* Email Field */}
             <div className="flex flex-col gap-2">
@@ -120,7 +122,7 @@ export default function LoginPage() {
                   autoComplete="username"
                   required
                   placeholder="Digite seu e-mail"
-                  className="w-full bg-[#F3F3FA] border border-[#C2C6D3] text-[#6B7280] text-[16px] py-3 pl-[44px] pr-3 focus:outline-none focus:ring-1 focus:ring-[#1170D6] focus:border-[#1170D6] transition-colors font-sans"
+                  className="w-full bg-[#F3F3FA] border border-[#C2C6D3] text-[#6B7280] text-[16px] py-3 pl-11 pr-3 focus:outline-none focus:ring-1 focus:ring-[#1170D6] focus:border-[#1170D6] transition-colors font-sans"
                 />
               </div>
             </div>
@@ -141,7 +143,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   required
                   placeholder="••••••••"
-                  className="w-full bg-[#F3F3FA] border border-[#C2C6D3] text-[#6B7280] text-[16px] py-3 pl-[44px] pr-12 focus:outline-none focus:ring-1 focus:ring-[#1170D6] focus:border-[#1170D6] transition-colors font-sans"
+                  className="w-full bg-[#F3F3FA] border border-[#C2C6D3] text-[#6B7280] text-[16px] py-3 pl-11 pr-12 focus:outline-none focus:ring-1 focus:ring-[#1170D6] focus:border-[#1170D6] transition-colors font-sans"
                 />
                 <button 
                   type="button"
@@ -190,7 +192,7 @@ export default function LoginPage() {
               className="mt-1 w-full bg-[#1170D6] hover:bg-[#0E5CA8] transition-colors shadow-sm rounded-[5px] flex justify-center items-center gap-2 py-[12px] text-white text-[15px] font-semibold uppercase tracking-[0.6px] disabled:opacity-70 disabled:cursor-not-allowed font-sans"
             >
               {loading ? "Entrando..." : "Entrar"}
-              {!loading && <LogIn className="w-[18px] h-[18px]" />}
+              {!loading && <LogIn className="w-4.5 h-4.5" />}
             </button>
           </form>
         </div>
