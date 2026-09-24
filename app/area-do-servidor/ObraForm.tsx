@@ -79,16 +79,37 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
   const [message, setMessage] = useState("");
 
   const update = (field: keyof FormState, value: string) => {
-    setForm((current) => ({ ...current, [field]: value }));
+    const nextForm = { ...form, [field]: value };
+    setForm(nextForm);
     setStatus("idle");
     setMessage("");
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => {
-        const next = { ...prev };
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      if (next[field]) {
         delete next[field];
-        return next;
-      });
-    }
+      }
+
+      // Validação dinâmica entre data da OS e previsão de conclusão
+      if (field === "dataOrdemServico" || field === "previsaoConclusao") {
+        const os = field === "dataOrdemServico" ? value : nextForm.dataOrdemServico;
+        const conclusao = field === "previsaoConclusao" ? value : nextForm.previsaoConclusao;
+
+        if (os && conclusao) {
+          if (conclusao < os) {
+            next.previsaoConclusao =
+              "A previsão de conclusão não pode ser anterior à data da ordem de serviço.";
+          } else if (
+            next.previsaoConclusao ===
+            "A previsão de conclusão não pode ser anterior à data da ordem de serviço."
+          ) {
+            delete next.previsaoConclusao;
+          }
+        }
+      }
+
+      return next;
+    });
   };
 
   const validateClientForm = (): FieldErrors => {
@@ -432,6 +453,7 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
                 <Field label="Previsão de conclusão / entrega" error={fieldErrors.previsaoConclusao}>
                   <input
                     type="date"
+                    min={form.dataOrdemServico || undefined}
                     value={form.previsaoConclusao}
                     onChange={(event) => update("previsaoConclusao", event.target.value)}
                   />
