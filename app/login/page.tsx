@@ -107,7 +107,7 @@ export default function LoginPage() {
             {/* Email Field */}
             <div className="flex flex-col gap-2">
               <label className="text-[#121C2C] text-[13px] font-medium uppercase tracking-[0.6px] font-sans">
-                USUÁRIO / CPF
+                E-MAIL
               </label>
               <div className="relative flex items-center">
                 <div className="absolute left-4 text-[#737783]">
@@ -119,7 +119,7 @@ export default function LoginPage() {
                   onChange={(event) => setEmail(event.target.value)}
                   autoComplete="username"
                   required
-                  placeholder="Digite seu usuário"
+                  placeholder="Digite seu e-mail"
                   className="w-full bg-[#F3F3FA] border border-[#C2C6D3] text-[#6B7280] text-[16px] py-3 pl-[44px] pr-3 focus:outline-none focus:ring-1 focus:ring-[#1170D6] focus:border-[#1170D6] transition-colors font-sans"
                 />
               </div>
