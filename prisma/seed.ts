@@ -156,7 +156,7 @@ async function main() {
   const engenheiro = await prisma.usuario.create({
     data: {
       nome: "Fiscal de Obras - Prefeitura de Goiana",
-      email: "fiscal.obras@goiana.pe.gov.br",
+      email: "engenheiro.seduo@goiana.pe.gov.br",
       cargo: "Engenheiro Civil Fiscal",
       role: Role.ENGENHEIRO,
       secretariaId: seinfra.id,
@@ -166,7 +166,7 @@ async function main() {
   const engenheiroSeduc = await prisma.usuario.create({
     data: {
       nome: "Fiscal de Obras da Educação",
-      email: "fiscal.educacao@goiana.pe.gov.br",
+      email: "engenheiro.seduc@goiana.pe.gov.br",
       cargo: "Engenheiro Civil Fiscal",
       role: Role.ENGENHEIRO,
       secretariaId: seduc.id,

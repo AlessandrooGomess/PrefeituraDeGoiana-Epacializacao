@@ -349,6 +349,13 @@ export default function PaginaCarteiraProjetos() {
                 }
                 onKeyDown={(e) => {
                   if (e.key === "Escape") setTermoBusca("");
+                  if (e.key === "/" || e.key === "\\") e.preventDefault();
+                  if (
+                    (e.key === " " || e.key === "Spacebar") &&
+                    (e.currentTarget.selectionStart === 0 || !e.currentTarget.value)
+                  ) {
+                    e.preventDefault();
+                  }
                 }}
                 maxLength={MAX_SEARCH_LENGTH}
                 placeholder="Buscar por nome ou categoria..."

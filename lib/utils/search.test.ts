@@ -31,9 +31,25 @@ describe("sanitizeSearchInput", () => {
     expect(resultado).toBe("Obra no Centro");
   });
 
-  it("preserva caracteres acentuados válidos e pontuações comuns", () => {
-    const texto = "Reforma & Pavimentação - Goiana/PE nº 123";
+  it("preserva caracteres acentuados válidos, hífens e números", () => {
+    const texto = "Reforma & Pavimentação - Goiana PE nº 123";
     expect(sanitizeSearchInput(texto)).toBe(texto);
+  });
+
+  it("remove barras normais e invertidas (/ e \\)", () => {
+    expect(sanitizeSearchInput("Goiana/PE")).toBe("GoianaPE");
+    expect(sanitizeSearchInput("pasta\\arquivo/subpasta")).toBe("pastaarquivosubpasta");
+  });
+
+  it("remove caracteres especiais inseguros (<, >, {, }, [, ], ;, \", ', |, ^, ~, `)", () => {
+    expect(sanitizeSearchInput("<script>alert('xss');</script>")).toBe("scriptalert(xss)script");
+    expect(sanitizeSearchInput("obra {bloco [A]} \"teste\" ~ ^ | `code`")).toBe("obra bloco A teste code");
+  });
+
+  it("remove espaços em branco no início e colapsa espaços duplicados", () => {
+    expect(sanitizeSearchInput("   escola")).toBe("escola");
+    expect(sanitizeSearchInput("escola    técnica   goiana")).toBe("escola técnica goiana");
+    expect(sanitizeSearchInput("     ")).toBe("");
   });
 });
 
