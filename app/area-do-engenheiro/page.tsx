@@ -15,9 +15,3 @@ export default async function AreaDoEngenheiro() {
 
   return null;
 }
-
-const session = await auth();
-
-if (session?.user?.role === Role.ENGENHEIRO) {
-    redirect("/area-do-engenheiro");
-}
