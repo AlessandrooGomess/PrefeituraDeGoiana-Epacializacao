@@ -2,8 +2,9 @@
 
 import { FormEvent, useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, Lock, EyeOff, Eye, LogIn } from "lucide-react";
+import { User, Lock, EyeOff, Eye, LogIn, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -194,6 +195,14 @@ export default function LoginPage() {
               {loading ? "Entrando..." : "Entrar"}
               {!loading && <LogIn className="w-4.5 h-4.5" />}
             </button>
+
+            <Link
+              href="/"
+              className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-[5px] border border-[#C2C6D3] bg-white py-[11px] text-[15px] font-semibold uppercase tracking-[0.6px] text-[#424751] transition-colors hover:border-[#1170D6] hover:bg-[#F3F7FC] hover:text-[#1170D6] focus:outline-none focus:ring-2 focus:ring-[#1170D6] focus:ring-offset-2"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              Voltar ao mapa
+            </Link>
           </form>
         </div>
       </div>
