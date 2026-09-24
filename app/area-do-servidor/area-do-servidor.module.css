@@ -138,11 +138,29 @@
 .pageTitle em { display: inline-block; margin-left: 8px; padding: 4px 8px; border-radius: 4px; background: #e8f1ff; color: #1770cc; font-size: 10px; font-weight: 700; font-style: normal; letter-spacing: .05em; vertical-align: middle; }
 .pageHeading p { max-width: 590px; margin: 7px 0 0; color: #64748b; font-size: 13px; line-height: 1.5; }
 .headingActions { display: flex; flex: 0 0 auto; gap: 9px; padding-top: 26px; }
-.primaryButton, .secondaryButton, .cancelButton { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 0 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.primaryButton, .secondaryButton, .cancelButton { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 0 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity 0.15s, background-color 0.15s; }
 .primaryButton { border: 1px solid #0874d9; background: #0874d9; color: white; }
-.primaryButton:hover { background: #075eaf; }
+.primaryButton:hover:not(:disabled) { background: #075eaf; }
 .secondaryButton, .cancelButton { border: 1px solid #d8e0ec; background: white; color: #56647a; }
-.secondaryButton:hover, .cancelButton:hover { background: #f2f6fc; }
+.secondaryButton:hover:not(:disabled), .cancelButton:hover:not(:disabled) { background: #f2f6fc; }
+.primaryButton:disabled, .secondaryButton:disabled, .cancelButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .form { display: grid; gap: 17px; }
 .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 17px; }

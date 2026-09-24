@@ -1,8 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
-import { AlertCircle, Building2, CheckCircle2, HelpCircle, Save, Send, Settings, Upload } from "lucide-react";
+import { FormEvent, useRef, useState } from "react";
+import {
+  AlertCircle,
+  Building2,
+  CheckCircle2,
+  HelpCircle,
+  Loader2,
+  Save,
+  Send,
+  Settings,
+  Upload,
+} from "lucide-react";
 import Sidebar, { type SidebarUser } from "@/components/sidebar/Sidebar";
 import { formatCurrencyBRL, parseCurrencyBRLToNumber } from "@/lib/utils/currency";
 import styles from "./area-do-servidor.module.css";
@@ -73,6 +83,7 @@ type ObraFormProps = {
 };
 
 export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProps) {
+  const isSubmittingRef = useRef(false);
   const [form, setForm] = useState(initialForm);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<"idle" | "saved" | "error" | "sending">("idle");
@@ -161,6 +172,11 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    // Prevenção imediata de duplo clique / submissões concorrentes
+    if (isSubmittingRef.current || status === "sending") {
+      return;
+    }
+
     // 1. Validação preventiva no cliente
     const clientErrors = validateClientForm();
     if (Object.keys(clientErrors).length > 0) {
@@ -170,6 +186,7 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
       return;
     }
 
+    isSubmittingRef.current = true;
     setStatus("sending");
     setFieldErrors({});
     setMessage("");
@@ -237,6 +254,8 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
     } catch {
       setStatus("error");
       setMessage("Erro de conexão ao tentar salvar a obra. Verifique sua rede e tente novamente.");
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
   return (
@@ -273,7 +292,15 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
                 form="obra-form"
                 disabled={status === "sending"}
               >
-                <Send size={16} /> {status === "sending" ? "Publicando..." : "Publicar"}
+                {status === "sending" ? (
+                  <>
+                    <Loader2 size={16} className={styles.spinner} /> Publicando...
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} /> Publicar
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -504,7 +531,15 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
                   type="submit"
                   disabled={status === "sending"}
                 >
-                  <Send size={16} /> {status === "sending" ? "Publicando..." : "Publicar obra"}
+                  {status === "sending" ? (
+                    <>
+                      <Loader2 size={16} className={styles.spinner} /> Publicando...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={16} /> Publicar obra
+                    </>
+                  )}
                 </button>
               </div>
             </div>
