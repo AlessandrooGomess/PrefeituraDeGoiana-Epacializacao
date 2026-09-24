@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { AlertCircle, Building2, CheckCircle2, HelpCircle, Save, Send, Settings, Upload } from "lucide-react";
 import Sidebar, { type SidebarUser } from "@/components/sidebar/Sidebar";
+import { formatCurrencyBRL, parseCurrencyBRLToNumber } from "@/lib/utils/currency";
 import styles from "./area-do-servidor.module.css";
 
 type FormState = {
@@ -163,7 +164,7 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
           bairro: form.bairro.trim(),
           latitude: Number(form.latitude),
           longitude: Number(form.longitude),
-          valorContrato: form.valorContrato ? Number(form.valorContrato) : null,
+          valorContrato: parseCurrencyBRLToNumber(form.valorContrato),
           empresaContratada: form.empresaContratada.trim() || null,
           numeroOrdemServico: form.numeroOrdemServico.trim() || null,
           dataOrdemServico: form.dataOrdemServico || null,
@@ -412,11 +413,13 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
                 </Field>
                 <Field label="Valor homologado / contratual" error={fieldErrors.valorContrato}>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="numeric"
                     value={form.valorContrato}
-                    onChange={(event) => update("valorContrato", event.target.value)}
-                    placeholder="2450000.00"
+                    onChange={(event) =>
+                      update("valorContrato", formatCurrencyBRL(event.target.value))
+                    }
+                    placeholder="R$ 0,00"
                   />
                 </Field>
                 <Field label="Ordem de serviço (data prevista)" error={fieldErrors.dataOrdemServico}>
