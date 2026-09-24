@@ -8,14 +8,16 @@ import styles from "./area-do-servidor.module.css";
 
 export default async function AreaDoServidor() {
   const session = await auth();
-  const allowedRoles: Role[] = [
-    Role.ADM_SECRETARIA,
-    Role.ENGENHEIRO,
-  ];
 
   if (!session?.user) {
     redirect("/login");
   }
+
+  if (session.user.role === Role.ENGENHEIRO) {
+    redirect("/area-do-engenheiro");
+  }
+
+  const allowedRoles: Role[] = [Role.ADM_SECRETARIA];
 
   if (!allowedRoles.includes(session.user.role)) {
     redirect("/");
