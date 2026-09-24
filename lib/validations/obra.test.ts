@@ -99,4 +99,42 @@ describe("createObraSchema", () => {
 
     expect(result.success).toBe(false);
   });
+
+  it("rejeita data de ordem de serviço anterior a 2020", () => {
+    const resultAnoAntigo = createObraSchema.safeParse({
+      ...validObra,
+      dataOrdemServico: "1966-01-24",
+    });
+    expect(resultAnoAntigo.success).toBe(false);
+
+    const result2019 = createObraSchema.safeParse({
+      ...validObra,
+      dataOrdemServico: "2019-12-31",
+    });
+    expect(result2019.success).toBe(false);
+  });
+
+  it("rejeita previsão de conclusão anterior a 2020", () => {
+    const resultAnoAntigo = createObraSchema.safeParse({
+      ...validObra,
+      previsaoConclusao: "1966-01-24",
+    });
+    expect(resultAnoAntigo.success).toBe(false);
+
+    const result2019 = createObraSchema.safeParse({
+      ...validObra,
+      previsaoConclusao: "2019-12-31",
+    });
+    expect(result2019.success).toBe(false);
+  });
+
+  it("aceita datas válidas a partir de 2020", () => {
+    const result = createObraSchema.safeParse({
+      ...validObra,
+      dataOrdemServico: "2020-01-15",
+      previsaoConclusao: "2021-12-31",
+    });
+
+    expect(result.success).toBe(true);
+  });
 });

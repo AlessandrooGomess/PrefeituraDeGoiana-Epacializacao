@@ -32,6 +32,9 @@ type ObraBusinessRulesInput = {
   status?: z.infer<typeof statusInput>;
 };
 
+const MIN_OBRA_DATE = new Date("2020-01-01T00:00:00.000Z");
+const MAX_OBRA_DATE = new Date("2050-12-31T23:59:59.999Z");
+
 export function getObraBusinessRuleIssues(data: ObraBusinessRulesInput) {
   const dataOrdemServico = data.dataOrdemServico
     ? new Date(data.dataOrdemServico)
@@ -43,6 +46,34 @@ export function getObraBusinessRuleIssues(data: ObraBusinessRulesInput) {
     ? new Date(data.dataConclusaoReal)
     : null;
   const issues: Array<{ path: string[]; message: string }> = [];
+
+  if (dataOrdemServico && dataOrdemServico < MIN_OBRA_DATE) {
+    issues.push({
+      path: ["dataOrdemServico"],
+      message: "A data da ordem de serviço deve ser a partir de 2020.",
+    });
+  }
+
+  if (dataOrdemServico && dataOrdemServico > MAX_OBRA_DATE) {
+    issues.push({
+      path: ["dataOrdemServico"],
+      message: "A data da ordem de serviço não pode ultrapassar 2050.",
+    });
+  }
+
+  if (previsaoConclusao && previsaoConclusao < MIN_OBRA_DATE) {
+    issues.push({
+      path: ["previsaoConclusao"],
+      message: "A previsão de conclusão deve ser a partir de 2020.",
+    });
+  }
+
+  if (previsaoConclusao && previsaoConclusao > MAX_OBRA_DATE) {
+    issues.push({
+      path: ["previsaoConclusao"],
+      message: "A previsão de conclusão não pode ultrapassar 2050.",
+    });
+  }
 
   if (
     dataOrdemServico &&

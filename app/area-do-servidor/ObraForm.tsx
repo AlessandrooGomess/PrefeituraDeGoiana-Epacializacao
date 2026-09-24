@@ -49,6 +49,9 @@ const initialForm: FormState = {
   previsaoConclusao: "",
 };
 
+const MIN_OBRA_DATE = "2020-01-01";
+const MAX_OBRA_DATE = "2050-12-31";
+
 type FieldErrors = Partial<Record<keyof FormState | "geral", string>>;
 
 function Field({
@@ -101,12 +104,22 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
         delete next[field];
       }
 
-      // Validação dinâmica entre data da OS e previsão de conclusão
+      // Validação de limites de data (a partir de 2020 até 2050)
       if (field === "dataOrdemServico" || field === "previsaoConclusao") {
+        if (value && value < MIN_OBRA_DATE) {
+          next[field] =
+            field === "dataOrdemServico"
+              ? "A data da ordem de serviço deve ser a partir de 2020."
+              : "A previsão de conclusão deve ser a partir de 2020.";
+        } else if (value && value > MAX_OBRA_DATE) {
+          next[field] = "A data limite permitida é até 2050.";
+        }
+
+        // Validação dinâmica entre data da OS e previsão de conclusão
         const os = field === "dataOrdemServico" ? value : nextForm.dataOrdemServico;
         const conclusao = field === "previsaoConclusao" ? value : nextForm.previsaoConclusao;
 
-        if (os && conclusao) {
+        if (os && conclusao && os >= MIN_OBRA_DATE && conclusao >= MIN_OBRA_DATE) {
           if (conclusao < os) {
             next.previsaoConclusao =
               "A previsão de conclusão não pode ser anterior à data da ordem de serviço.";
@@ -158,11 +171,26 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
       }
     }
 
+    if (form.dataOrdemServico) {
+      if (form.dataOrdemServico < MIN_OBRA_DATE) {
+        errors.dataOrdemServico = "A data da ordem de serviço deve ser a partir de 2020.";
+      } else if (form.dataOrdemServico > MAX_OBRA_DATE) {
+        errors.dataOrdemServico = "A data da ordem de serviço não pode ultrapassar 2050.";
+      }
+    }
+
+    if (form.previsaoConclusao) {
+      if (form.previsaoConclusao < MIN_OBRA_DATE) {
+        errors.previsaoConclusao = "A previsão de conclusão deve ser a partir de 2020.";
+      } else if (form.previsaoConclusao > MAX_OBRA_DATE) {
+        errors.previsaoConclusao = "A previsão de conclusão não pode ultrapassar 2050.";
+      }
+    }
+
     if (form.dataOrdemServico && form.previsaoConclusao) {
-      const inicio = new Date(form.dataOrdemServico);
-      const fim = new Date(form.previsaoConclusao);
-      if (fim < inicio) {
-        errors.previsaoConclusao = "A previsão de conclusão não pode ser anterior à data da ordem de serviço.";
+      if (form.previsaoConclusao < form.dataOrdemServico) {
+        errors.previsaoConclusao =
+          "A previsão de conclusão não pode ser anterior à data da ordem de serviço.";
       }
     }
 
@@ -473,6 +501,8 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
                 <Field label="Ordem de serviço (data prevista)" error={fieldErrors.dataOrdemServico}>
                   <input
                     type="date"
+                    min={MIN_OBRA_DATE}
+                    max={MAX_OBRA_DATE}
                     value={form.dataOrdemServico}
                     onChange={(event) => update("dataOrdemServico", event.target.value)}
                   />
@@ -480,7 +510,12 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
                 <Field label="Previsão de conclusão / entrega" error={fieldErrors.previsaoConclusao}>
                   <input
                     type="date"
-                    min={form.dataOrdemServico || undefined}
+                    min={
+                      form.dataOrdemServico && form.dataOrdemServico >= MIN_OBRA_DATE
+                        ? form.dataOrdemServico
+                        : MIN_OBRA_DATE
+                    }
+                    max={MAX_OBRA_DATE}
                     value={form.previsaoConclusao}
                     onChange={(event) => update("previsaoConclusao", event.target.value)}
                   />
