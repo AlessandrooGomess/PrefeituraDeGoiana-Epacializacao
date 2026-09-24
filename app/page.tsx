@@ -151,6 +151,13 @@ export default function Home() {
               }
               onKeyDown={(event) => {
                 if (event.key === "Escape") setQuery("");
+                if (event.key === "/" || event.key === "\\") event.preventDefault();
+                if (
+                  (event.key === " " || event.key === "Spacebar") &&
+                  (event.currentTarget.selectionStart === 0 || !event.currentTarget.value)
+                ) {
+                  event.preventDefault();
+                }
               }}
               maxLength={MAX_SEARCH_LENGTH}
               placeholder="Buscar projeto..."

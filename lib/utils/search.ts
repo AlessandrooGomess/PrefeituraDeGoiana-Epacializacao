@@ -7,14 +7,17 @@
 export const MAX_SEARCH_LENGTH = 100;
 
 /**
- * Remove caracteres de controle invisíveis e normaliza espaços.
+ * Remove caracteres de controle invisíveis, barras (/ e \), caracteres especiais inseguros,
+ * remove espaços no início, colapsa espaços duplicados e limita o tamanho máximo do texto.
  */
 export function sanitizeSearchInput(raw: string, maxLength: number = MAX_SEARCH_LENGTH): string {
   if (!raw) return "";
 
-  // Remove caracteres de controle (ASCII 0-31 e 127) e caracteres invisíveis de largura zero
   const sanitized = raw
     .replace(/[\u0000-\u001F\u007F-\u009F\u200B-\u200D\uFEFF]/g, "")
+    .replace(/[\\/<>{}[\];"'|^~`]/g, "")
+    .replace(/^\s+/, "")
+    .replace(/\s{2,}/g, " ")
     .slice(0, maxLength);
 
   return sanitized;
