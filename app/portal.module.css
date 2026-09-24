@@ -113,6 +113,26 @@
   color: #737982;
 }
 
+.search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.search-clear:hover {
+  color: #334155;
+  background: #f1f5f9;
+}
+
 .portal-content {
   flex: 1;
   min-height: 0;
@@ -390,6 +410,7 @@
   }
 
   .portal-content {
+    position: relative;
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
@@ -408,10 +429,24 @@
   }
 
   .filter-panel.is-expanded {
-    max-height: calc(100dvh - 64px);
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    background: #ffffff;
+    max-height: none;
+    height: 100%;
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: 24px;
+  }
+
+  .filter-panel.is-expanded .mobile-filter-strip {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
   }
 
   .map-area {
@@ -567,8 +602,9 @@
 
   .filter-panel.is-expanded > .filter-apply {
     display: block;
+    margin-top: 24px;
     margin-right: 16px;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
     margin-left: 16px;
     width: calc(100% - 32px);
   }
