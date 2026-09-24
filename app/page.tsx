@@ -7,6 +7,11 @@ import styles from "./portal.module.css";
 import type { EixoComSecretarias, ObraItem, StatusObra } from "@/types/obra";
 import WorkCard from "@/components/map/WorkCard";
 import { STATUS_PRESENTATION } from "@/components/map/workPresentation";
+import {
+  MAX_SEARCH_LENGTH,
+  matchesSearch,
+  sanitizeSearchInput,
+} from "@/lib/utils/search";
 
 const MapContainer = dynamic(() => import("@/components/map/MapContainer"), {
   ssr: false,
@@ -61,21 +66,27 @@ export default function Home() {
   const filtered = useMemo(
     () =>
       obras.filter((obra) => {
-        const haystack = [obra.titulo, obra.endereco, obra.bairro, obra.secretaria?.nome]
-          .filter(Boolean)
-          .join(" ")
-          .toLocaleLowerCase("pt-BR");
-        const searchTerm = query.toLocaleLowerCase("pt-BR");
+        const matchQuery = matchesSearch(
+          [
+            obra.titulo,
+            obra.endereco,
+            obra.bairro,
+            obra.secretaria?.nome,
+            obra.empresaContratada,
+            obra.numeroOrdemServico,
+          ],
+          query,
+        );
 
         return (
-          (!(query && !query.trim()) && (!query || haystack.includes(searchTerm))) &&
-          (!secretarias.length || secretarias.includes(obra.secretaria.id)) &&
+          matchQuery &&
+          (!secretarias.length || (obra.secretaria?.id ? secretarias.includes(obra.secretaria.id) : false)) &&
           (!statuses.length || statuses.includes(obra.status)) &&
           (!userLocation || distanceInKilometers(
             userLocation,
             [obra.latitude, obra.longitude],
           ) <= 10) &&
-          (!selectedEixoIds.length || selectedEixoIds.includes(eixoBySecretariaId.get(obra.secretaria.id) ?? ""))
+          (!selectedEixoIds.length || (obra.secretaria?.id ? selectedEixoIds.includes(eixoBySecretariaId.get(obra.secretaria.id) ?? "") : false))
         );
       }),
     [obras, eixoBySecretariaId, query, secretarias, statuses, selectedEixoIds, userLocation],
@@ -135,10 +146,27 @@ export default function Home() {
             <Image src="/icons/lupa.svg" alt="" width={16} height={16} />
             <input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) =>
+                setQuery(sanitizeSearchInput(event.target.value))
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setQuery("");
+              }}
+              maxLength={MAX_SEARCH_LENGTH}
               placeholder="Buscar projeto..."
               aria-label="Buscar projeto"
             />
+            {query && (
+              <button
+                type="button"
+                className={styles["search-clear"]}
+                onClick={() => setQuery("")}
+                aria-label="Limpar pesquisa"
+                title="Limpar pesquisa"
+              >
+                ✕
+              </button>
+            )}
           </label>
         </div>
       </header>
@@ -156,7 +184,7 @@ export default function Home() {
               onClick={() => setFiltersOpen((open) => !open)}
             >
               Filtros
-              <span className={styles["filter-toggle-chevron"]} aria-hidden="true">⌄</span>
+              <span className={styles["filter-toggle-chevron"]} aria-hidden="true">{filtersOpen ? "⌃" : "⌄"}</span>
             </button>
             <button
               className={`${styles["near-button"]} ${styles["near-button-mobile"]}`}

@@ -17,6 +17,11 @@ import {
   Building2,
   X,
 } from "lucide-react";
+import {
+  MAX_SEARCH_LENGTH,
+  matchesSearch,
+  sanitizeSearchInput,
+} from "@/lib/utils/search";
 
 interface ProjetoItem {
   id: string;
@@ -48,6 +53,7 @@ interface ProjetoItem {
   eixoNome: string | null;
   areaTematicaId: string | null;
   areaTematicaNome: string | null;
+  empresaContratada?: string | null;
 }
 
 const STATUS_LABEL: Record<StatusObra, ProjetoItem["status"]> = {
@@ -116,6 +122,7 @@ function mapearObra(obra: ObraApiItem): ProjetoItem {
     eixoNome: obra.eixo?.nome ?? null,
     areaTematicaId: obra.areaTematica?.id ?? null,
     areaTematicaNome: obra.areaTematica?.nome ?? null,
+    empresaContratada: obra.empresaContratada,
   };
 }
 
@@ -274,22 +281,30 @@ export default function PaginaCarteiraProjetos() {
   }, [projetoSelecionado]);
 
   const projetosFiltrados = useMemo(() => {
-    const termo = termoBusca.toLowerCase();
-    const buscaSomenteEspacos = termoBusca.length > 0 && !termoBusca.trim();
-
     return projetos.filter((item) => {
-      const matchTexto =
-        !buscaSomenteEspacos && (
-          item.titulo.toLowerCase().includes(termo) ||
-          item.codigo.toLowerCase().includes(termo) ||
-          item.categoriaLabel.toLowerCase().includes(termo)
-        );
+      const matchTexto = matchesSearch(
+        [
+          item.titulo,
+          item.codigo,
+          item.categoriaLabel,
+          item.bairro,
+          item.secretaria,
+          item.eixoNome,
+          item.areaTematicaNome,
+          item.empresaContratada,
+        ],
+        termoBusca,
+      );
 
       const matchStatus =
         statusFiltro === "Todos" || item.status === statusFiltro;
 
-      const matchEixo = !eixosSelecionados.length || (item.eixoId && eixosSelecionados.includes(item.eixoId));
-      const matchArea = !areasSelecionadas.length || (item.areaTematicaId && areasSelecionadas.includes(item.areaTematicaId));
+      const matchEixo =
+        !eixosSelecionados.length ||
+        (item.eixoId && eixosSelecionados.includes(item.eixoId));
+      const matchArea =
+        !areasSelecionadas.length ||
+        (item.areaTematicaId && areasSelecionadas.includes(item.areaTematicaId));
 
       return matchTexto && matchStatus && matchEixo && matchArea;
     });
@@ -329,14 +344,24 @@ export default function PaginaCarteiraProjetos() {
               <input
                 type="text"
                 value={termoBusca}
-                onChange={(e) => setTermoBusca(e.target.value)}
+                onChange={(e) =>
+                  setTermoBusca(sanitizeSearchInput(e.target.value))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setTermoBusca("");
+                }}
+                maxLength={MAX_SEARCH_LENGTH}
                 placeholder="Buscar por nome ou categoria..."
-                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-md text-xs sm:text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-(--cor-principal) focus:border-transparent transition"
+                aria-label="Buscar por nome ou categoria"
+                className="w-full pl-10 pr-9 py-2 bg-white border border-slate-200 rounded-md text-xs sm:text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-(--cor-principal) focus:border-transparent transition"
               />
               {termoBusca && (
                 <button
+                  type="button"
                   onClick={() => setTermoBusca("")}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                  aria-label="Limpar pesquisa"
+                  title="Limpar pesquisa"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
