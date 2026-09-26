@@ -135,6 +135,11 @@ model Obra {
   engenheiroId String?  @map("engenheiro_id")
   engenheiro   Usuario? @relation("EngenheiroObra", fields: [engenheiroId], references: [id])
 
+  tipoObraId String?   @map("tipo_obra_id")
+  tipoObra TipoObra? @relation(fields: [tipoObraId], references: [id], onDelete: SetNull)
+
+  etapasObra EtapaObra[]
+
   medicoes Medicao[]
   fotos    Foto[]
 
