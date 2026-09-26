@@ -31,6 +31,15 @@ enum TipoFoto {
   CONCLUIDO
 }
 
+enum TipoIntercorrencia {
+  CHUVA
+  ATRASO_MATERIAL
+  FALTA_PESSOAL
+  ACIDENTE_TRABALHO
+  PROBLEMA_FORNECEDOR
+  OUTROS
+}
+
 enum StatusEtapa {
   PENDENTE
   EM_ANDAMENTO
