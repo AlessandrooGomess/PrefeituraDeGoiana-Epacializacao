@@ -191,6 +191,10 @@ model Foto {
   descricao String?
   dataFoto  DateTime @default(now()) @map("data_foto")
   createdAt DateTime @default(now()) @map("created_at")
+  latitude        Float?
+  longitude       Float?
+  registroCampoId String?        @map("registro_campo_id")
+  registroCampo   RegistroCampo? @relation(fields: [registroCampoId], references: [id], onDelete: SetNull)
 
   @@map("fotos")
 }
@@ -208,6 +212,7 @@ model RegistroCampo {
   observacoes     String?              @db.Text
   createdAt       DateTime             @default(now()) @map("created_at")
   updatedAt       DateTime             @updatedAt @map("updated_at")
+  fotos           Foto[]
 
   @@map("registros_campo")
 }
