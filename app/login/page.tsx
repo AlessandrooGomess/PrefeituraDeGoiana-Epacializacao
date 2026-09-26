@@ -190,7 +190,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-1 w-full bg-[#1170D6] hover:bg-[#0E5CA8] transition-colors shadow-sm rounded-[5px] flex justify-center items-center gap-2 py-[12px] text-white text-[15px] font-semibold uppercase tracking-[0.6px] disabled:opacity-70 disabled:cursor-not-allowed font-sans"
+              className="mt-1 w-full bg-[#1170D6] hover:bg-[#0E5CA8] transition-colors shadow-sm rounded-[5px] flex justify-center items-center gap-2 py-3 text-white text-[15px] font-semibold uppercase tracking-[0.6px] disabled:opacity-70 disabled:cursor-not-allowed font-sans"
             >
               {loading ? "Entrando..." : "Entrar"}
               {!loading && <LogIn className="w-4.5 h-4.5" />}
@@ -198,7 +198,7 @@ export default function LoginPage() {
 
             <Link
               href="/"
-              className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-[5px] border border-[#C2C6D3] bg-white py-[11px] text-[15px] font-semibold uppercase tracking-[0.6px] text-[#424751] transition-colors hover:border-[#1170D6] hover:bg-[#F3F7FC] hover:text-[#1170D6] focus:outline-none focus:ring-2 focus:ring-[#1170D6] focus:ring-offset-2"
+              className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-[5px] border border-[#C2C6D3] bg-white py-2.75 text-[15px] font-semibold uppercase tracking-[0.6px] text-[#424751] transition-colors hover:border-[#1170D6] hover:bg-[#F3F7FC] hover:text-[#1170D6] focus:outline-none focus:ring-2 focus:ring-[#1170D6] focus:ring-offset-2"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               Voltar ao mapa
