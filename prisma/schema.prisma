@@ -40,6 +40,11 @@ enum TipoIntercorrencia {
   OUTROS
 }
 
+enum StatusRegistro {
+  RASCUNHO
+  ENVIADO
+}
+
 enum StatusEtapa {
   PENDENTE
   EM_ANDAMENTO
