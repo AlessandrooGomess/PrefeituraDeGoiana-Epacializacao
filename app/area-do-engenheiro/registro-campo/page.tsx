@@ -3,11 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { RegistroCampoHeader } from "@/components/registro-campo/RegistroCampoHeader";
-import { ObraInfoCard } from "@/components/registro-campo/ObraInfoCard";
-import { EvolucaoFisicaCard } from "@/components/registro-campo/EvolucaoFisicaCard";
-import { RegistroFotograficoCard } from "@/components/registro-campo/RegistroFotograficoCard";
-import { IntercorrenciasCard } from "@/components/registro-campo/IntercorrenciasCard";
-import { RegistroCampoActions } from "@/components/registro-campo/RegistroCampoActions";
+import { RegistroCampoForm } from "@/components/registro-campo/RegistroCampoForm";
 import { BottomNav } from "@/components/registro-campo/BottomNav";
 
 export default async function RegistroCampoPage() {
@@ -27,12 +23,11 @@ export default async function RegistroCampoPage() {
   const obras = await prisma.obra.findMany({
     where: {
       deletedAt: null,
-      OR: [
-        { engenheiroId: session.user.id },
-        ...(session.user.secretariaId
-          ? [{ secretariaId: session.user.secretariaId }]
-          : []),
-      ],
+      ...(session.user.role === Role.ENGENHEIRO
+        ? { engenheiroId: session.user.id }
+        : session.user.secretariaId
+        ? { secretariaId: session.user.secretariaId }
+        : {}),
     },
     select: {
       id: true,
@@ -52,7 +47,7 @@ export default async function RegistroCampoPage() {
         {/* Topo Azul com botão fechar */}
         <RegistroCampoHeader backHref="/area-do-engenheiro" />
 
-        {/* Conteúdo dos Cards */}
+        {/* Conteúdo Principal com Formulário Dinâmico */}
         <main className="flex-1 px-4 pt-4 pb-6 space-y-3.5">
           {/* Título e Subtítulo */}
           <div className="space-y-0.5">
@@ -64,41 +59,8 @@ export default async function RegistroCampoPage() {
             </p>
           </div>
 
-          {/* Card 1: Identificação da Obra (Dinâmico com obras do engenheiro) */}
-          <ObraInfoCard
-            obras={obras}
-            tituloFallback="Escola Municipal Centro"
-            subtituloFallback="Lote 03 - Fase de Estrutura"
-          />
-
-          {/* Card 2: Evolução Física da Etapa (Reservado para mentoria) */}
-          <EvolucaoFisicaCard
-            etapas={[
-              { nome: "Alvenaria", percentual: 65 },
-              { nome: "Instalações Elétricas", percentual: 20 },
-            ]}
-          />
-
-          {/* Card 3: Registro Fotográfico com GPS */}
-          <RegistroFotograficoCard
-            gpsAtivo={true}
-            fotos={[
-              {
-                id: "foto-demo-1",
-                url: "/fotos/obra-escola-angelo.jpg",
-                coordenadas: "-23.5505, -46.6333",
-              },
-            ]}
-          />
-
-          {/* Card 4: Intercorrências e Observações Adicionais */}
-          <IntercorrenciasCard
-            selecionadas={["ATRASO_MATERIAL"]}
-            observacoes=""
-          />
-
-          {/* Ações: Salvar Rascunho / Enviar Medição */}
-          <RegistroCampoActions />
+          {/* Orquestrador de Cards e Estados */}
+          <RegistroCampoForm obras={obras} />
         </main>
 
         {/* Barra de Navegação Inferior Fixa */}
