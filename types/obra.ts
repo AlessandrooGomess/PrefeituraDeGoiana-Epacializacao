@@ -19,6 +19,10 @@ export interface EixoResumo {
   cor: string | null;
 }
 
+export interface EixoComSecretarias extends EixoResumo {
+  secretarias: SecretariaResumo[];
+}
+
 export interface AreaTematicaResumo {
   id: string;
   nome: string;
@@ -47,4 +51,44 @@ export interface ObraItem {
   areaTematica: AreaTematicaResumo | null;
 
   percentualExecutado: number | null;
+}
+
+export interface ObrasPaginadas {
+  items: ObraItem[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface ObraDetalhe extends ObraItem {
+  dataConclusaoReal: string | null;
+  createdAt: string;
+  medicoes: MedicaoResumo[];
+  fotos: FotoResumo[];
+  engenheiro: EngenheiroResumo | null;
+}
+
+export interface MedicaoResumo {
+  id: string;
+  dataVistoria: string;
+  percentualExecutado: number;
+  observacoesTecnicas: string | null;
+  engenheiro: EngenheiroResumo;
+}
+
+export interface FotoResumo {
+  id: string;
+  url: string;
+  tipo: "RENDER_PROJETO" | "ANTES" | "EM_ANDAMENTO" | "CONCLUIDO";
+  descricao: string | null;
+  dataFoto: string;
+}
+
+export interface EngenheiroResumo {
+  id: string;
+  nome: string;
+  cargo: string | null;
 }

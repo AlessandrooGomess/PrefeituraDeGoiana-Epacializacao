@@ -4,9 +4,14 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./portal.module.css";
-import type { ObraItem, StatusObra } from "@/types/obra";
+import type { EixoComSecretarias, ObraItem, StatusObra } from "@/types/obra";
 import WorkCard from "@/components/map/WorkCard";
 import { STATUS_PRESENTATION } from "@/components/map/workPresentation";
+import {
+  MAX_SEARCH_LENGTH,
+  matchesSearch,
+  sanitizeSearchInput,
+} from "@/lib/utils/search";
 
 const MapContainer = dynamic(() => import("@/components/map/MapContainer"), {
   ssr: false,
@@ -16,13 +21,6 @@ const MapContainer = dynamic(() => import("@/components/map/MapContainer"), {
     </div>
   ),
 });
-
-const thematicCategories = [
-  { id: "saude", label: "Saúde", color: "#ef4444", terms: ["saúde", "hospital", "ubs"] },
-  { id: "educacao", label: "Educação", color: "#f97316", terms: ["educação", "escola", "creche"] },
-  { id: "mobilidade", label: "Mobilidade", color: "#2383d9", terms: ["mobilidade", "pavimentação", "drenagem", "ponte"] },
-  { id: "esportes", label: "Esportes", color: "#16a34a", terms: ["esporte", "quadra", "campo"] },
-];
 
 function distanceInKilometers(
   first: [number, number],
@@ -42,6 +40,7 @@ function distanceInKilometers(
 
 export default function Home() {
   const [obras, setObras] = useState<ObraItem[]>([]);
+  const [eixos, setEixos] = useState<EixoComSecretarias[]>([]);
   const [query, setQuery] = useState("");
   const [secretarias, setSecretarias] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<StatusObra[]>(["EM_ANDAMENTO"]);
@@ -50,45 +49,58 @@ export default function Home() {
   const [notice, setNotice] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedEixoIds, setSelectedEixoIds] = useState<string[]>([]);
+  const [expandedEixoIds, setExpandedEixoIds] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
   const onObrasLoaded = useCallback((items: ObraItem[]) => setObras(items), []);
   const onSelectObra = useCallback((obra: ObraItem) => setSelected(obra), []);
 
-  const secretaries = useMemo(
-    () => Array.from(new Map(obras.map((obra) => [obra.secretaria.id, obra.secretaria])).values()),
-    [obras],
+  const eixoBySecretariaId = useMemo(
+    () => new Map(
+      eixos.flatMap((eixo) => eixo.secretarias.map((secretaria) => [secretaria.id, eixo.id] as const)),
+    ),
+    [eixos],
   );
 
   const filtered = useMemo(
     () =>
       obras.filter((obra) => {
-        const haystack = [obra.titulo, obra.endereco, obra.bairro, obra.secretaria?.nome]
-          .filter(Boolean)
-          .join(" ")
-          .toLocaleLowerCase("pt-BR");
+        const matchQuery = matchesSearch(
+          [
+            obra.titulo,
+            obra.endereco,
+            obra.bairro,
+            obra.secretaria?.nome,
+            obra.empresaContratada,
+            obra.numeroOrdemServico,
+          ],
+          query,
+        );
 
         return (
-          (!query || haystack.includes(query.toLocaleLowerCase("pt-BR"))) &&
-          (!secretarias.length || secretarias.includes(obra.secretaria.id)) &&
+          matchQuery &&
+          (!secretarias.length || (obra.secretaria?.id ? secretarias.includes(obra.secretaria.id) : false)) &&
           (!statuses.length || statuses.includes(obra.status)) &&
           (!userLocation || distanceInKilometers(
             userLocation,
             [obra.latitude, obra.longitude],
           ) <= 10) &&
-          (!categories.length || categories.some((categoryId) => {
-            const category = thematicCategories.find((item) => item.id === categoryId);
-            const thematicText = obra.areaTematica?.nome.toLocaleLowerCase("pt-BR") || "";
-            return category?.terms.some((term) => `${haystack} ${thematicText}`.includes(term));
-          }))
+          (!selectedEixoIds.length || (obra.secretaria?.id ? selectedEixoIds.includes(eixoBySecretariaId.get(obra.secretaria.id) ?? "") : false))
         );
       }),
-    [obras, query, secretarias, statuses, categories, userLocation],
+    [obras, eixoBySecretariaId, query, secretarias, statuses, selectedEixoIds, userLocation],
   );
 
   const toggle = <T,>(value: T, values: T[], setter: (next: T[]) => void) =>
     setter(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
+
+  const toggleEixo = (eixoId: string) => {
+    toggle(eixoId, selectedEixoIds, setSelectedEixoIds);
+  };
+
+  const toggleExpandedEixo = (eixoId: string) =>
+    toggle(eixoId, expandedEixoIds, setExpandedEixoIds);
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -134,10 +146,34 @@ export default function Home() {
             <Image src="/icons/lupa.svg" alt="" width={16} height={16} />
             <input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) =>
+                setQuery(sanitizeSearchInput(event.target.value))
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setQuery("");
+                if (event.key === "/" || event.key === "\\") event.preventDefault();
+                if (
+                  (event.key === " " || event.key === "Spacebar") &&
+                  (event.currentTarget.selectionStart === 0 || !event.currentTarget.value)
+                ) {
+                  event.preventDefault();
+                }
+              }}
+              maxLength={MAX_SEARCH_LENGTH}
               placeholder="Buscar projeto..."
               aria-label="Buscar projeto"
             />
+            {query && (
+              <button
+                type="button"
+                className={styles["search-clear"]}
+                onClick={() => setQuery("")}
+                aria-label="Limpar pesquisa"
+                title="Limpar pesquisa"
+              >
+                ✕
+              </button>
+            )}
           </label>
         </div>
       </header>
@@ -155,7 +191,7 @@ export default function Home() {
               onClick={() => setFiltersOpen((open) => !open)}
             >
               Filtros
-              <span className={styles["filter-toggle-chevron"]} aria-hidden="true">⌄</span>
+              <span className={styles["filter-toggle-chevron"]} aria-hidden="true">{filtersOpen ? "⌃" : "⌄"}</span>
             </button>
             <button
               className={`${styles["near-button"]} ${styles["near-button-mobile"]}`}
@@ -168,20 +204,6 @@ export default function Home() {
               <Image src="/icons/mira-perto-de-mim.svg" alt="" width={18} height={18} />
               Perto de Mim
             </button>
-          </div>
-
-          <div className={styles["mobile-category-list"]} aria-label="Secretarias e áreas temáticas">
-            {thematicCategories.map((category) => (
-              <button
-                className={`${styles["mobile-category-chip"]} ${categories.includes(category.id) ? styles["is-selected"] : ""}`}
-                key={category.id}
-                type="button"
-                onClick={() => toggle(category.id, categories, setCategories)}
-              >
-                <span style={{ background: category.color }} />
-                {category.label}
-              </button>
-            ))}
           </div>
 
           <h1>Filtros</h1>
@@ -199,17 +221,37 @@ export default function Home() {
           </button>
 
           <section>
-            <h2>Categorias</h2>
-            {secretaries.map((secretaria) => (
-              <label className={styles["check-row"]} key={secretaria.id}>
-                <input
-                  type="checkbox"
-                  checked={secretarias.includes(secretaria.id)}
-                  onChange={() => toggle(secretaria.id, secretarias, setSecretarias)}
-                />
-                <span className="color-dot" style={{ background: secretaria.corIdentificacao || "#2383d9" }} />
-                {secretaria.nome.replace("Secretaria de ", "")}
-              </label>
+            <h2>Áreas de interesse</h2>
+            {eixos.map((eixo) => (
+              <div className={styles["filter-group"]} key={eixo.id}>
+                <div className={styles["filter-group-heading"]}>
+                  <label className={styles["check-row"]}>
+                    <input type="checkbox" checked={selectedEixoIds.includes(eixo.id)} onChange={() => toggleEixo(eixo.id)} />
+                    <span className={styles["color-dot"]} style={{ background: eixo.cor || "#2383d9" }} />
+                    {eixo.nome}
+                  </label>
+                  <button
+                    className={styles["filter-group-toggle"]}
+                    type="button"
+                    aria-label={expandedEixoIds.includes(eixo.id) ? `Recolher ${eixo.nome}` : `Expandir ${eixo.nome}`}
+                    aria-expanded={expandedEixoIds.includes(eixo.id)}
+                    onClick={() => toggleExpandedEixo(eixo.id)}
+                  >
+                    <span aria-hidden="true">{expandedEixoIds.includes(eixo.id) ? "⌃" : "⌄"}</span>
+                  </button>
+                </div>
+                {expandedEixoIds.includes(eixo.id) && (
+                  <div className={styles["secretary-list"]}>
+                    {eixo.secretarias.map((secretaria) => (
+                      <label className={styles["check-row"]} key={secretaria.id}>
+                        <input type="checkbox" checked={secretarias.includes(secretaria.id)} onChange={() => toggle(secretaria.id, secretarias, setSecretarias)} />
+                        <span className={styles["color-dot"]} style={{ background: secretaria.corIdentificacao || eixo.cor || "#2383d9" }} />
+                        {secretaria.nome.replace("Secretaria de ", "")}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </section>
 
@@ -240,6 +282,7 @@ export default function Home() {
         <div className={styles["map-area"]}>
           <MapContainer
             onObrasLoaded={onObrasLoaded}
+            onFiltersLoaded={setEixos}
             onSelectObra={onSelectObra}
             selectedObraId={selected?.id}
             visibleObraIds={filtered.map((obra) => obra.id)}
