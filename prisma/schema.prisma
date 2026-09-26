@@ -192,3 +192,21 @@ model TipoObra {
 
   @@map("tipo_obras")
 }
+
+model EtapaTemplate {
+  id         String   @id @default(uuid())
+  tipoObraId String   @map("tipo_obra_id")
+  tipoObra   TipoObra @relation(fields: [tipoObraId], references: [id], onDelete: Cascade)
+  nome        String
+  nomeCidadao String  @map("nome_cidadao")
+  descricao   String? @db.Text
+  ordem       Int
+  peso        Int     @default(10)
+  ehContinua  Boolean @default(false) @map("eh_continua")
+  ativa       Boolean @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  subEtapasTemplate SubEtapaTemplate[]
+  etapasObra        EtapaObra[]
+  @@unique([tipoObraId, ordem])
+  @@map("etapas_template")
+}
