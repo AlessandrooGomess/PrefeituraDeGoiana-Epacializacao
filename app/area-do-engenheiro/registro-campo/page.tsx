@@ -1,6 +1,7 @@
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { RegistroCampoHeader } from "@/components/registro-campo/RegistroCampoHeader";
 import { ObraInfoCard } from "@/components/registro-campo/ObraInfoCard";
 import { EvolucaoFisicaCard } from "@/components/registro-campo/EvolucaoFisicaCard";
@@ -22,6 +23,28 @@ export default async function RegistroCampoPage() {
     redirect("/area-do-servidor");
   }
 
+  // Busca obras reais vinculadas ao engenheiro logado ou à secretaria dele
+  const obras = await prisma.obra.findMany({
+    where: {
+      deletedAt: null,
+      OR: [
+        { engenheiroId: session.user.id },
+        ...(session.user.secretariaId
+          ? [{ secretariaId: session.user.secretariaId }]
+          : []),
+      ],
+    },
+    select: {
+      id: true,
+      titulo: true,
+      numeroOrdemServico: true,
+      bairro: true,
+      empresaContratada: true,
+      status: true,
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center text-slate-800 antialiased">
       {/* Moldura / Container estritamente Mobile-first */}
@@ -41,10 +64,11 @@ export default async function RegistroCampoPage() {
             </p>
           </div>
 
-          {/* Card 1: Identificação da Obra */}
+          {/* Card 1: Identificação da Obra (Dinâmico com obras do engenheiro) */}
           <ObraInfoCard
-            titulo="Escola Municipal Centro"
-            faseOuLote="Lote 03 - Fase de Estrutura"
+            obras={obras}
+            tituloFallback="Escola Municipal Centro"
+            subtituloFallback="Lote 03 - Fase de Estrutura"
           />
 
           {/* Card 2: Evolução Física da Etapa (Reservado para mentoria) */}
