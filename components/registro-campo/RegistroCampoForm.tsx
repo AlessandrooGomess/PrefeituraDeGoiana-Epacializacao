@@ -30,6 +30,7 @@ export function RegistroCampoForm({ obras }: RegistroCampoFormProps) {
   ]);
   const [observacoes, setObservacoes] = useState<string>("");
   const [fotoErro, setFotoErro] = useState<string | null>(null);
+  const [observacoesErro, setObservacoesErro] = useState<string | null>(null);
 
   // Estados de feedback e submissão
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,27 +43,49 @@ export function RegistroCampoForm({ obras }: RegistroCampoFormProps) {
     setIntercorrencias((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
+    if (observacoesErro) setObservacoesErro(null);
   };
 
   // Enviar para a API
   const submitRegistro = async (status: "RASCUNHO" | "ENVIADO") => {
     setMensagemSucesso(null);
     setMensagemErro(null);
+    setFotoErro(null);
+    setObservacoesErro(null);
 
-    // Validação frontend estrita: envio definitivo exige foto
+    // 1. Validação estrita de fotos (apenas se for envio definitivo)
     if (status === "ENVIADO" && fotos.length === 0) {
-      setFotoErro("Pelo menos uma foto com registro fotográfico é obrigatória.");
+      setFotoErro("Pelo menos uma foto com registro fotográfico é obrigatória para enviar a medição.");
       return;
     }
 
-    setFotoErro(null);
+    // 2. Validações completas do campo de observações adicionais
+    const obsTrim = observacoes.trim();
+
+    if (/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi.test(observacoes)) {
+      setObservacoesErro("Código de script malicioso não é permitido nas observações.");
+      return;
+    }
+
+    if (observacoes.length > 5000) {
+      setObservacoesErro("As observações adicionais não podem ultrapassar 5.000 caracteres.");
+      return;
+    }
+
+    if (intercorrencias.includes("OUTROS") && obsTrim.length < 10) {
+      setObservacoesErro(
+        "Ao selecionar 'Outros', detalhe o motivo nas observações adicionais (mínimo de 10 caracteres)."
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmittingType(status === "RASCUNHO" ? "rascunho" : "envio");
 
     const payload = {
       status,
       intercorrencias,
-      observacoes: observacoes.trim() || null,
+      observacoes: obsTrim || null,
       fotos: fotos.map((f) => ({
         url: f.url.startsWith("blob:") ? "/fotos/obra-escola-angelo.jpg" : f.url,
         descricao: f.descricao ?? null,
@@ -159,7 +182,11 @@ export function RegistroCampoForm({ obras }: RegistroCampoFormProps) {
         selecionadas={intercorrencias}
         onToggle={handleToggleIntercorrencia}
         observacoes={observacoes}
-        onChangeObservacoes={setObservacoes}
+        onChangeObservacoes={(val) => {
+          setObservacoes(val);
+          if (observacoesErro) setObservacoesErro(null);
+        }}
+        erro={observacoesErro}
       />
 
       {/* Ações: Salvar Rascunho / Enviar Medição */}

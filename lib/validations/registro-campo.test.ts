@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createRegistroCampoSchema } from "./registro-campo";
 
 describe("createRegistroCampoSchema", () => {
@@ -60,7 +60,7 @@ describe("createRegistroCampoSchema", () => {
       fotos: [
         {
           url: "https://exemplo.com/foto.jpg",
-          latitude: 150, // Inválido: max 90
+          latitude: 150,
           longitude: -34.9,
         },
       ],
@@ -88,5 +88,45 @@ describe("createRegistroCampoSchema", () => {
 
     const result = createRegistroCampoSchema.safeParse(input);
     expect(result.success).toBe(false);
+  });
+
+  it("rejeita script malicioso nas observações", () => {
+    const input = {
+      status: "RASCUNHO",
+      observacoes: "Texto normal <script>alert('hack')</script>",
+    };
+
+    const result = createRegistroCampoSchema.safeParse(input);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toContain(
+        "Código de script malicioso não é permitido",
+      );
+    }
+  });
+
+  it("exige observações detalhadas (mínimo 10 caracteres) se marcar OUTROS", () => {
+    const inputInvalido = {
+      status: "RASCUNHO",
+      intercorrencias: ["OUTROS"],
+      observacoes: "curto",
+    };
+
+    const resultInvalido = createRegistroCampoSchema.safeParse(inputInvalido);
+    expect(resultInvalido.success).toBe(false);
+    if (!resultInvalido.success) {
+      expect(resultInvalido.error.issues[0].message).toContain(
+        "Ao selecionar a intercorrência 'Outros'",
+      );
+    }
+
+    const inputValido = {
+      status: "RASCUNHO",
+      intercorrencias: ["OUTROS"],
+      observacoes: "Manifestação comunitária na entrada da obra.",
+    };
+
+    const resultValido = createRegistroCampoSchema.safeParse(inputValido);
+    expect(resultValido.success).toBe(true);
   });
 });

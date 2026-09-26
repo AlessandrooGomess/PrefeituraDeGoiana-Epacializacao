@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 
 const dateInput = z
   .string()
@@ -60,6 +60,13 @@ export const createRegistroCampoSchema = z
       .string()
       .trim()
       .max(5000, "As observações não podem ultrapassar 5000 caracteres.")
+      .refine(
+        (val) => !/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi.test(val),
+        { message: "Código de script malicioso não é permitido nas observações." }
+      )
+      .refine((val) => !val.includes("\0"), {
+        message: "Caracteres nulos não são permitidos.",
+      })
       .optional()
       .nullable(),
     fotos: z.array(fotoRegistroSchema).default([]),
@@ -76,6 +83,23 @@ export const createRegistroCampoSchema = z
       message:
         "Pelo menos uma foto com registro fotográfico é obrigatória para envio da medição.",
       path: ["fotos"],
+    },
+  )
+  .refine(
+    (data) => {
+      // Se selecionou OUTROS, exige descrição mínima de 10 caracteres
+      if (data.intercorrencias?.includes("OUTROS")) {
+        return (
+          typeof data.observacoes === "string" &&
+          data.observacoes.trim().length >= 10
+        );
+      }
+      return true;
+    },
+    {
+      message:
+        "Ao selecionar a intercorrência 'Outros', detalhe o motivo nas observações adicionais (mínimo de 10 caracteres).",
+      path: ["observacoes"],
     },
   );
 
