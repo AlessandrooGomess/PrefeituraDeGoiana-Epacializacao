@@ -31,6 +31,13 @@ enum TipoFoto {
   CONCLUIDO
 }
 
+enum StatusEtapa {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDA
+  PARALISADA
+}
+
 model Usuario {
   id           String      @id @default(uuid())
   nome         String
@@ -128,6 +135,11 @@ model Obra {
   engenheiroId String?  @map("engenheiro_id")
   engenheiro   Usuario? @relation("EngenheiroObra", fields: [engenheiroId], references: [id])
 
+  tipoObraId String?   @map("tipo_obra_id")
+  tipoObra   TipoObra? @relation(fields: [tipoObraId], references: [id], onDelete: SetNull)
+
+  etapasObra EtapaObra[]
+
   medicoes Medicao[]
   fotos    Foto[]
 
@@ -165,4 +177,91 @@ model Foto {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("fotos")
+}
+
+model TipoObra {
+  id        String   @id @default(uuid())
+  nome      String   @unique
+  slug      String   @unique
+  descricao String?  @db.Text
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  etapasTemplate EtapaTemplate[]
+  obras          Obra[]
+
+  @@map("tipo_obras")
+}
+
+model EtapaTemplate {
+  id                String             @id @default(uuid())
+  tipoObraId        String             @map("tipo_obra_id")
+  tipoObra          TipoObra           @relation(fields: [tipoObraId], references: [id], onDelete: Cascade)
+  nome              String
+  nomeCidadao       String             @map("nome_cidadao")
+  descricao         String?            @db.Text
+  ordem             Int
+  peso              Int                @default(10)
+  ehContinua        Boolean            @default(false) @map("eh_continua")
+  ativa             Boolean            @default(true)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  subEtapasTemplate SubEtapaTemplate[]
+  etapasObra        EtapaObra[]
+
+  @@unique([tipoObraId, ordem])
+  @@map("etapas_template")
+}
+
+model SubEtapaTemplate {
+  id              String         @id @default(uuid())
+  etapaTemplateId String         @map("etapa_template_id")
+  etapaTemplate   EtapaTemplate  @relation(fields: [etapaTemplateId], references: [id], onDelete: Cascade)
+  nome            String
+  descricao       String?        @db.Text
+  ordem           Int
+  peso            Int            @default(10)
+  ativa           Boolean        @default(true)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  subEtapasObra   SubEtapaObra[]
+
+  @@unique([etapaTemplateId, ordem])
+  @@map("sub_etapas_template")
+}
+
+model EtapaObra {
+  id                  String         @id @default(uuid())
+  obraId              String         @map("obra_id")
+  obra                Obra           @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  etapaTemplateId     String         @map("etapa_template_id")
+  etapaTemplate       EtapaTemplate  @relation(fields: [etapaTemplateId], references: [id])
+  status              StatusEtapa    @default(PENDENTE)
+  percentualConcluido Decimal        @default(0) @map("percentual_concluido") @db.Decimal(5, 2)
+  dataInicio          DateTime?      @map("data_inicio")
+  dataPrevisao        DateTime?      @map("data_previsao")
+  dataConclusao       DateTime?      @map("data_conclusao")
+  observacoes         String?        @db.Text
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+  subEtapasObra       SubEtapaObra[]
+
+  @@unique([obraId, etapaTemplateId])
+  @@map("etapas_obra")
+}
+
+
+model SubEtapaObra {
+  id                 String           @id @default(uuid())
+  etapaObraId        String           @map("etapa_obra_id")
+  etapaObra          EtapaObra        @relation(fields: [etapaObraId], references: [id], onDelete: Cascade)
+  subEtapaTemplateId String           @map("sub_etapa_template_id")
+  subEtapaTemplate   SubEtapaTemplate @relation(fields: [subEtapaTemplateId], references: [id])
+  status              StatusEtapa @default(PENDENTE)
+  percentualConcluido Decimal     @default(0) @map("percentual_concluido") @db.Decimal(5, 2)
+  dataInicio          DateTime?   @map("data_inicio")
+  dataConclusao       DateTime?   @map("data_conclusao")
+  observacoes         String?     @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@unique([etapaObraId, subEtapaTemplateId])
+  @@map("sub_etapas_obra")
 }
