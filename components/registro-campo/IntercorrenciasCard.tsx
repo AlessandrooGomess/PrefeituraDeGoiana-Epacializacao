@@ -48,6 +48,9 @@ export function IntercorrenciasCard({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     let valor = e.target.value;
 
+    // Impede espaços ou quebras de linha no início do texto
+    valor = valor.replace(/^\s+/, "");
+
     // Remove caracteres nulos por segurança
     valor = valor.replace(/\0/g, "");
 

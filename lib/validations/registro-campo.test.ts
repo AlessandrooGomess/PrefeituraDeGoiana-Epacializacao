@@ -129,4 +129,18 @@ describe("createRegistroCampoSchema", () => {
     const resultValido = createRegistroCampoSchema.safeParse(inputValido);
     expect(resultValido.success).toBe(true);
   });
+  it("rejeita observações que iniciam com espaço em branco", () => {
+    const input = {
+      status: "RASCUNHO",
+      observacoes: "  Texto iniciando com espaços",
+    };
+
+    const result = createRegistroCampoSchema.safeParse(input);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toContain(
+        "não podem iniciar com espaço em branco",
+      );
+    }
+  });
 });

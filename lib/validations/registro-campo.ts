@@ -58,8 +58,10 @@ export const createRegistroCampoSchema = z
     intercorrencias: z.array(tipoIntercorrenciaEnum).default([]),
     observacoes: z
       .string()
-      .trim()
-      .max(5000, "As observações não podem ultrapassar 5000 caracteres.")
+      .refine(
+        (val) => !/^\s/.test(val),
+        { message: "As observações adicionais não podem iniciar com espaço em branco." }
+      )
       .refine(
         (val) => !/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi.test(val),
         { message: "Código de script malicioso não é permitido nas observações." }
@@ -67,6 +69,10 @@ export const createRegistroCampoSchema = z
       .refine((val) => !val.includes("\0"), {
         message: "Caracteres nulos não são permitidos.",
       })
+      .refine((val) => val.trim().length <= 5000, {
+        message: "As observações não podem ultrapassar 5000 caracteres.",
+      })
+      .transform((val) => val.trim())
       .optional()
       .nullable(),
     fotos: z.array(fotoRegistroSchema).default([]),
