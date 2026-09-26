@@ -210,3 +210,19 @@ model EtapaTemplate {
   @@unique([tipoObraId, ordem])
   @@map("etapas_template")
 }
+
+
+model SubEtapaTemplate {
+  id              String        @id @default(uuid())
+  etapaTemplateId String        @map("etapa_template_id")
+  etapaTemplate   EtapaTemplate @relation(fields: [etapaTemplateId], references: [id], onDelete: Cascade)
+  nome      String
+  descricao String? @db.Text
+  ordem     Int
+  peso      Int     @default(10)
+  ativa     Boolean @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  subEtapasObra SubEtapaObra[]
+  @@unique([etapaTemplateId, ordem])
+  @@map("sub_etapas_template")
+}
