@@ -1,3 +1,5 @@
+"use client";
+
 import { Camera, MapPin } from "lucide-react";
 
 export interface FotoPreviewItem {

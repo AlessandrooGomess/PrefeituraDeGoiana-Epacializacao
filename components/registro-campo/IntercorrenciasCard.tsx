@@ -1,3 +1,5 @@
+"use client";
+
 import { CloudRain, Clock, UserX, AlertTriangle, FileQuestion } from "lucide-react";
 
 export interface IntercorrenciaOption {
