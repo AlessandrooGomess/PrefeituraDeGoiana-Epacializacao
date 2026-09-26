@@ -1,4 +1,5 @@
 import { PrismaClient, Role, StatusObra, TipoFoto } from "@prisma/client";
+import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -134,12 +135,16 @@ async function main() {
   console.log(
     " [4/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...",
   );
+  
+  const senhaPadrao = await hash("Goiana@2025", 12);
+
   await prisma.usuario.create({
     data: {
       nome: "Administrador Geral - Prefeitura de Goiana",
       email: "admin@goiana.pe.gov.br",
       cargo: "Gestor de Tecnologia e Transparência",
       role: Role.SUPER_ADMIN,
+      passwordHash: senhaPadrao,
     },
   });
 
@@ -150,6 +155,7 @@ async function main() {
       cargo: "Secretario Executivo de Infraestrutura",
       role: Role.ADM_SECRETARIA,
       secretariaId: seinfra.id,
+      passwordHash: senhaPadrao,
     },
   });
 
@@ -160,6 +166,7 @@ async function main() {
       cargo: "Engenheiro Civil Fiscal",
       role: Role.ENGENHEIRO,
       secretariaId: seinfra.id,
+      passwordHash: senhaPadrao,
     },
   });
 
@@ -170,6 +177,7 @@ async function main() {
       cargo: "Engenheiro Civil Fiscal",
       role: Role.ENGENHEIRO,
       secretariaId: seduc.id,
+      passwordHash: senhaPadrao,
     },
   });
 
