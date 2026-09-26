@@ -226,3 +226,22 @@ model SubEtapaTemplate {
   @@unique([etapaTemplateId, ordem])
   @@map("sub_etapas_template")
 }
+
+model EtapaObra {
+  id              String        @id @default(uuid())
+  obraId          String        @map("obra_id")
+  obra            Obra          @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  etapaTemplateId String        @map("etapa_template_id")
+  etapaTemplate   EtapaTemplate @relation(fields: [etapaTemplateId], references: [id])
+  status              StatusEtapa @default(PENDENTE)
+  percentualConcluido Decimal     @default(0) @map("percentual_concluido") @db.Decimal(5, 2)
+  dataInicio          DateTime?   @map("data_inicio")
+  dataPrevisao        DateTime?   @map("data_previsao")
+  dataConclusao       DateTime?   @map("data_conclusao")
+  observacoes         String?     @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  subEtapasObra SubEtapaObra[]
+  @@unique([obraId, etapaTemplateId])
+  @@map("etapas_obra")
+}
