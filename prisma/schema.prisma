@@ -31,6 +31,13 @@ enum TipoFoto {
   CONCLUIDO
 }
 
+enum StatusEtapa {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDA
+  PARALISADA
+}
+
 model Usuario {
   id           String      @id @default(uuid())
   nome         String
