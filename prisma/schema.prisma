@@ -31,6 +31,20 @@ enum TipoFoto {
   CONCLUIDO
 }
 
+enum TipoIntercorrencia {
+  CHUVA
+  ATRASO_MATERIAL
+  FALTA_PESSOAL
+  ACIDENTE_TRABALHO
+  PROBLEMA_FORNECEDOR
+  OUTROS
+}
+
+enum StatusRegistro {
+  RASCUNHO
+  ENVIADO
+}
+
 enum StatusEtapa {
   PENDENTE
   EM_ANDAMENTO
@@ -53,6 +67,7 @@ model Usuario {
 
   obrasFiscalizadas Obra[]    @relation("EngenheiroObra")
   medicoes          Medicao[]
+  registrosCampo    RegistroCampo[] @relation("EngenheiroRegistros")
   fotosEnviadas     Foto[]    @relation("UsuarioFotos")
 
   @@map("usuarios")
@@ -141,7 +156,8 @@ model Obra {
   etapasObra EtapaObra[]
 
   medicoes Medicao[]
-  fotos    Foto[]
+  registrosCampo    RegistroCampo[]
+  fotos             Foto[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -175,10 +191,31 @@ model Foto {
   descricao String?
   dataFoto  DateTime @default(now()) @map("data_foto")
   createdAt DateTime @default(now()) @map("created_at")
+  latitude        Float?
+  longitude       Float?
+  registroCampoId String?        @map("registro_campo_id")
+  registroCampo   RegistroCampo? @relation(fields: [registroCampoId], references: [id], onDelete: SetNull)
 
   @@map("fotos")
 }
 
+
+model RegistroCampo {
+  id              String               @id @default(uuid())
+  obraId          String               @map("obra_id")
+  obra            Obra                 @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  engenheiroId    String               @map("engenheiro_id")
+  engenheiro      Usuario              @relation("EngenheiroRegistros", fields: [engenheiroId], references: [id])
+  dataVistoria    DateTime             @default(now()) @map("data_vistoria")
+  status          StatusRegistro       @default(RASCUNHO)
+  intercorrencias TipoIntercorrencia[]
+  observacoes     String?              @db.Text
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+  fotos           Foto[]
+
+  @@map("registros_campo")
+}
 model TipoObra {
   id        String   @id @default(uuid())
   nome      String   @unique
