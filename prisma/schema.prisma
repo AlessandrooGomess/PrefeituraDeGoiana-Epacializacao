@@ -178,3 +178,17 @@ model Foto {
 
   @@map("fotos")
 }
+
+model TipoObra {
+  id String @id @default(uuid())
+  nome String @unique
+  slug String @unique
+  descricao String? @db.Text
+  ativo Boolean @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  etapasTemplate EtapaTemplate[]
+  obras Obra[]
+
+  @@map("tipo_obras")
+}
