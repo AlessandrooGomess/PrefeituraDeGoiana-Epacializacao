@@ -150,6 +150,7 @@ describe("POST /api/obras/[id]/fotos", () => {
     mocks.obraFindUnique.mockResolvedValue({
       id: obraId,
       secretariaId: "secretaria-1",
+      engenheiroId: usuarioId,
       deletedAt: null,
     });
     mocks.fotoCreate.mockResolvedValue({

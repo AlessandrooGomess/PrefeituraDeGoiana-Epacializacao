@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
+import { requireUser } from "@/lib/auth/authorization";
+import { canManageObra } from "@/lib/auth/obra-access";
 import { Role } from "@prisma/client";
 
 interface RouteContext {
@@ -29,13 +30,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ message: "Obra não encontrada." }, { status: 404 });
     }
 
-    // O engenheiro só atualiza obras sob sua responsabilidade; os demais, obras da sua secretaria
-    const podeAtualizar =
-      auth.user.role === Role.ENGENHEIRO
-        ? obra.engenheiroId === auth.user.id
-        : canAccessSecretaria(auth.user, obra.secretariaId);
-
-    if (!podeAtualizar) {
+    if (!canManageObra(auth.user, obra)) {
       return NextResponse.json({ message: "Você não tem permissão para alterar esta obra." }, { status: 403 });
     }
 
