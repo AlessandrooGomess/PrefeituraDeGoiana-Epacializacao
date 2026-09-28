@@ -2,7 +2,8 @@ import { Prisma, Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
+import { requireUser } from "@/lib/auth/authorization";
+import { canManageObra } from "@/lib/auth/obra-access";
 import { serializeDate } from "@/lib/serializers/obra";
 import { createMedicaoSchema } from "@/lib/validations/medicao";
 
@@ -114,7 +115,7 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const obra = await prisma.obra.findUnique({
       where: { id },
-      select: { id: true, secretariaId: true, deletedAt: true },
+      select: { id: true, secretariaId: true, engenheiroId: true, deletedAt: true },
     });
 
     if (!obra || obra.deletedAt) {
@@ -124,7 +125,7 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    if (!canAccessSecretaria(authorization.user, obra.secretariaId)) {
+    if (!canManageObra(authorization.user, obra)) {
       return NextResponse.json(
         { message: "Você não tem permissão para registrar medição nesta obra." },
         { status: 403 },
