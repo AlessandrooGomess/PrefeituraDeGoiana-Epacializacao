@@ -5,6 +5,7 @@ import { Menu, UserRound, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import styles from "./Sidebar.module.css";
+import { getHomeByRole } from "@/lib/auth/role-routes";
 
 export type SidebarUser = {
   name: string;
@@ -20,6 +21,12 @@ export default function Sidebar({ user = null }: SidebarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  const areaHref = user?.role ? getHomeByRole(user.role) : "/login";
+  const areaLabel =
+    user?.role === "ENGENHEIRO" ? "Minha Área" : "Área do Servidor";
+  const areaActive =
+    areaHref !== "/" && areaHref !== "/login" && pathname.startsWith(areaHref);
+
   return (
     <header className={styles.sidebar}>
       <div className={styles.inner}>
@@ -27,10 +34,24 @@ export default function Sidebar({ user = null }: SidebarProps) {
           Portal de Infraestrutura
         </Link>
 
-        <nav className={`${styles.navigation} ${menuOpen ? styles.navigationOpen : ""}`}>
-          <Link className={pathname === "/" ? styles.active : ""} href="/">Mapa</Link>
-          <Link className={pathname === "/projetos" ? styles.active : ""} href="/projetos">Projetos</Link>
-          <Link className={pathname === "/area-do-servidor" ? styles.active : ""} href="/area-do-servidor">Área do Servidor</Link>
+        <nav
+          className={`${styles.navigation} ${menuOpen ? styles.navigationOpen : ""}`}
+        >
+          <Link className={areaActive ? styles.active : ""} href={areaHref}>
+            {areaLabel}
+          </Link>
+          <Link
+            className={pathname === "/projetos" ? styles.active : ""}
+            href="/projetos"
+          >
+            Projetos
+          </Link>
+          <Link
+            className={pathname === "/area-do-servidor" ? styles.active : ""}
+            href="/area-do-servidor"
+          >
+            Área do Servidor
+          </Link>
         </nav>
 
         {user && (
