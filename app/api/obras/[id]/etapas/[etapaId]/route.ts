@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/authorization";
 import { canManageObra } from "@/lib/auth/obra-access";
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 
 interface RouteContext {
   params: Promise<{ id: string; etapaId: string }>;
@@ -72,6 +72,13 @@ export async function PATCH(request: Request, context: RouteContext) {
       { status: 200 }
     );
   } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json({ message: "Etapa não encontrada." }, { status: 404 });
+    }
+
     console.error("Erro ao atualizar etapa:", error);
     return NextResponse.json({ message: "Erro interno ao atualizar etapa." }, { status: 500 });
   }

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 const mocks = vi.hoisted(() => ({
   obraFindUnique: vi.fn(),
@@ -146,6 +147,27 @@ describe("PATCH /api/obras/[id]/etapas/[etapaId]", () => {
 
     expect(response.status).toBe(200);
     expect(mocks.etapaObraUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it("retorna 404 para etapa inexistente", async () => {
+    mocks.requireUser.mockResolvedValue({
+      user: { id: engenheiroId, role: "ENGENHEIRO", secretariaId },
+    });
+    mocks.obraFindUnique.mockResolvedValue({
+      secretariaId,
+      engenheiroId,
+      deletedAt: null,
+    });
+    mocks.etapaObraUpdate.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Registro não encontrado.", {
+        code: "P2025",
+        clientVersion: "test",
+      }),
+    );
+
+    const response = await patchRequest();
+
+    expect(response.status).toBe(404);
   });
 
   it("retorna 404 para obra inexistente", async () => {
