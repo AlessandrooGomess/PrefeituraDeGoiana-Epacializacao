@@ -3,13 +3,14 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import ObraForm from "../ObraForm";
+import { getHomeByRole } from "@/lib/auth/role-routes";
 
 export default async function NovaObraPage() {
   const session = await auth();
-  const allowedRoles: Role[] = [Role.ADM_SECRETARIA, Role.ENGENHEIRO];
 
   if (!session?.user) redirect("/login");
-  if (!allowedRoles.includes(session.user.role) || session.user.role !== Role.ADM_SECRETARIA) redirect("/");
+  // Somente a secretaria cadastra obras
+  if (session.user.role !== Role.ADM_SECRETARIA) redirect(getHomeByRole(session.user.role));
   if (!session.user.secretariaId) redirect("/");
 
   const secretaria = await prisma.secretaria.findUnique({

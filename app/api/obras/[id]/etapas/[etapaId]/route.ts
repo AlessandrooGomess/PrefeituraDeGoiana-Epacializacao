@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/authorization";
+import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
 import { Role } from "@prisma/client";
 
 interface RouteContext {
@@ -11,11 +11,34 @@ interface RouteContext {
 export async function PATCH(request: Request, context: RouteContext) {
   const { id, etapaId } = await context.params;
 
+  if (!z.uuid().safeParse(id).success || !z.uuid().safeParse(etapaId).success) {
+    return NextResponse.json({ message: "Identificador inválido." }, { status: 400 });
+  }
+
   // Apenas cargos autorizados podem atualizar o progresso
   const auth = await requireUser([Role.SUPER_ADMIN, Role.GESTAO, Role.ADM_SECRETARIA, Role.ENGENHEIRO]);
   if (auth.response) return auth.response;
 
   try {
+    const obra = await prisma.obra.findUnique({
+      where: { id },
+      select: { secretariaId: true, engenheiroId: true, deletedAt: true },
+    });
+
+    if (!obra || obra.deletedAt) {
+      return NextResponse.json({ message: "Obra não encontrada." }, { status: 404 });
+    }
+
+    // O engenheiro só atualiza obras sob sua responsabilidade; os demais, obras da sua secretaria
+    const podeAtualizar =
+      auth.user.role === Role.ENGENHEIRO
+        ? obra.engenheiroId === auth.user.id
+        : canAccessSecretaria(auth.user, obra.secretariaId);
+
+    if (!podeAtualizar) {
+      return NextResponse.json({ message: "Você não tem permissão para alterar esta obra." }, { status: 403 });
+    }
+
     const body = await request.json();
     const updateSchema = z.object({
       status: z.enum(["PENDENTE", "EM_ANDAMENTO", "CONCLUIDA", "PARALISADA"]).optional(),
