@@ -12,17 +12,20 @@ export default async function NovaObraPage() {
   if (!allowedRoles.includes(session.user.role) || session.user.role !== Role.ADM_SECRETARIA) redirect("/");
   if (!session.user.secretariaId) redirect("/");
 
-  const [secretaria, engenheiros] = await Promise.all([
-    prisma.secretaria.findUniqueOrThrow({
-      where: { id: session.user.secretariaId },
-      select: { id: true, nome: true, sigla: true, eixo: { select: { id: true, nome: true } } },
-    }),
-    prisma.usuario.findMany({
-      where: { secretariaId: session.user.secretariaId, role: Role.ENGENHEIRO, ativo: true },
-      orderBy: { nome: "asc" },
-      select: { id: true, nome: true },
-    }),
-  ]);
+  const secretaria = await prisma.secretaria.findUnique({
+    where: { id: session.user.secretariaId },
+    select: { id: true, nome: true, sigla: true, eixo: { select: { id: true, nome: true } } },
+  });
+
+  if (!secretaria) {
+    redirect("/login");
+  }
+
+  const engenheiros = await prisma.usuario.findMany({
+    where: { secretariaId: session.user.secretariaId, role: Role.ENGENHEIRO, ativo: true },
+    orderBy: { nome: "asc" },
+    select: { id: true, nome: true },
+  });
 
   return <ObraForm user={{ name: session.user.name ?? session.user.email ?? "Usuário", role: session.user.role }} secretaria={secretaria} engenheiros={engenheiros} />;
 }

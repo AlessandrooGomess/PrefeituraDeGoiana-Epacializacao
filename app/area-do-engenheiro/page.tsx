@@ -9,9 +9,11 @@ export default async function AreaDoEngenheiro() {
     redirect("/login");
   }
 
-  if (session.user.role !== Role.ENGENHEIRO) {
+  const allowedRoles: Role[] = [Role.ENGENHEIRO, Role.SUPER_ADMIN, Role.GESTAO];
+
+  if (!allowedRoles.includes(session.user.role)) {
     redirect("/area-do-servidor");
   }
 
-  return null;
+  redirect("/area-do-engenheiro/registro-campo");
 }
