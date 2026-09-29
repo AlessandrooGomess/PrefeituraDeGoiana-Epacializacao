@@ -4,10 +4,17 @@ import { hash } from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 [1/4] Limpando dados antigos...");
+  console.log("🧹 [1/4] Limpando dados antigos...");
+
   await prisma.foto.deleteMany();
+  await prisma.registroCampo.deleteMany();
   await prisma.medicao.deleteMany();
+  await prisma.subEtapaObra.deleteMany();
+  await prisma.etapaObra.deleteMany();
   await prisma.obra.deleteMany();
+  await prisma.subEtapaTemplate.deleteMany();
+  await prisma.etapaTemplate.deleteMany();
+  await prisma.tipoObra.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.secretaria.deleteMany();
   await prisma.areaTematica.deleteMany();
@@ -105,27 +112,91 @@ async function main() {
 
   await prisma.secretaria.createMany({
     data: [
-      { nome: "Manutenção e Serviços Públicos", sigla: "SEMANGES", eixoId: eixoSocial.id },
+      {
+        nome: "Manutenção e Serviços Públicos",
+        sigla: "SEMANGES",
+        eixoId: eixoSocial.id,
+      },
       { nome: "Esportes", sigla: "SEES", eixoId: eixoSocial.id },
       { nome: "Criança e Juventude", sigla: "SECJ", eixoId: eixoSocial.id },
       { nome: "Saúde", sigla: "SESAU", eixoId: eixoSocial.id },
-      { nome: "Assistência Social e Direitos Humanos", sigla: "SASDH", eixoId: eixoSocial.id },
-      { nome: "Autarquia de Ensino Superior de Ensino", sigla: "AMESG", eixoId: eixoSocial.id },
+      {
+        nome: "Assistência Social e Direitos Humanos",
+        sigla: "SASDH",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Autarquia de Ensino Superior de Ensino",
+        sigla: "AMESG",
+        eixoId: eixoSocial.id,
+      },
       { nome: "Mulher", sigla: "SEMUL", eixoId: eixoSocial.id },
-      { nome: "Segurança Cidadã, Trânsito e Transportes Urbanos", sigla: "SESTRAN", eixoId: eixoSocial.id },
-      { nome: "Habitação e Regularização Fundiária", sigla: "SEHAB", eixoId: eixoSocial.id },
-      { nome: "Turismo, Cultura e Proteção ao Patrimônio Histórico Cultural", sigla: "SETUR", eixoId: eixoEconomico.id },
-      { nome: "Agência de Desenvolvimento de Goiana", sigla: "AD", eixoId: eixoEconomico.id },
-      { nome: "Desenvolvimento Econômico e Tecnologia", sigla: "SECTI", eixoId: eixoEconomico.id },
-      { nome: "Agricultura, Pecuária, Pesca e Proteção Animal", sigla: "SEAPPA", eixoId: eixoEconomico.id },
-      { nome: "Agência de Meio Ambiente", sigla: "AMAG", eixoId: eixoEconomico.id },
-      { nome: "Planejamento Estratégico, Orçamento e Gestão", sigla: "SEPLAN", eixoId: eixoModernizacao.id },
-      { nome: "Administração e Gestão da Qualidade", sigla: "SECAD", eixoId: eixoModernizacao.id },
-      { nome: "Fazenda Municipal", sigla: "SEFAZ", eixoId: eixoModernizacao.id },
-      { nome: "Articulação Política, Governo e Participação Social", sigla: "SEAPOG", eixoId: eixoModernizacao.id },
-      { nome: "Licitações e Contratos Públicos", sigla: "SLCP", eixoId: eixoModernizacao.id },
+      {
+        nome: "Segurança Cidadã, Trânsito e Transportes Urbanos",
+        sigla: "SESTRAN",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Habitação e Regularização Fundiária",
+        sigla: "SEHAB",
+        eixoId: eixoSocial.id,
+      },
+      {
+        nome: "Turismo, Cultura e Proteção ao Patrimônio Histórico Cultural",
+        sigla: "SETUR",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Agência de Desenvolvimento de Goiana",
+        sigla: "AD",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Desenvolvimento Econômico e Tecnologia",
+        sigla: "SECTI",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Agricultura, Pecuária, Pesca e Proteção Animal",
+        sigla: "SEAPPA",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Agência de Meio Ambiente",
+        sigla: "AMAG",
+        eixoId: eixoEconomico.id,
+      },
+      {
+        nome: "Planejamento Estratégico, Orçamento e Gestão",
+        sigla: "SEPLAN",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Administração e Gestão da Qualidade",
+        sigla: "SECAD",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Fazenda Municipal",
+        sigla: "SEFAZ",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Articulação Política, Governo e Participação Social",
+        sigla: "SEAPOG",
+        eixoId: eixoModernizacao.id,
+      },
+      {
+        nome: "Licitações e Contratos Públicos",
+        sigla: "SLCP",
+        eixoId: eixoModernizacao.id,
+      },
       { nome: "Ouvidoria", sigla: "OGM", eixoId: eixoModernizacao.id },
-      { nome: "Goiana Previ", sigla: "GOIANAPREVI", eixoId: eixoModernizacao.id },
+      {
+        nome: "Goiana Previ",
+        sigla: "GOIANAPREVI",
+        eixoId: eixoModernizacao.id,
+      },
       { nome: "Controladoria", sigla: "CCI", eixoId: eixoModernizacao.id },
       { nome: "Comunicação", sigla: "SECOM", eixoId: eixoModernizacao.id },
       { nome: "Procuradoria", sigla: "PGM", eixoId: eixoModernizacao.id },
@@ -135,7 +206,7 @@ async function main() {
   console.log(
     " [4/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...",
   );
-  
+
   const senhaPadrao = await hash("Goiana@2025", 12);
 
   await prisma.usuario.create({
@@ -182,6 +253,149 @@ async function main() {
   });
 
   console.log("📍 [4/4] Inserindo Obras Reais de Goiana (2025)...");
+
+  console.log("📑 Criando Tipos de Obra e Templates de Etapas...");
+
+  const tipoConstrucao = await prisma.tipoObra.create({
+    data: {
+      nome: "Construção de Prédio Público",
+      slug: "construcao-predio-publico",
+      descricao:
+        "Obras de construção do zero de edificações como escolas, hospitais, etc.",
+      etapasTemplate: {
+        create: [
+          {
+            nome: "Serviços Preliminares",
+            nomeCidadao: "Preparação do Terreno",
+            ordem: 1,
+            peso: 5,
+          },
+          { nome: "Fundações", nomeCidadao: "Fundações", ordem: 2, peso: 15 },
+          {
+            nome: "Superestrutura",
+            nomeCidadao: "Estrutura e Paredes",
+            ordem: 3,
+            peso: 25,
+          },
+          {
+            nome: "Alvenaria e Fechamentos",
+            nomeCidadao: "Cobertura e Esquadrias",
+            ordem: 4,
+            peso: 20,
+          },
+          {
+            nome: "Instalações Elétricas/Hidráulicas",
+            nomeCidadao: "Instalações",
+            ordem: 5,
+            peso: 15,
+          },
+          {
+            nome: "Acabamentos",
+            nomeCidadao: "Acabamentos e Pintura",
+            ordem: 6,
+            peso: 20,
+          },
+        ],
+      },
+    },
+  });
+
+  const tipoReforma = await prisma.tipoObra.create({
+    data: {
+      nome: "Reforma de Prédio Público",
+      slug: "reforma-predio-publico",
+      descricao:
+        "Obras de melhoria, ampliação ou reparo estrutural em prédios existentes.",
+      etapasTemplate: {
+        create: [
+          {
+            nome: "Demolições e Retiradas",
+            nomeCidadao: "Início da Reforma",
+            ordem: 1,
+            peso: 10,
+          },
+          {
+            nome: "Recuperação Estrutural",
+            nomeCidadao: "Estrutura",
+            ordem: 2,
+            peso: 20,
+          },
+          {
+            nome: "Alvenaria",
+            nomeCidadao: "Paredes e Telhado",
+            ordem: 3,
+            peso: 15,
+          },
+          {
+            nome: "Instalações",
+            nomeCidadao: "Instalações",
+            ordem: 4,
+            peso: 20,
+          },
+          {
+            nome: "Acabamentos",
+            nomeCidadao: "Acabamentos",
+            ordem: 5,
+            peso: 25,
+          },
+          {
+            nome: "Limpeza Final e Entrega",
+            nomeCidadao: "Entrega",
+            ordem: 6,
+            peso: 10,
+          },
+        ],
+      },
+    },
+  });
+
+  const tipoVias = await prisma.tipoObra.create({
+    data: {
+      nome: "Obras de Vias e Pavimentação",
+      slug: "vias-pavimentacao",
+      descricao: "Obras de asfalto, calçamento e infraestrutura viária.",
+      etapasTemplate: {
+        create: [
+          {
+            nome: "Terraplanagem",
+            nomeCidadao: "Terraplanagem",
+            ordem: 1,
+            peso: 20,
+          },
+          {
+            nome: "Sub-base e Base",
+            nomeCidadao: "Base da Rua",
+            ordem: 2,
+            peso: 25,
+          },
+          {
+            nome: "Imprimação e Pintura de Ligação",
+            nomeCidadao: "Preparação Asfalto",
+            ordem: 3,
+            peso: 10,
+          },
+          {
+            nome: "Revestimento Asfáltico/Pavimentação",
+            nomeCidadao: "Pavimentação",
+            ordem: 4,
+            peso: 30,
+          },
+          {
+            nome: "Meio-fio e Sarjeta",
+            nomeCidadao: "Meio-fio",
+            ordem: 5,
+            peso: 10,
+          },
+          {
+            nome: "Sinalização",
+            nomeCidadao: "Sinalização",
+            ordem: 6,
+            peso: 5,
+          },
+        ],
+      },
+    },
+  });
 
   const obraPontaDePedras = await prisma.obra.create({
     data: {
@@ -490,6 +704,59 @@ async function main() {
       descricao: "Registro fotográfico do pátio de feira de Flexeiras.",
     },
   });
+
+  console.log("🔗 Associando os Tipos de Obra e calculando progresso...");
+
+  const associacoes = [
+    { obraId: obraPontaDePedras.id, tipo: tipoVias, progresso: 40 },
+    { obraId: obraCarneDeVaca.id, tipo: tipoVias, progresso: 25 },
+    { obraId: obraRestauroCentro.id, tipo: tipoReforma, progresso: 15 },
+    { obraId: obraTejucupapo.id, tipo: tipoVias, progresso: 60 },
+    { obraId: obraAsfaltoCentro.id, tipo: tipoVias, progresso: 100 },
+    { obraId: obraEscolaAngelo.id, tipo: tipoReforma, progresso: 35 },
+    { obraId: obraFeiraFlexeiras.id, tipo: tipoConstrucao, progresso: 100 },
+  ];
+
+  for (const assoc of associacoes) {
+    await prisma.obra.update({
+      where: { id: assoc.obraId },
+      data: { tipoObraId: assoc.tipo.id },
+    });
+
+    const templates = await prisma.etapaTemplate.findMany({
+      where: { tipoObraId: assoc.tipo.id },
+      orderBy: { ordem: "asc" },
+    });
+
+    for (let i = 0; i < templates.length; i++) {
+      const template = templates[i];
+      const etapaProgresso =
+        assoc.progresso === 100
+          ? 100
+          : i === 0 || i === 1
+            ? assoc.progresso * 1.5
+            : 0;
+      const limitProgresso = Math.min(etapaProgresso, 100);
+
+      const statusEtapa =
+        limitProgresso === 100
+          ? "CONCLUIDA"
+          : limitProgresso > 0
+            ? "EM_ANDAMENTO"
+            : "PENDENTE";
+
+      await prisma.etapaObra.create({
+        data: {
+          obraId: assoc.obraId,
+          etapaTemplateId: template.id,
+          percentualConcluido: limitProgresso,
+          status: statusEtapa,
+          dataInicio: limitProgresso > 0 ? new Date("2025-06-01") : null,
+          dataConclusao: limitProgresso === 100 ? new Date("2025-08-01") : null,
+        },
+      });
+    }
+  }
 
   console.log("✨ Todas as 7 obras foram inseridas com sucesso!");
 }
