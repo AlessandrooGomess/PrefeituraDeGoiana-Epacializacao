@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -16,6 +16,18 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   try {
+    const obra = await prisma.obra.findUnique({
+      where: { id },
+      select: { id: true, deletedAt: true },
+    });
+
+    if (!obra || obra.deletedAt) {
+      return NextResponse.json(
+        { message: "Obra não encontrada." },
+        { status: 404 },
+      );
+    }
+
     const etapas = await prisma.etapaObra.findMany({
       where: { obraId: id },
       orderBy: { etapaTemplate: { ordem: "asc" } },
@@ -69,7 +81,16 @@ export async function POST(request: Request, context: RouteContext) {
   if (auth.response) return auth.response;
 
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { message: "O corpo da requisição deve conter um JSON válido." },
+        { status: 400 },
+      );
+    }
+
     const schema = z.object({
       etapasTemplateIds: z.array(z.string().uuid())
     });
@@ -93,22 +114,38 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ message: "Você não tem permissão para alterar esta obra." }, { status: 403 });
     }
 
-    // Cria as etapas da obra
-    const novasEtapas = await Promise.all(
-      data.etapasTemplateIds.map(async (templateId) => {
-        return prisma.etapaObra.create({
-          data: {
-            obraId: id,
-            etapaTemplateId: templateId,
-            status: "PENDENTE",
-            percentualConcluido: 0
-          }
-        });
-      })
-    );
+    // Cria as etapas da obra em lote
+    await prisma.etapaObra.createMany({
+      data: data.etapasTemplateIds.map((templateId) => ({
+        obraId: id,
+        etapaTemplateId: templateId,
+        status: "PENDENTE",
+        percentualConcluido: 0,
+      })),
+    });
+
+    const novasEtapas = await prisma.etapaObra.findMany({
+      where: { obraId: id },
+      orderBy: { etapaTemplate: { ordem: "asc" } },
+      include: {
+        etapaTemplate: {
+          select: { nome: true, nomeCidadao: true, ordem: true, peso: true, ehContinua: true }
+        }
+      }
+    });
 
     return NextResponse.json(novasEtapas, { status: 201 });
   } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { message: "Uma ou mais etapas já foram cadastradas para esta obra." },
+        { status: 409 },
+      );
+    }
+
     console.error("Erro ao instanciar etapas da obra:", error);
     return NextResponse.json({ message: "Erro interno ao salvar etapas." }, { status: 500 });
   }

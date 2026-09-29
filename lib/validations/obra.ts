@@ -196,6 +196,7 @@ const obraFields = {
   eixoId: optionalUuid,
   areaTematicaId: optionalUuid,
   engenheiroId: optionalUuid,
+  tipoObraId: z.string().uuid("Selecione um tipo de obra válido."),
 };
 
 export const createObraSchema = z
