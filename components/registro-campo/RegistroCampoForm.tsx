@@ -135,7 +135,7 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
   };
 
   return (
-    <div className="space-y-3.5">
+    <div className="space-y-3.5 md:space-y-5">
       {/* Mensagem de Sucesso */}
       {mensagemSucesso && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-semibold text-emerald-800 shadow-xs">
@@ -169,27 +169,30 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
         ]}
       />
 
-      {/* Card 3: Registro Fotográfico com GPS */}
-      <RegistroFotograficoCard
-        fotos={fotos}
-        onChangeFotos={(novas) => {
-          setFotos(novas);
-          if (novas.length > 0) setFotoErro(null);
-        }}
-        erro={fotoErro}
-      />
+      {/* Cards 3 e 4: empilhados no mobile, lado a lado a partir do tablet */}
+      <div className="grid gap-3.5 md:grid-cols-2 md:gap-5">
+        {/* Card 3: Registro Fotográfico com GPS */}
+        <RegistroFotograficoCard
+          fotos={fotos}
+          onChangeFotos={(novas) => {
+            setFotos(novas);
+            if (novas.length > 0) setFotoErro(null);
+          }}
+          erro={fotoErro}
+        />
 
-      {/* Card 4: Intercorrências e Observações Adicionais */}
-      <IntercorrenciasCard
-        selecionadas={intercorrencias}
-        onToggle={handleToggleIntercorrencia}
-        observacoes={observacoes}
-        onChangeObservacoes={(val) => {
-          setObservacoes(val);
-          if (observacoesErro) setObservacoesErro(null);
-        }}
-        erro={observacoesErro}
-      />
+        {/* Card 4: Intercorrências e Observações Adicionais */}
+        <IntercorrenciasCard
+          selecionadas={intercorrencias}
+          onToggle={handleToggleIntercorrencia}
+          observacoes={observacoes}
+          onChangeObservacoes={(val) => {
+            setObservacoes(val);
+            if (observacoesErro) setObservacoesErro(null);
+          }}
+          erro={observacoesErro}
+        />
+      </div>
 
       {/* Ações: Salvar Rascunho / Enviar Medição */}
       <RegistroCampoActions
