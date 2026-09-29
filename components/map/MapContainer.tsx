@@ -167,27 +167,37 @@ export default function MapContainer({
   useEffect(() => {
     let isMounted = true;
 
+    // Filtros são buscados à parte: uma falha neles não deve esconder as obras do mapa
+    async function carregarFiltros() {
+      try {
+        const response = await fetch("/api/filtros");
+        if (!response.ok) {
+          throw new Error("Falha ao carregar filtros.");
+        }
+
+        const eixos: EixoComSecretarias[] = await response.json();
+        if (isMounted) {
+          onFiltersLoaded?.(eixos);
+        }
+      } catch (err) {
+        console.error("Erro na busca de filtros:", err);
+      }
+    }
+
     async function carregarObras() {
       try {
         setLoading(true);
         setError(null);
 
-        const [obrasResponse, filtersResponse] = await Promise.all([
-          fetch("/api/obras"),
-          fetch("/api/filtros"),
-        ]);
-        if (!obrasResponse.ok || !filtersResponse.ok) {
+        const response = await fetch("/api/obras");
+        if (!response.ok) {
           throw new Error("Falha ao carregar dados do mapa.");
         }
 
-        const [dados, eixos]: [ObraItem[], EixoComSecretarias[]] = await Promise.all([
-          obrasResponse.json(),
-          filtersResponse.json(),
-        ]);
+        const dados: ObraItem[] = await response.json();
         if (isMounted) {
           setObras(dados);
           onObrasLoaded?.(dados);
-          onFiltersLoaded?.(eixos);
         }
       } catch (err) {
         console.error("Erro na busca de obras:", err);
@@ -204,6 +214,7 @@ export default function MapContainer({
     }
 
     carregarObras();
+    carregarFiltros();
 
     return () => {
       isMounted = false;
