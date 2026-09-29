@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import Link from "next/link";
+import { EngenheiroMenuMobile } from "@/components/area-engenheiro/EngenheiroMenuMobile";
 
 interface RegistroCampoHeaderProps {
   onClose?: () => void;
@@ -14,7 +15,10 @@ export function RegistroCampoHeader({
 }: RegistroCampoHeaderProps) {
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between bg-blue-600 px-5 py-3.5 text-white shadow-xs">
-      <h1 className="text-base font-semibold tracking-wide">Novo Registro</h1>
+      <div className="flex items-center gap-3">
+        <EngenheiroMenuMobile />
+        <h1 className="text-base font-semibold tracking-wide">Novo Registro</h1>
+      </div>
       {onClose ? (
         <button
           type="button"
