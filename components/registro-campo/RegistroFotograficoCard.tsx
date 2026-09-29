@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Camera, MapPin, X, Loader2 } from "lucide-react";
 
 export interface FotoItem {
@@ -12,6 +12,12 @@ export interface FotoItem {
   coordenadasFormatadas?: string;
   descricao?: string;
 }
+
+// Suporte a GPS é uma característica fixa do navegador, lida como valor externo (não como estado).
+// O servidor assume suporte para o HTML inicial coincidir com o primeiro render no cliente.
+const semAssinatura = () => () => {};
+const getSuporteGeolocalizacao = () => "geolocation" in navigator;
+const getSuporteGeolocalizacaoServidor = () => true;
 
 interface RegistroFotograficoCardProps {
   fotos?: FotoItem[];
@@ -25,15 +31,18 @@ export function RegistroFotograficoCard({
   erro,
 }: RegistroFotograficoCardProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [gpsStatus, setGpsStatus] = useState<"ativo" | "buscando" | "inativo">("buscando");
+  const suportaGeolocalizacao = useSyncExternalStore(
+    semAssinatura,
+    getSuporteGeolocalizacao,
+    getSuporteGeolocalizacaoServidor,
+  );
+  const [gpsStatusLeitura, setGpsStatus] = useState<"ativo" | "buscando" | "inativo">("buscando");
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const gpsStatus = suportaGeolocalizacao ? gpsStatusLeitura : "inativo";
 
   // 1. Tenta obter o GPS real do dispositivo
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setGpsStatus("inativo");
-      return;
-    }
+    if (!suportaGeolocalizacao) return;
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -53,7 +62,7 @@ export function RegistroFotograficoCard({
         maximumAge: 60000,
       }
     );
-  }, []);
+  }, [suportaGeolocalizacao]);
 
   // 2. Manipula a seleção/captura de novas fotos
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
