@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -16,23 +16,21 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   try {
-    const etapas = await prisma.etapaObra.findMany({
-      where: { obraId: id },
-      orderBy: { etapaTemplate: { ordem: "asc" } },
-      include: {
-        etapaTemplate: {
-          select: { nome: true, nomeCidadao: true, ordem: true, peso: true, ehContinua: true }
-        },
-        subEtapasObra: {
-          include: {
-            subEtapaTemplate: { select: { nome: true, ordem: true, peso: true } }
-          },
-          orderBy: { subEtapaTemplate: { ordem: "asc" } }
-        }
-      }
+    const obra = await prisma.obra.findUnique({
+      where: { id },
+      select: { id: true, deletedAt: true },
     });
 
-    // Formata a resposta
+    if (!obra || obra.deletedAt) {
+      return NextResponse.json(
+        { message: "Obra não encontrada." },
+        { status: 404 },
+      );
+    }
+
+    const etapas = await prisma.etapaObra.findMany({
+      where: { obraId: id },
+
     const formatado = etapas.map(etapa => ({
       id: etapa.id,
       status: etapa.status,
@@ -64,7 +62,6 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ message: "O identificador da obra é inválido." }, { status: 400 });
   }
 
-  // Cadastro de etapas é atribuição da secretaria; o engenheiro não pode cadastrar
   const auth = await requireUser([Role.SUPER_ADMIN, Role.GESTAO, Role.ADM_SECRETARIA]);
   if (auth.response) return auth.response;
 
