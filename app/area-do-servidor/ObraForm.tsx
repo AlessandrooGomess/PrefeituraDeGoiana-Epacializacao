@@ -6,7 +6,6 @@ import { FormEvent, useRef, useState } from "react";
 import {
   AlertCircle,
   Building2,
-  CheckCircle2,
   HelpCircle,
   Loader2,
   Save,
