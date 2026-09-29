@@ -207,7 +207,9 @@ async function main() {
     " [4/4] Criando Hierarquia de Usuários (Admin, Gestor e Fiscal)...",
   );
 
-  const senhaPadrao = await hash("Goiana@2025", 12);
+  const senhaAdmin = await hash(process.env.SEED_SENHA_ADMIN || "12345678", 12);
+  const senhaSec = await hash(process.env.SEED_SENHA_GESTOR_SEDUO || "12345678", 12);
+  const senhaEng = await hash(process.env.SEED_SENHA_ENG_SEDUO || "12345678", 12);
 
   await prisma.usuario.create({
     data: {
@@ -215,7 +217,7 @@ async function main() {
       email: "admin@goiana.pe.gov.br",
       cargo: "Gestor de Tecnologia e Transparência",
       role: Role.SUPER_ADMIN,
-      passwordHash: senhaPadrao,
+      passwordHash: senhaAdmin,
     },
   });
 
@@ -226,7 +228,7 @@ async function main() {
       cargo: "Secretario Executivo de Infraestrutura",
       role: Role.ADM_SECRETARIA,
       secretariaId: seinfra.id,
-      passwordHash: senhaPadrao,
+      passwordHash: senhaSec,
     },
   });
 
@@ -237,7 +239,7 @@ async function main() {
       cargo: "Engenheiro Civil Fiscal",
       role: Role.ENGENHEIRO,
       secretariaId: seinfra.id,
-      passwordHash: senhaPadrao,
+      passwordHash: senhaEng,
     },
   });
 
@@ -248,7 +250,7 @@ async function main() {
       cargo: "Engenheiro Civil Fiscal",
       role: Role.ENGENHEIRO,
       secretariaId: seduc.id,
-      passwordHash: senhaPadrao,
+      passwordHash: senhaEng,
     },
   });
 
