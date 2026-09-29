@@ -28,6 +28,7 @@ type FormState = {
   engenheiroId: string;
   empresaContratada: string;
   numeroOrdemServico: string;
+  tipoObraId: string;
   valorContrato: string;
   dataOrdemServico: string;
   previsaoConclusao: string;
@@ -44,6 +45,7 @@ const initialForm: FormState = {
   engenheiroId: "",
   empresaContratada: "",
   numeroOrdemServico: "",
+  tipoObraId: "",
   valorContrato: "",
   dataOrdemServico: "",
   previsaoConclusao: "",
@@ -83,9 +85,10 @@ type ObraFormProps = {
   user: SidebarUser;
   secretaria: { id: string; nome: string; sigla: string; eixo: { id: string; nome: string } | null };
   engenheiros: Array<{ id: string; nome: string }>;
+  tiposObra: Array<{ id: string; nome: string }>;
 };
 
-export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProps) {
+export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: ObraFormProps) {
   const isSubmittingRef = useRef(false);
   const [form, setForm] = useState(initialForm);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -233,6 +236,7 @@ export default function ObraForm({ user, secretaria, engenheiros }: ObraFormProp
           valorContrato: parseCurrencyBRLToNumber(form.valorContrato),
           empresaContratada: form.empresaContratada.trim() || null,
           numeroOrdemServico: form.numeroOrdemServico.trim() || null,
+            tipoObraId: form.tipoObraId,
           dataOrdemServico: form.dataOrdemServico || null,
           previsaoConclusao: form.previsaoConclusao || null,
           eixoId: secretaria.eixo?.id ?? null,
