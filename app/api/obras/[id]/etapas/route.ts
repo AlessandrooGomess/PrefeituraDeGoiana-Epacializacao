@@ -66,10 +66,15 @@ export async function POST(request: Request, context: RouteContext) {
   if (auth.response) return auth.response;
 
   try {
-    const body = await request.json();
-    const schema = z.object({
-      etapasTemplateIds: z.array(z.string().uuid())
-    });
+        let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { message: "O corpo da requisição deve conter um JSON válido." },
+        { status: 400 },
+      );
+    }
 
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
