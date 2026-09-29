@@ -2,10 +2,15 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { filtroObrasAreaEngenheiro } from "@/lib/obras/filtro-area-engenheiro";
 import { RegistroCampoForm } from "@/components/registro-campo/RegistroCampoForm";
 import { EngenheiroShell } from "@/components/area-engenheiro/EngenheiroShell";
 
-export default async function RegistroCampoPage() {
+interface RegistroCampoPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function RegistroCampoPage({ searchParams }: RegistroCampoPageProps) {
   const session = await auth();
 
   if (!session?.user) {
@@ -20,14 +25,7 @@ export default async function RegistroCampoPage() {
 
   // Busca obras reais vinculadas ao engenheiro logado ou à secretaria dele
   const obras = await prisma.obra.findMany({
-    where: {
-      deletedAt: null,
-      ...(session.user.role === Role.ENGENHEIRO
-        ? { engenheiroId: session.user.id }
-        : session.user.secretariaId
-        ? { secretariaId: session.user.secretariaId }
-        : {}),
-    },
+    where: filtroObrasAreaEngenheiro(session.user),
     select: {
       id: true,
       titulo: true,
@@ -38,6 +36,10 @@ export default async function RegistroCampoPage() {
     },
     orderBy: { updatedAt: "desc" },
   });
+
+  // Obra escolhida na tela de Início (?obra=<id>); só é aceita se estiver entre as obras do usuário
+  const { obra: obraParam } = await searchParams;
+  const obraInicialId = obras.find((obra) => obra.id === obraParam)?.id;
 
   return (
     <EngenheiroShell titulo="Novo Registro" fecharHref="/area-do-engenheiro" abaAtiva="diario">
@@ -52,7 +54,7 @@ export default async function RegistroCampoPage() {
       </div>
 
       {/* Orquestrador de Cards e Estados */}
-      <RegistroCampoForm obras={obras} />
+      <RegistroCampoForm obras={obras} obraInicialId={obraInicialId} />
     </EngenheiroShell>
   );
 }
