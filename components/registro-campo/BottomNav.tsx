@@ -1,9 +1,10 @@
 import { AlertTriangle, BookOpen, CheckSquare, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
-type BottomNavTab = "diario" | "checklist" | "ouvidoria";
+export type BottomNavTab = "diario" | "checklist" | "ouvidoria";
 
 interface BottomNavProps {
+  // Sem aba ativa em telas fora das seções da barra (ex.: Início)
   activeTab?: BottomNavTab;
 }
 
@@ -14,7 +15,7 @@ const ABAS: { id: BottomNavTab; label: string; href: string; icon: LucideIcon }[
   { id: "ouvidoria", label: "Ouvidoria", href: "/area-do-engenheiro/ouvidoria", icon: AlertTriangle },
 ];
 
-export function BottomNav({ activeTab = "diario" }: BottomNavProps) {
+export function BottomNav({ activeTab }: BottomNavProps) {
   return (
     <nav
       aria-label="Seções do registro de campo"
