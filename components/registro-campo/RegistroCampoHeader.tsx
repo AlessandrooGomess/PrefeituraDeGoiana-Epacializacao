@@ -5,13 +5,16 @@ import Link from "next/link";
 import { EngenheiroMenuMobile } from "@/components/area-engenheiro/EngenheiroMenuMobile";
 
 interface RegistroCampoHeaderProps {
+  titulo?: string;
   onClose?: () => void;
+  // Sem onClose nem backHref, o botão "fechar" não é exibido
   backHref?: string;
 }
 
 export function RegistroCampoHeader({
+  titulo = "Novo Registro",
   onClose,
-  backHref = "/area-do-engenheiro",
+  backHref,
 }: RegistroCampoHeaderProps) {
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between bg-blue-600 px-5 py-3.5 text-white shadow-xs">
@@ -20,7 +23,7 @@ export function RegistroCampoHeader({
         <div className="flex items-center gap-2.5">
           {/* Marca visual do portal de espacialização de obras */}
           <MapPinned className="h-6 w-6 md:h-7 md:w-7 shrink-0" aria-hidden="true" />
-          <h1 className="text-base md:text-lg font-semibold tracking-wide">Novo Registro</h1>
+          <h1 className="text-base md:text-lg font-semibold tracking-wide">{titulo}</h1>
         </div>
       </div>
       {onClose ? (
@@ -32,7 +35,7 @@ export function RegistroCampoHeader({
         >
           <X className="h-5 w-5" />
         </button>
-      ) : (
+      ) : backHref ? (
         <Link
           href={backHref}
           className="rounded-full p-1 text-white/90 hover:bg-blue-700 hover:text-white transition-colors"
@@ -40,7 +43,7 @@ export function RegistroCampoHeader({
         >
           <X className="h-5 w-5" />
         </Link>
-      )}
+      ) : null}
     </header>
   );
 }
