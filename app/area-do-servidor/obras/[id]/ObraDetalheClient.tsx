@@ -58,6 +58,28 @@ type ObraDetail = {
     engenheiro: { nome: string; cargo: string | null };
   }>;
   fotos: Photo[];
+  etapas: Array<{
+    id: string;
+    nome: string;
+    nomeCidadao: string;
+    ordem: number;
+    status: string;
+    percentualConcluido: number;
+    dataInicio: string | null;
+    dataPrevisao: string | null;
+    dataConclusao: string | null;
+    observacoes: string | null;
+    subEtapas: Array<{
+      id: string;
+      nome: string;
+      ordem: number;
+      status: string;
+      percentualConcluido: number;
+      dataInicio: string | null;
+      dataConclusao: string | null;
+      observacoes: string | null;
+    }>;
+  }>;
   registrosCampo: Array<{
     id: string;
     dataVistoria: string;
@@ -93,6 +115,12 @@ const statusLabel: Record<StatusObra, string> = {
   EM_ANDAMENTO: "Em andamento",
   PARALISADA: "Paralisada",
   CONCLUIDA: "Concluída",
+};
+const etapaStatusLabel: Record<string, string> = {
+  PENDENTE: "Pendente",
+  EM_ANDAMENTO: "Em andamento",
+  CONCLUIDA: "Concluída",
+  PARALISADA: "Paralisada",
 };
 
 const dateValue = (value: string | null) => value?.slice(0, 10) ?? "";
@@ -426,6 +454,44 @@ export default function ObraDetalheClient({
 
               <section className={styles.card}>
                 <div className={styles.cardHeading}>
+                  <div><span className={styles.step}><ClipboardList size={16} /></span><div><h2>Etapas da obra</h2><p>Progresso das etapas e subetapas cadastradas</p></div></div>
+                </div>
+                {obra.etapas.length ? (
+                  <div className="divide-y divide-slate-100">
+                    {[...obra.etapas].sort((a, b) => a.ordem - b.ordem).map((etapa) => (
+                      <article className="py-3" key={etapa.id}>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <strong className="text-sm text-slate-800">{etapa.nomeCidadao || etapa.nome}</strong>
+                          <span className={styles.statusTag}>{etapaStatusLabel[etapa.status] ?? etapa.status}</span>
+                        </div>
+                        <p className="mb-0 mt-1 text-xs text-slate-500">
+                          {etapa.percentualConcluido}% concluída
+                          {etapa.dataInicio && ` · Início: ${displayDate(etapa.dataInicio)}`}
+                          {etapa.dataPrevisao && ` · Previsão: ${displayDate(etapa.dataPrevisao)}`}
+                          {etapa.dataConclusao && ` · Conclusão: ${displayDate(etapa.dataConclusao)}`}
+                        </p>
+                        {etapa.observacoes && <p className="mb-0 mt-2 text-sm text-slate-700">{etapa.observacoes}</p>}
+                        {etapa.subEtapas.length > 0 && (
+                          <ul className="mb-0 mt-3 grid list-none gap-2 border-l-2 border-blue-100 pl-3">
+                            {[...etapa.subEtapas].sort((a, b) => a.ordem - b.ordem).map((subEtapa) => (
+                              <li key={subEtapa.id}>
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <span className="text-xs font-medium text-slate-700">{subEtapa.nome}</span>
+                                  <span className="text-xs text-slate-500">{subEtapaStatusLabel(subEtapa.status)} · {subEtapa.percentualConcluido}%</span>
+                                </div>
+                                {subEtapa.observacoes && <p className="mb-0 mt-1 text-xs text-slate-500">{subEtapa.observacoes}</p>}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                ) : <p className={styles.emptyState}>Ainda não há etapas cadastradas para esta obra.</p>}
+              </section>
+
+              <section className={styles.card}>
+                <div className={styles.cardHeading}>
                   <div><span className={styles.step}><ClipboardList size={16} /></span><div><h2>Medições e vistorias</h2><p>Histórico registrado pelos engenheiros</p></div></div>
                 </div>
                 {obra.medicoes.length ? (
@@ -457,7 +523,15 @@ export default function ObraDetalheClient({
                         </div>
                         {registro.intercorrencias.length > 0 && <p className="mb-0 mt-2 text-xs text-slate-600">Intercorrências: {registro.intercorrencias.join(", ")}</p>}
                         {registro.observacoes && <p className="mb-0 mt-2 text-sm text-slate-700">{registro.observacoes}</p>}
-                        {registro.fotos.length > 0 && <p className="mb-0 mt-2 text-xs text-slate-500">{registro.fotos.length} foto(s) anexada(s)</p>}
+                        {registro.fotos.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                            {registro.fotos.map((foto) => (
+                              <a className="text-xs font-medium text-blue-700 hover:underline" href={foto.url} target="_blank" rel="noreferrer" key={foto.id}>
+                                {foto.descricao || foto.tipo} · {displayDate(foto.dataFoto)}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </article>
                     ))}
                   </div>

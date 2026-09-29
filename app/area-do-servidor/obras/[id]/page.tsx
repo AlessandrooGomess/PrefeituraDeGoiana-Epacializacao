@@ -77,6 +77,29 @@ export default async function ObraDetalhePage({
         orderBy: { dataFoto: "desc" },
         select: { id: true, url: true, tipo: true, descricao: true, dataFoto: true },
       },
+      etapasObra: {
+        select: {
+          id: true,
+          status: true,
+          percentualConcluido: true,
+          dataInicio: true,
+          dataPrevisao: true,
+          dataConclusao: true,
+          observacoes: true,
+          etapaTemplate: { select: { nome: true, nomeCidadao: true, ordem: true } },
+          subEtapasObra: {
+            select: {
+              id: true,
+              status: true,
+              percentualConcluido: true,
+              dataInicio: true,
+              dataConclusao: true,
+              observacoes: true,
+              subEtapaTemplate: { select: { nome: true, ordem: true } },
+            },
+          },
+        },
+      },
       registrosCampo: {
         orderBy: { dataVistoria: "desc" },
         select: {
@@ -160,6 +183,28 @@ export default async function ObraDetalhePage({
         fotos: obra.fotos.map((foto) => ({
           ...foto,
           dataFoto: foto.dataFoto.toISOString(),
+        })),
+        etapas: obra.etapasObra.map((etapa) => ({
+          id: etapa.id,
+          nome: etapa.etapaTemplate.nome,
+          nomeCidadao: etapa.etapaTemplate.nomeCidadao,
+          ordem: etapa.etapaTemplate.ordem,
+          status: etapa.status,
+          percentualConcluido: Number(etapa.percentualConcluido),
+          dataInicio: etapa.dataInicio?.toISOString() ?? null,
+          dataPrevisao: etapa.dataPrevisao?.toISOString() ?? null,
+          dataConclusao: etapa.dataConclusao?.toISOString() ?? null,
+          observacoes: etapa.observacoes,
+          subEtapas: etapa.subEtapasObra.map((subEtapa) => ({
+            id: subEtapa.id,
+            nome: subEtapa.subEtapaTemplate.nome,
+            ordem: subEtapa.subEtapaTemplate.ordem,
+            status: subEtapa.status,
+            percentualConcluido: Number(subEtapa.percentualConcluido),
+            dataInicio: subEtapa.dataInicio?.toISOString() ?? null,
+            dataConclusao: subEtapa.dataConclusao?.toISOString() ?? null,
+            observacoes: subEtapa.observacoes,
+          })),
         })),
         registrosCampo: obra.registrosCampo.map((registro) => ({
           ...registro,
