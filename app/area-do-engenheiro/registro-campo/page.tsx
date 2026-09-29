@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { RegistroCampoHeader } from "@/components/registro-campo/RegistroCampoHeader";
 import { RegistroCampoForm } from "@/components/registro-campo/RegistroCampoForm";
 import { BottomNav } from "@/components/registro-campo/BottomNav";
+import { EngenheiroSidebar } from "@/components/area-engenheiro/EngenheiroSidebar";
 
 export default async function RegistroCampoPage() {
   const session = await auth();
@@ -47,21 +48,26 @@ export default async function RegistroCampoPage() {
         {/* Topo Azul com botão fechar */}
         <RegistroCampoHeader backHref="/area-do-engenheiro" />
 
-        {/* Conteúdo Principal com Formulário Dinâmico */}
-        <main className="flex-1 w-full max-w-6xl mx-auto px-4 pt-4 pb-6 md:px-8 md:pt-8 space-y-3.5 md:space-y-5">
-          {/* Título e Subtítulo */}
-          <div className="space-y-0.5 md:space-y-1">
-            <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">
-              Registro de Campo
-            </h2>
-            <p className="text-xs md:text-sm text-slate-500">
-              Preencha os dados da vistoria diária.
-            </p>
-          </div>
+        <div className="flex flex-1">
+          {/* Menu Lateral (a partir do tablet) */}
+          <EngenheiroSidebar />
 
-          {/* Orquestrador de Cards e Estados */}
-          <RegistroCampoForm obras={obras} />
-        </main>
+          {/* Conteúdo Principal com Formulário Dinâmico */}
+          <main className="flex-1 min-w-0 w-full max-w-6xl mx-auto px-4 pt-4 pb-6 md:px-8 md:pt-8 space-y-3.5 md:space-y-5">
+            {/* Título e Subtítulo */}
+            <div className="space-y-0.5 md:space-y-1">
+              <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">
+                Registro de Campo
+              </h2>
+              <p className="text-xs md:text-sm text-slate-500">
+                Preencha os dados da vistoria diária.
+              </p>
+            </div>
+
+            {/* Orquestrador de Cards e Estados */}
+            <RegistroCampoForm obras={obras} />
+          </main>
+        </div>
 
         {/* Barra de Navegação Inferior Fixa */}
         <BottomNav activeTab="diario" />
