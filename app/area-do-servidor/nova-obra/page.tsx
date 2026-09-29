@@ -9,7 +9,6 @@ export default async function NovaObraPage() {
   const session = await auth();
 
   if (!session?.user) redirect("/login");
-  // Somente a secretaria cadastra obras
   if (session.user.role !== Role.ADM_SECRETARIA) redirect(getHomeByRole(session.user.role));
   if (!session.user.secretariaId) redirect("/");
 
@@ -28,5 +27,18 @@ export default async function NovaObraPage() {
     select: { id: true, nome: true },
   });
 
-  return <ObraForm user={{ name: session.user.name ?? session.user.email ?? "Usuário", role: session.user.role }} secretaria={secretaria} engenheiros={engenheiros} />;
+  const tiposObra = await prisma.tipoObra.findMany({
+    where: { ativo: true },
+    orderBy: { nome: "asc" },
+    select: { id: true, nome: true },
+  });
+
+  return (
+    <ObraForm 
+      user={{ name: session.user.name ?? session.user.email ?? "Usuário", role: session.user.role }} 
+      secretaria={secretaria} 
+      engenheiros={engenheiros} 
+      tiposObra={tiposObra}
+    />
+  );
 }
