@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log("🧹 [1/4] Limpando dados antigos...");
-  
+
   await prisma.foto.deleteMany();
   await prisma.registroCampo.deleteMany();
   await prisma.medicao.deleteMany();
@@ -253,6 +253,62 @@ async function main() {
   });
 
   console.log("📍 [4/4] Inserindo Obras Reais de Goiana (2025)...");
+
+    console.log("📑 Criando Tipos de Obra e Templates de Etapas...");
+
+  const tipoConstrucao = await prisma.tipoObra.create({
+    data: {
+      nome: "Construção de Prédio Público",
+      slug: "construcao-predio-publico",
+      descricao: "Obras de construção do zero de edificações como escolas, hospitais, etc.",
+      etapasTemplate: {
+        create: [
+          { nome: "Serviços Preliminares", nomeCidadao: "Preparação do Terreno", ordem: 1, peso: 5 },
+          { nome: "Fundações", nomeCidadao: "Fundações", ordem: 2, peso: 15 },
+          { nome: "Superestrutura", nomeCidadao: "Estrutura e Paredes", ordem: 3, peso: 25 },
+          { nome: "Alvenaria e Fechamentos", nomeCidadao: "Cobertura e Esquadrias", ordem: 4, peso: 20 },
+          { nome: "Instalações Elétricas/Hidráulicas", nomeCidadao: "Instalações", ordem: 5, peso: 15 },
+          { nome: "Acabamentos", nomeCidadao: "Acabamentos e Pintura", ordem: 6, peso: 20 },
+        ],
+      },
+    },
+  });
+
+  const tipoReforma = await prisma.tipoObra.create({
+    data: {
+      nome: "Reforma de Prédio Público",
+      slug: "reforma-predio-publico",
+      descricao: "Obras de melhoria, ampliação ou reparo estrutural em prédios existentes.",
+      etapasTemplate: {
+        create: [
+          { nome: "Demolições e Retiradas", nomeCidadao: "Início da Reforma", ordem: 1, peso: 10 },
+          { nome: "Recuperação Estrutural", nomeCidadao: "Estrutura", ordem: 2, peso: 20 },
+          { nome: "Alvenaria", nomeCidadao: "Paredes e Telhado", ordem: 3, peso: 15 },
+          { nome: "Instalações", nomeCidadao: "Instalações", ordem: 4, peso: 20 },
+          { nome: "Acabamentos", nomeCidadao: "Acabamentos", ordem: 5, peso: 25 },
+          { nome: "Limpeza Final e Entrega", nomeCidadao: "Entrega", ordem: 6, peso: 10 },
+        ],
+      },
+    },
+  });
+
+  const tipoVias = await prisma.tipoObra.create({
+    data: {
+      nome: "Obras de Vias e Pavimentação",
+      slug: "vias-pavimentacao",
+      descricao: "Obras de asfalto, calçamento e infraestrutura viária.",
+      etapasTemplate: {
+        create: [
+          { nome: "Terraplanagem", nomeCidadao: "Terraplanagem", ordem: 1, peso: 20 },
+          { nome: "Sub-base e Base", nomeCidadao: "Base da Rua", ordem: 2, peso: 25 },
+          { nome: "Imprimação e Pintura de Ligação", nomeCidadao: "Preparação Asfalto", ordem: 3, peso: 10 },
+          { nome: "Revestimento Asfáltico/Pavimentação", nomeCidadao: "Pavimentação", ordem: 4, peso: 30 },
+          { nome: "Meio-fio e Sarjeta", nomeCidadao: "Meio-fio", ordem: 5, peso: 10 },
+          { nome: "Sinalização", nomeCidadao: "Sinalização", ordem: 6, peso: 5 },
+        ],
+      },
+    },
+  });
 
   const obraPontaDePedras = await prisma.obra.create({
     data: {
