@@ -106,6 +106,9 @@ export default function Home() {
     [obras, eixoBySecretariaId, query, secretarias, statuses, selectedEixoIds, userLocation],
   );
 
+  // Referência estável evita que o mapa recrie todos os marcadores a cada render
+  const visibleObraIds = useMemo(() => filtered.map((obra) => obra.id), [filtered]);
+
   const toggle = <T,>(value: T, values: T[], setter: (next: T[]) => void) =>
     setter(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
 
@@ -295,7 +298,7 @@ export default function Home() {
             onFiltersLoaded={setEixos}
             onSelectObra={onSelectObra}
             selectedObraId={selected?.id}
-            visibleObraIds={filtered.map((obra) => obra.id)}
+            visibleObraIds={visibleObraIds}
             nearMeRequest={nearMeRequest}
             onGeolocationError={setNotice}
             onGeolocationSuccess={onGeolocationSuccess}
