@@ -42,19 +42,19 @@ export default async function RegistroCampoPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center text-slate-800 antialiased">
-      {/* Moldura / Container estritamente Mobile-first */}
-      <div className="w-full max-w-md min-h-screen bg-slate-50 flex flex-col shadow-xl pb-24 relative border-x border-slate-200">
+      {/* Moldura mobile-first: coluna de celular no mobile, largura total a partir do tablet */}
+      <div className="w-full max-w-md md:max-w-none min-h-screen bg-slate-50 flex flex-col shadow-xl md:shadow-none pb-24 relative border-x border-slate-200 md:border-x-0">
         {/* Topo Azul com botão fechar */}
         <RegistroCampoHeader backHref="/area-do-engenheiro" />
 
         {/* Conteúdo Principal com Formulário Dinâmico */}
-        <main className="flex-1 px-4 pt-4 pb-6 space-y-3.5">
+        <main className="flex-1 w-full max-w-6xl mx-auto px-4 pt-4 pb-6 md:px-8 md:pt-8 space-y-3.5 md:space-y-5">
           {/* Título e Subtítulo */}
-          <div className="space-y-0.5">
-            <h2 className="text-xl font-extrabold tracking-tight text-slate-900">
+          <div className="space-y-0.5 md:space-y-1">
+            <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">
               Registro de Campo
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs md:text-sm text-slate-500">
               Preencha os dados da vistoria diária.
             </p>
           </div>
