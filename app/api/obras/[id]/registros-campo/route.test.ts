@@ -112,8 +112,29 @@ describe("POST /api/obras/[id]/registros-campo", () => {
     mocks.obraFindUnique.mockResolvedValue({
       id: obraId,
       secretariaId: "sec-1",
+      engenheiroId,
       deletedAt: null,
     });
+  });
+
+  it("bloqueia engenheiro que não é responsável pela obra", async () => {
+    mocks.obraFindUnique.mockResolvedValue({
+      id: obraId,
+      secretariaId: "sec-1",
+      engenheiroId: "outro-engenheiro",
+      deletedAt: null,
+    });
+
+    const response = await POST(
+      new Request(`http://localhost/api/obras/${obraId}/registros-campo`, {
+        method: "POST",
+        body: JSON.stringify({ status: "RASCUNHO", intercorrencias: [] }),
+      }),
+      { params: Promise.resolve({ id: obraId }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.registroCampoCreate).not.toHaveBeenCalled();
   });
 
   it("rejeita requisição quando usuário não é engenheiro", async () => {

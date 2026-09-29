@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth/authorization";
+import { canAccessSecretaria, requireUser } from "@/lib/auth/authorization";
 import { Role } from "@prisma/client";
 
 interface RouteContext {
@@ -60,7 +60,12 @@ export async function GET(_request: Request, context: RouteContext) {
 export async function POST(request: Request, context: RouteContext) {
   const { id } = await context.params;
 
-  const auth = await requireUser([Role.SUPER_ADMIN, Role.GESTAO, Role.ADM_SECRETARIA, Role.ENGENHEIRO]);
+  if (!z.uuid().safeParse(id).success) {
+    return NextResponse.json({ message: "O identificador da obra é inválido." }, { status: 400 });
+  }
+
+  // Cadastro de etapas é atribuição da secretaria; o engenheiro não pode cadastrar
+  const auth = await requireUser([Role.SUPER_ADMIN, Role.GESTAO, Role.ADM_SECRETARIA]);
   if (auth.response) return auth.response;
 
   try {
@@ -69,7 +74,24 @@ export async function POST(request: Request, context: RouteContext) {
       etapasTemplateIds: z.array(z.string().uuid())
     });
 
-    const data = schema.parse(body);
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ message: "Dados inválidos.", errors: parsed.error.issues }, { status: 400 });
+    }
+    const data = parsed.data;
+
+    const obra = await prisma.obra.findUnique({
+      where: { id },
+      select: { secretariaId: true, deletedAt: true },
+    });
+
+    if (!obra || obra.deletedAt) {
+      return NextResponse.json({ message: "Obra não encontrada." }, { status: 404 });
+    }
+
+    if (!canAccessSecretaria(auth.user, obra.secretariaId)) {
+      return NextResponse.json({ message: "Você não tem permissão para alterar esta obra." }, { status: 403 });
+    }
 
     // Cria as etapas da obra
     const novasEtapas = await Promise.all(

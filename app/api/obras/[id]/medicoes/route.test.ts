@@ -176,6 +176,7 @@ describe("POST /api/obras/[id]/medicoes", () => {
     mocks.obraFindUnique.mockResolvedValue({
       id: obraId,
       secretariaId: "secretaria-1",
+      engenheiroId,
     });
     mocks.usuarioFindUnique.mockResolvedValue({
       id: engenheiroId,
@@ -232,12 +233,12 @@ describe("POST /api/obras/[id]/medicoes", () => {
     expect(mocks.obraFindUnique).not.toHaveBeenCalled();
   });
 
-  it("retorna 403 quando o engenheiro tenta registrar em outra secretaria", async () => {
+  it("retorna 403 quando o engenheiro não é o responsável pela obra", async () => {
     mocks.obraFindUnique.mockResolvedValue({
       id: obraId,
-      secretariaId: "secretaria-2",
+      secretariaId: "secretaria-1",
+      engenheiroId: "770e8400-e29b-41d4-a716-446655440000",
     });
-    mocks.canAccessSecretaria.mockReturnValue(false);
 
     const response = await POST(
       request({ percentualExecutado: 40, engenheiroId }),
@@ -252,6 +253,7 @@ describe("POST /api/obras/[id]/medicoes", () => {
     mocks.obraFindUnique.mockResolvedValue({
       id: obraId,
       secretariaId: "secretaria-1",
+      engenheiroId,
     });
 
     const response = await POST(
