@@ -477,7 +477,7 @@ export default function ObraDetalheClient({
                               <li key={subEtapa.id}>
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                   <span className="text-xs font-medium text-slate-700">{subEtapa.nome}</span>
-                                  <span className="text-xs text-slate-500">{subEtapaStatusLabel(subEtapa.status)} · {subEtapa.percentualConcluido}%</span>
+                                  <span className="text-xs text-slate-500">{etapaStatusLabel[subEtapa.status] ?? subEtapa.status} · {subEtapa.percentualConcluido}%</span>
                                 </div>
                                 {subEtapa.observacoes && <p className="mb-0 mt-1 text-xs text-slate-500">{subEtapa.observacoes}</p>}
                               </li>
