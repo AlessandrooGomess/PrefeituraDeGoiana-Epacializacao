@@ -1,4 +1,5 @@
 import { Role } from "@prisma/client";
+import { Eye, Pencil } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -132,13 +133,34 @@ export default async function AreaDoServidor() {
               <div className={styles.workList}>
                 {obras.map((obra) => (
                   <article className={styles.workRow} key={obra.id}>
-                    <div>
+                    <Link
+                      className={styles.workRowLink}
+                      href={`/area-do-servidor/obras/${obra.id}`}
+                    >
                       <strong>{obra.titulo}</strong>
                       <span>{obra.secretaria.nome}</span>
+                    </Link>
+                    <div className={styles.workRowActions}>
+                      <span className={styles.statusTag}>
+                        {statusLabel[obra.status]}
+                      </span>
+                      <Link
+                        className={styles.workAction}
+                        href={`/area-do-servidor/obras/${obra.id}`}
+                        title="Ver detalhes da obra"
+                        aria-label={`Ver detalhes de ${obra.titulo}`}
+                      >
+                        <Eye size={16} aria-hidden="true" />
+                      </Link>
+                      <Link
+                        className={styles.workAction}
+                        href={`/area-do-servidor/obras/${obra.id}?modo=editar`}
+                        title="Editar obra"
+                        aria-label={`Editar ${obra.titulo}`}
+                      >
+                        <Pencil size={15} aria-hidden="true" />
+                      </Link>
                     </div>
-                    <span className={styles.statusTag}>
-                      {statusLabel[obra.status]}
-                    </span>
                   </article>
                 ))}
               </div>

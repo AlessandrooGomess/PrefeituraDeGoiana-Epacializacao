@@ -314,6 +314,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (data.eixoId !== undefined) updateData.eixoId = data.eixoId;
     if (data.areaTematicaId !== undefined) updateData.areaTematicaId = data.areaTematicaId;
     if (data.engenheiroId !== undefined) updateData.engenheiroId = data.engenheiroId;
+    if (data.tipoObraId !== undefined) updateData.tipoObraId = data.tipoObraId;
 
     const obra = await prisma.obra.update({
       where: { id },
