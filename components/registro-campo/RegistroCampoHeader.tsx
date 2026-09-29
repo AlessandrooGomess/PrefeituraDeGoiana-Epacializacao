@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { MapPinned, X } from "lucide-react";
 import Link from "next/link";
 import { EngenheiroMenuMobile } from "@/components/area-engenheiro/EngenheiroMenuMobile";
 
@@ -17,7 +17,11 @@ export function RegistroCampoHeader({
     <header className="sticky top-0 z-30 flex items-center justify-between bg-blue-600 px-5 py-3.5 text-white shadow-xs">
       <div className="flex items-center gap-3">
         <EngenheiroMenuMobile />
-        <h1 className="text-base font-semibold tracking-wide">Novo Registro</h1>
+        <div className="flex items-center gap-2.5">
+          {/* Marca visual do portal de espacialização de obras */}
+          <MapPinned className="h-6 w-6 md:h-7 md:w-7 shrink-0" aria-hidden="true" />
+          <h1 className="text-base md:text-lg font-semibold tracking-wide">Novo Registro</h1>
+        </div>
       </div>
       {onClose ? (
         <button
