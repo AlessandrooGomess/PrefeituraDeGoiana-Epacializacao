@@ -450,6 +450,21 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
                 </div>
               </div>
               <div className={styles.fieldsGrid}>
+                                <Field label="Tipo de Obra" required error={fieldErrors.tipoObraId}>
+                  <select
+                    value={form.tipoObraId}
+                    onChange={(event) => {
+                      setForm({ ...form, tipoObraId: event.target.value });
+                      setFieldErrors({ ...fieldErrors, tipoObraId: undefined });
+                    }}
+                  >
+                    <option value="" disabled>Selecione o tipo de obra</option>
+                    {tiposObra.map((tipo) => (
+                      <option key={tipo.id} value={tipo.id}>{tipo.nome}</option>
+                    ))}
+                  </select>
+                </Field>
+
                 <Field label="Engenheiro fiscal titular" error={fieldErrors.engenheiroId}>
                   <select
                     value={form.engenheiroId}
