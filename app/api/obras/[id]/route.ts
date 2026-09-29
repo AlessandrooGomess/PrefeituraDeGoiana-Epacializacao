@@ -29,6 +29,13 @@ export async function GET(_request: Request, context: RouteContext) {
     const obra = await prisma.obra.findUnique({
       where: { id },
       include: {
+        tipoObra: {
+          select: {
+            id: true,
+            nome: true,
+            slug: true,
+          },
+        },
         secretaria: {
           select: {
             id: true,
@@ -84,6 +91,73 @@ export async function GET(_request: Request, context: RouteContext) {
             dataFoto: true,
           },
         },
+        etapasObra: {
+          orderBy: { etapaTemplate: { ordem: "asc" } },
+          select: {
+            id: true,
+            status: true,
+            percentualConcluido: true,
+            dataInicio: true,
+            dataPrevisao: true,
+            dataConclusao: true,
+            observacoes: true,
+            etapaTemplate: {
+              select: {
+                id: true,
+                nome: true,
+                nomeCidadao: true,
+                ordem: true,
+                peso: true,
+                ehContinua: true,
+              },
+            },
+            subEtapasObra: {
+              orderBy: { subEtapaTemplate: { ordem: "asc" } },
+              select: {
+                id: true,
+                status: true,
+                percentualConcluido: true,
+                dataInicio: true,
+                dataConclusao: true,
+                observacoes: true,
+                subEtapaTemplate: {
+                  select: {
+                    id: true,
+                    nome: true,
+                    ordem: true,
+                    peso: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        registrosCampo: {
+          orderBy: { dataVistoria: "desc" },
+          select: {
+            id: true,
+            dataVistoria: true,
+            status: true,
+            intercorrencias: true,
+            observacoes: true,
+            engenheiro: {
+              select: {
+                id: true,
+                nome: true,
+                cargo: true,
+              },
+            },
+            fotos: {
+              select: {
+                id: true,
+                url: true,
+                tipo: true,
+                descricao: true,
+                dataFoto: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -116,29 +190,74 @@ export async function GET(_request: Request, context: RouteContext) {
       previsaoConclusao: serializeDate(obra.previsaoConclusao),
       dataConclusaoReal: serializeDate(obra.dataConclusaoReal),
       atualizadoEm: obra.updatedAt.toISOString(),
+      updatedAt: obra.updatedAt.toISOString(),
       createdAt: obra.createdAt.toISOString(),
-      imagemUrl: obra.fotos[0]?.url ?? null,
+      imagemUrl: obra.fotos?.[0]?.url ?? null,
       status: obra.status,
       secretaria: obra.secretaria,
       eixo: obra.eixo,
       areaTematica: obra.areaTematica,
-      percentualExecutado: obra.medicoes[0]
+      percentualExecutado: obra.medicoes?.[0]
         ? Number(obra.medicoes[0].percentualExecutado)
         : null,
       engenheiro: obra.engenheiro,
-      medicoes: obra.medicoes.map((medicao) => ({
+      tipoObra: obra.tipoObra
+        ? {
+            id: obra.tipoObra.id,
+            nome: obra.tipoObra.nome,
+            slug: obra.tipoObra.slug,
+          }
+        : null,
+      medicoes: (obra.medicoes ?? []).map((medicao) => ({
         id: medicao.id,
-        dataVistoria: medicao.dataVistoria.toISOString(),
+        dataVistoria: serializeDate(medicao.dataVistoria) ?? medicao.dataVistoria.toISOString(),
         percentualExecutado: Number(medicao.percentualExecutado),
         observacoesTecnicas: medicao.observacoesTecnicas,
         engenheiro: medicao.engenheiro,
       })),
-      fotos: obra.fotos.map((foto) => ({
+      fotos: (obra.fotos ?? []).map((foto) => ({
         id: foto.id,
         url: foto.url,
         tipo: foto.tipo,
         descricao: foto.descricao,
-        dataFoto: foto.dataFoto.toISOString(),
+        dataFoto: serializeDate(foto.dataFoto) ?? foto.dataFoto.toISOString(),
+      })),
+      etapas: (obra.etapasObra ?? []).map((etapa) => ({
+        id: etapa.id,
+        nome: etapa.etapaTemplate.nome,
+        nomeCidadao: etapa.etapaTemplate.nomeCidadao,
+        ordem: etapa.etapaTemplate.ordem,
+        status: etapa.status,
+        percentualConcluido: Number(etapa.percentualConcluido),
+        dataInicio: serializeDate(etapa.dataInicio),
+        dataPrevisao: serializeDate(etapa.dataPrevisao),
+        dataConclusao: serializeDate(etapa.dataConclusao),
+        observacoes: etapa.observacoes,
+        subEtapas: (etapa.subEtapasObra ?? []).map((sub) => ({
+          id: sub.id,
+          nome: sub.subEtapaTemplate.nome,
+          ordem: sub.subEtapaTemplate.ordem,
+          status: sub.status,
+          percentualConcluido: Number(sub.percentualConcluido),
+          dataInicio: serializeDate(sub.dataInicio),
+          dataConclusao: serializeDate(sub.dataConclusao),
+          observacoes: sub.observacoes,
+        })),
+      })),
+      registrosCampo: (obra.registrosCampo ?? []).map((reg) => ({
+        id: reg.id,
+        dataVistoria: serializeDate(reg.dataVistoria) ?? reg.dataVistoria.toISOString(),
+        status: reg.status,
+        intercorrencias: reg.intercorrencias,
+        observacoes: reg.observacoes,
+        engenheiro: reg.engenheiro,
+        fotos: (reg.fotos ?? []).map((f) => ({
+          id: f.id,
+          url: f.url,
+          tipo: f.tipo,
+          descricao: f.descricao,
+          dataFoto: serializeDate(f.dataFoto) ?? f.dataFoto.toISOString(),
+        })),
       })),
     };
 

@@ -5,10 +5,15 @@ import {
   ArrowLeft,
   Building2,
   CalendarDays,
+  Check,
+  CheckCircle2,
   ClipboardList,
   ExternalLink,
+  ImagePlus,
   MapPin,
   Pencil,
+  Plus,
+  RefreshCw,
   Save,
   X,
 } from "lucide-react";
@@ -49,13 +54,14 @@ type ObraDetail = {
   engenheiro: { id: string; nome: string; cargo: string | null } | null;
   tipoObra: RelatedName;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  atualizadoEm?: string;
   medicoes: Array<{
     id: string;
     dataVistoria: string;
     percentualExecutado: number;
     observacoesTecnicas: string | null;
-    engenheiro: { nome: string; cargo: string | null };
+    engenheiro: { nome: string; cargo?: string | null };
   }>;
   fotos: Photo[];
   etapas: Array<{
@@ -116,6 +122,7 @@ const statusLabel: Record<StatusObra, string> = {
   PARALISADA: "Paralisada",
   CONCLUIDA: "Concluída",
 };
+
 const etapaStatusLabel: Record<string, string> = {
   PENDENTE: "Pendente",
   EM_ANDAMENTO: "Em andamento",
@@ -123,13 +130,13 @@ const etapaStatusLabel: Record<string, string> = {
   PARALISADA: "Paralisada",
 };
 
-const dateValue = (value: string | null) => value?.slice(0, 10) ?? "";
-const displayDate = (value: string | null) =>
+const dateValue = (value: string | null | undefined) => value?.slice(0, 10) ?? "";
+const displayDate = (value: string | null | undefined) =>
   value
     ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value))
     : "Não informada";
-const displayValue = (value: number | null) =>
-  value === null
+const displayValue = (value: number | null | undefined) =>
+  value === null || value === undefined
     ? "Não informado"
     : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
@@ -176,7 +183,7 @@ function EditField({
 
 export default function ObraDetalheClient({
   user,
-  obra,
+  obra: initialObra,
   tiposObra,
   engenheiros,
   initialEditMode,
@@ -188,27 +195,81 @@ export default function ObraDetalheClient({
   initialEditMode: boolean;
 }) {
   const router = useRouter();
+  const [obra, setObra] = useState<ObraDetail>(initialObra);
+  const [carregandoObra, setCarregandoObra] = useState(false);
   const [editing, setEditing] = useState(initialEditMode);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Estado do formulário de edição da obra
   const [draft, setDraft] = useState<ObraDraft>({
-    titulo: obra.titulo,
-    descricao: obra.descricao ?? "",
-    endereco: obra.endereco,
-    bairro: obra.bairro,
-    latitude: String(obra.latitude),
-    longitude: String(obra.longitude),
-    valorContrato: obra.valorContrato === null ? "" : formatCurrencyBRL(obra.valorContrato),
-    empresaContratada: obra.empresaContratada ?? "",
-    numeroOrdemServico: obra.numeroOrdemServico ?? "",
-    dataOrdemServico: dateValue(obra.dataOrdemServico),
-    previsaoConclusao: dateValue(obra.previsaoConclusao),
-    dataConclusaoReal: dateValue(obra.dataConclusaoReal),
-    status: obra.status,
-    tipoObraId: obra.tipoObra?.id ?? "",
-    engenheiroId: obra.engenheiro?.id ?? "",
+    titulo: initialObra.titulo,
+    descricao: initialObra.descricao ?? "",
+    endereco: initialObra.endereco,
+    bairro: initialObra.bairro,
+    latitude: String(initialObra.latitude),
+    longitude: String(initialObra.longitude),
+    valorContrato: initialObra.valorContrato === null ? "" : formatCurrencyBRL(initialObra.valorContrato),
+    empresaContratada: initialObra.empresaContratada ?? "",
+    numeroOrdemServico: initialObra.numeroOrdemServico ?? "",
+    dataOrdemServico: dateValue(initialObra.dataOrdemServico),
+    previsaoConclusao: dateValue(initialObra.previsaoConclusao),
+    dataConclusaoReal: dateValue(initialObra.dataConclusaoReal),
+    status: initialObra.status,
+    tipoObraId: initialObra.tipoObra?.id ?? "",
+    engenheiroId: initialObra.engenheiro?.id ?? "",
   });
+
+  // Estados para gerenciamento de Etapas
+  const [etapasLoading, setEtapasLoading] = useState(false);
+  const [etapaMensagem, setEtapaMensagem] = useState<{ tipo: "sucesso" | "erro"; texto: string } | null>(null);
+  const [etapaEditandoId, setEtapaEditandoId] = useState<string | null>(null);
+  const [etapaStatusDraft, setEtapaStatusDraft] = useState<string>("PENDENTE");
+  const [etapaPercentualDraft, setEtapaPercentualDraft] = useState<number>(0);
+
+  // Estados para gerenciamento de Fotos
+  const [mostrandoFormFoto, setMostrandoFormFoto] = useState(false);
+  const [novaFotoUrl, setNovaFotoUrl] = useState("");
+  const [novaFotoTipo, setNovaFotoTipo] = useState<"RENDER_PROJETO" | "ANTES" | "EM_ANDAMENTO" | "CONCLUIDO">("EM_ANDAMENTO");
+  const [novaFotoDescricao, setNovaFotoDescricao] = useState("");
+  const [salvandoFoto, setSalvandoFoto] = useState(false);
+  const [fotoMensagem, setFotoMensagem] = useState<{ tipo: "sucesso" | "erro"; texto: string } | null>(null);
+
+  // Consumo oficial do endpoint GET /api/obras/[id]
+  async function carregarObra() {
+    try {
+      setCarregandoObra(true);
+      const response = await fetch(`/api/obras/${obra.id}`, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Não foi possível carregar os dados atualizados da obra.");
+      }
+      const data: ObraDetail = await response.json();
+      setObra(data);
+      // Sincroniza o rascunho com os dados mais recentes do banco
+      setDraft({
+        titulo: data.titulo,
+        descricao: data.descricao ?? "",
+        endereco: data.endereco,
+        bairro: data.bairro,
+        latitude: String(data.latitude),
+        longitude: String(data.longitude),
+        valorContrato: data.valorContrato === null ? "" : formatCurrencyBRL(data.valorContrato),
+        empresaContratada: data.empresaContratada ?? "",
+        numeroOrdemServico: data.numeroOrdemServico ?? "",
+        dataOrdemServico: dateValue(data.dataOrdemServico),
+        previsaoConclusao: dateValue(data.previsaoConclusao),
+        dataConclusaoReal: dateValue(data.dataConclusaoReal),
+        status: data.status,
+        tipoObraId: data.tipoObra?.id ?? "",
+        engenheiroId: data.engenheiro?.id ?? "",
+      });
+    } catch (err: unknown) {
+      console.error("Erro ao sincronizar com GET /api/obras/[id]:", err);
+    } finally {
+      setCarregandoObra(false);
+    }
+  }
 
   const updateDraft = <K extends keyof ObraDraft>(key: K, value: ObraDraft[K]) => {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -216,6 +277,7 @@ export default function ObraDetalheClient({
     setSuccess("");
   };
 
+  // Salvar alterações via PATCH /api/obras/[id]
   async function saveChanges(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
@@ -240,7 +302,7 @@ export default function ObraDetalheClient({
           previsaoConclusao: draft.previsaoConclusao || null,
           dataConclusaoReal: draft.dataConclusaoReal || null,
           status: draft.status,
-          tipoObraId: draft.tipoObraId,
+          tipoObraId: draft.tipoObraId || null,
           engenheiroId: draft.engenheiroId || null,
         }),
       });
@@ -252,12 +314,106 @@ export default function ObraDetalheClient({
       }
 
       setEditing(false);
-      setSuccess("Alterações salvas.");
+      setSuccess("Alterações salvas com sucesso no banco de dados!");
+      // Re-consulta o endpoint GET para atualizar os dados 100% via API
+      await carregarObra();
       router.refresh();
     } catch {
       setError("Erro de conexão ao salvar. Tente novamente.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  // Inicializar etapas padrão via POST /api/obras/[id]/etapas
+  async function handleInicializarEtapas() {
+    setEtapasLoading(true);
+    setEtapaMensagem(null);
+    try {
+      const res = await fetch(`/api/obras/${obra.id}/etapas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.message || "Erro ao inicializar etapas.");
+      }
+      setEtapaMensagem({ tipo: "sucesso", texto: "Etapas padrão vinculadas à obra com sucesso!" });
+      await carregarObra();
+    } catch (err: unknown) {
+      setEtapaMensagem({
+        tipo: "erro",
+        texto: err instanceof Error ? err.message : "Erro ao inicializar etapas.",
+      });
+    } finally {
+      setEtapasLoading(false);
+    }
+  }
+
+  // Atualizar etapa individual via PATCH /api/obras/[id]/etapas/[etapaId]
+  async function handleSalvarEdicaoEtapa(etapaId: string) {
+    setEtapasLoading(true);
+    setEtapaMensagem(null);
+    try {
+      const res = await fetch(`/api/obras/${obra.id}/etapas/${etapaId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: etapaStatusDraft,
+          percentualConcluido: Number(etapaPercentualDraft),
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.message || "Erro ao atualizar etapa.");
+      }
+      setEtapaEditandoId(null);
+      setEtapaMensagem({ tipo: "sucesso", texto: "Etapa atualizada com sucesso!" });
+      await carregarObra();
+    } catch (err: unknown) {
+      setEtapaMensagem({
+        tipo: "erro",
+        texto: err instanceof Error ? err.message : "Erro ao atualizar etapa.",
+      });
+    } finally {
+      setEtapasLoading(false);
+    }
+  }
+
+  // Adicionar foto via POST /api/obras/[id]/fotos
+  async function handleSalvarFoto(e: FormEvent) {
+    e.preventDefault();
+    if (!novaFotoUrl.trim()) return;
+
+    setSalvandoFoto(true);
+    setFotoMensagem(null);
+    try {
+      const res = await fetch(`/api/obras/${obra.id}/fotos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: novaFotoUrl.trim(),
+          tipo: novaFotoTipo,
+          descricao: novaFotoDescricao.trim() || null,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.message || "Erro ao cadastrar foto.");
+      }
+      setMostrandoFormFoto(false);
+      setNovaFotoUrl("");
+      setNovaFotoDescricao("");
+      setFotoMensagem({ tipo: "sucesso", texto: "Foto associada à obra com sucesso!" });
+      await carregarObra();
+    } catch (err: unknown) {
+      setFotoMensagem({
+        tipo: "erro",
+        texto: err instanceof Error ? err.message : "Erro ao cadastrar foto.",
+      });
+    } finally {
+      setSalvandoFoto(false);
     }
   }
 
@@ -292,7 +448,18 @@ export default function ObraDetalheClient({
               <h1 className={styles.pageTitle}>{obra.titulo}</h1>
               <p>Detalhes e acompanhamento da obra na área da secretaria.</p>
             </div>
-            <div className="flex flex-wrap gap-2 pt-2 sm:pt-6">
+            <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-6">
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                disabled={carregandoObra}
+                onClick={carregarObra}
+                title="Sincronizar com o banco de dados via API"
+              >
+                <RefreshCw size={14} className={carregandoObra ? "animate-spin" : ""} aria-hidden="true" />
+                {carregandoObra ? "Sincronizando..." : "Sincronizar"}
+              </button>
+
               {editing ? (
                 <button
                   className={styles.secondaryButton}
@@ -320,11 +487,12 @@ export default function ObraDetalheClient({
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <span className={styles.statusTag}>{statusLabel[obra.status]}</span>
             <span className="text-xs text-slate-500">
-              Atualizada em {displayDate(obra.updatedAt)}
+              Atualizada em {displayDate(obra.updatedAt || obra.atualizadoEm)}
             </span>
             {success && <span className="text-sm font-medium text-emerald-700">{success}</span>}
           </div>
 
+          {/* DADOS PRINCIPAIS: MODO EDIÇÃO OU MODO VISUALIZAÇÃO */}
           {editing ? (
             <form className={styles.form} onSubmit={saveChanges}>
               {error && <p className={styles.errorBanner} role="alert">{error}</p>}
@@ -339,14 +507,13 @@ export default function ObraDetalheClient({
                     <select
                       className="min-h-10 rounded border border-slate-300 bg-white px-3 text-sm"
                       value={draft.tipoObraId}
-                      required
                       onChange={(event) => updateDraft("tipoObraId", event.target.value)}
                     >
                       <option value="">Selecione o tipo de obra</option>
                       {tiposObra.map((tipo) => <option key={tipo.id} value={tipo.id}>{tipo.nome}</option>)}
                     </select>
                   </label>
-                  <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 sm:col-span-2">
                     Secretaria: <strong>{obra.secretaria.sigla} · {obra.secretaria.nome}</strong>
                     {obra.eixo && <span className="block pt-1">Eixo: {obra.eixo.nome}</span>}
                     {obra.areaTematica && <span className="block pt-1">Área temática: {obra.areaTematica.nome}</span>}
@@ -401,7 +568,15 @@ export default function ObraDetalheClient({
                 </div>
               </section>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  disabled={saving}
+                  onClick={() => setEditing(false)}
+                >
+                  Cancelar
+                </button>
                 <button className={styles.primaryButton} type="submit" disabled={saving}>
                   <Save size={16} aria-hidden="true" /> {saving ? "Salvando..." : "Salvar alterações"}
                 </button>
@@ -451,110 +626,322 @@ export default function ObraDetalheClient({
                   <DetailField label="Conclusão real" value={displayDate(obra.dataConclusaoReal)} />
                 </dl>
               </section>
-
-              <section className={styles.card}>
-                <div className={styles.cardHeading}>
-                  <div><span className={styles.step}><ClipboardList size={16} /></span><div><h2>Etapas da obra</h2><p>Progresso das etapas e subetapas cadastradas</p></div></div>
-                </div>
-                {obra.etapas.length ? (
-                  <div className="divide-y divide-slate-100">
-                    {[...obra.etapas].sort((a, b) => a.ordem - b.ordem).map((etapa) => (
-                      <article className="py-3" key={etapa.id}>
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <strong className="text-sm text-slate-800">{etapa.nomeCidadao || etapa.nome}</strong>
-                          <span className={styles.statusTag}>{etapaStatusLabel[etapa.status] ?? etapa.status}</span>
-                        </div>
-                        <p className="mb-0 mt-1 text-xs text-slate-500">
-                          {etapa.percentualConcluido}% concluída
-                          {etapa.dataInicio && ` · Início: ${displayDate(etapa.dataInicio)}`}
-                          {etapa.dataPrevisao && ` · Previsão: ${displayDate(etapa.dataPrevisao)}`}
-                          {etapa.dataConclusao && ` · Conclusão: ${displayDate(etapa.dataConclusao)}`}
-                        </p>
-                        {etapa.observacoes && <p className="mb-0 mt-2 text-sm text-slate-700">{etapa.observacoes}</p>}
-                        {etapa.subEtapas.length > 0 && (
-                          <ul className="mb-0 mt-3 grid list-none gap-2 border-l-2 border-blue-100 pl-3">
-                            {[...etapa.subEtapas].sort((a, b) => a.ordem - b.ordem).map((subEtapa) => (
-                              <li key={subEtapa.id}>
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                  <span className="text-xs font-medium text-slate-700">{subEtapa.nome}</span>
-                                  <span className="text-xs text-slate-500">{etapaStatusLabel[subEtapa.status] ?? subEtapa.status} · {subEtapa.percentualConcluido}%</span>
-                                </div>
-                                {subEtapa.observacoes && <p className="mb-0 mt-1 text-xs text-slate-500">{subEtapa.observacoes}</p>}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </article>
-                    ))}
-                  </div>
-                ) : <p className={styles.emptyState}>Ainda não há etapas cadastradas para esta obra.</p>}
-              </section>
-
-              <section className={styles.card}>
-                <div className={styles.cardHeading}>
-                  <div><span className={styles.step}><ClipboardList size={16} /></span><div><h2>Medições e vistorias</h2><p>Histórico registrado pelos engenheiros</p></div></div>
-                </div>
-                {obra.medicoes.length ? (
-                  <div className="divide-y divide-slate-100">
-                    {obra.medicoes.map((medicao) => (
-                      <article className="grid gap-1 py-3 sm:grid-cols-[1fr_auto] sm:items-start" key={medicao.id}>
-                        <div>
-                          <strong className="text-sm text-slate-800">{medicao.percentualExecutado}% executado</strong>
-                          <p className="m-0 mt-1 text-xs text-slate-500">{displayDate(medicao.dataVistoria)} · {medicao.engenheiro.nome}</p>
-                          {medicao.observacoesTecnicas && <p className="mb-0 mt-2 text-sm text-slate-700">{medicao.observacoesTecnicas}</p>}
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                ) : <p className={styles.emptyState}>Ainda não há medições cadastradas.</p>}
-              </section>
-
-              <section className={styles.card}>
-                <div className={styles.cardHeading}>
-                  <div><span className={styles.step}><ClipboardList size={16} /></span><div><h2>Registros de campo</h2><p>Vistorias, intercorrências e observações</p></div></div>
-                </div>
-                {obra.registrosCampo.length ? (
-                  <div className="divide-y divide-slate-100">
-                    {obra.registrosCampo.map((registro) => (
-                      <article className="py-3" key={registro.id}>
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <strong className="text-sm text-slate-800">{displayDate(registro.dataVistoria)} · {registro.engenheiro.nome}</strong>
-                          <span className={styles.statusTag}>{registro.status === "ENVIADO" ? "Enviado" : "Rascunho"}</span>
-                        </div>
-                        {registro.intercorrencias.length > 0 && <p className="mb-0 mt-2 text-xs text-slate-600">Intercorrências: {registro.intercorrencias.join(", ")}</p>}
-                        {registro.observacoes && <p className="mb-0 mt-2 text-sm text-slate-700">{registro.observacoes}</p>}
-                        {registro.fotos.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-                            {registro.fotos.map((foto) => (
-                              <a className="text-xs font-medium text-blue-700 hover:underline" href={foto.url} target="_blank" rel="noreferrer" key={foto.id}>
-                                {foto.descricao || foto.tipo} · {displayDate(foto.dataFoto)}
-                              </a>
-                            ))}
-                          </div>
-                        )}
-                      </article>
-                    ))}
-                  </div>
-                ) : <p className={styles.emptyState}>Ainda não há registros de campo.</p>}
-              </section>
-
-              <section className={styles.card}>
-                <div className={styles.cardHeading}>
-                  <div><span className={styles.step}><ExternalLink size={16} /></span><div><h2>Fotos da obra</h2><p>Arquivos já associados ao cadastro</p></div></div>
-                </div>
-                {obra.fotos.length ? (
-                  <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2">
-                    {obra.fotos.map((foto) => (
-                      <li className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-100 py-2" key={foto.id}>
-                        <span className="min-w-0 truncate text-sm text-slate-700">{foto.descricao || foto.tipo} · {displayDate(foto.dataFoto)}</span>
-                        <a className="shrink-0 text-xs font-semibold text-blue-700 hover:underline" href={foto.url} target="_blank" rel="noreferrer">Abrir</a>
-                      </li>
-                    ))}
-                  </ul>
-                ) : <p className={styles.emptyState}>Ainda não há fotos cadastradas.</p>}
-              </section>
             </div>
           )}
+
+          {/* SEÇÕES DE ACOMPANHAMENTO: PERMANECEM VISÍVEIS MESMO DURANTE A EDIÇÃO */}
+          <div className={`${styles.form} mt-6`}>
+            {/* ETAPAS DA OBRA */}
+            <section className={styles.card}>
+              <div className={styles.cardHeading}>
+                <div>
+                  <span className={styles.step}><ClipboardList size={16} /></span>
+                  <div>
+                    <h2>Etapas da obra</h2>
+                    <p>Progresso das etapas e subetapas cadastradas</p>
+                  </div>
+                </div>
+              </div>
+
+              {etapaMensagem && (
+                <div className={`mb-3 p-3 text-xs rounded border ${etapaMensagem.tipo === "sucesso" ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-red-50 text-red-800 border-red-200"}`}>
+                  {etapaMensagem.texto}
+                </div>
+              )}
+
+              {obra.etapas && obra.etapas.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {[...obra.etapas].sort((a, b) => a.ordem - b.ordem).map((etapa) => (
+                    <article className="py-3" key={etapa.id}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <strong className="text-sm text-slate-800">{etapa.nomeCidadao || etapa.nome}</strong>
+                        <div className="flex items-center gap-2">
+                          <span className={styles.statusTag}>{etapaStatusLabel[etapa.status] ?? etapa.status}</span>
+                          <button
+                            type="button"
+                            className="text-xs font-semibold text-blue-700 hover:underline"
+                            onClick={() => {
+                              if (etapaEditandoId === etapa.id) {
+                                setEtapaEditandoId(null);
+                              } else {
+                                setEtapaEditandoId(etapa.id);
+                                setEtapaStatusDraft(etapa.status);
+                                setEtapaPercentualDraft(etapa.percentualConcluido);
+                              }
+                            }}
+                          >
+                            {etapaEditandoId === etapa.id ? "Cancelar" : "Atualizar progresso"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Formulário inline para atualizar progresso da etapa via PATCH */}
+                      {etapaEditandoId === etapa.id && (
+                        <div className="mt-3 rounded border border-blue-200 bg-blue-50/60 p-3">
+                          <h4 className="m-0 mb-2 text-xs font-bold text-slate-800">Atualizar etapa: {etapa.nomeCidadao || etapa.nome}</h4>
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <label className="grid gap-1">
+                              <span className="text-xs font-medium text-slate-600">Status</span>
+                              <select
+                                className="min-h-9 rounded border border-slate-300 bg-white px-2 text-xs"
+                                value={etapaStatusDraft}
+                                onChange={(e) => setEtapaStatusDraft(e.target.value)}
+                              >
+                                <option value="PENDENTE">Pendente</option>
+                                <option value="EM_ANDAMENTO">Em andamento</option>
+                                <option value="CONCLUIDA">Concluída</option>
+                                <option value="PARALISADA">Paralisada</option>
+                              </select>
+                            </label>
+
+                            <label className="grid gap-1">
+                              <span className="text-xs font-medium text-slate-600">Percentual concluído ({etapaPercentualDraft}%)</span>
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="1"
+                                value={etapaPercentualDraft}
+                                onChange={(e) => setEtapaPercentualDraft(Number(e.target.value))}
+                                className="w-full"
+                              />
+                            </label>
+                          </div>
+                          <div className="mt-3 flex justify-end gap-2">
+                            <button
+                              type="button"
+                              className={styles.secondaryButton}
+                              disabled={etapasLoading}
+                              onClick={() => setEtapaEditandoId(null)}
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.primaryButton}
+                              disabled={etapasLoading}
+                              onClick={() => handleSalvarEdicaoEtapa(etapa.id)}
+                            >
+                              <Check size={14} aria-hidden="true" />
+                              {etapasLoading ? "Salvando..." : "Salvar progresso"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <p className="mb-0 mt-1 text-xs text-slate-500">
+                        {etapa.percentualConcluido}% concluída
+                        {etapa.dataInicio && ` · Início: ${displayDate(etapa.dataInicio)}`}
+                        {etapa.dataPrevisao && ` · Previsão: ${displayDate(etapa.dataPrevisao)}`}
+                        {etapa.dataConclusao && ` · Conclusão: ${displayDate(etapa.dataConclusao)}`}
+                      </p>
+                      {etapa.observacoes && <p className="mb-0 mt-2 text-sm text-slate-700">{etapa.observacoes}</p>}
+                      {etapa.subEtapas && etapa.subEtapas.length > 0 && (
+                        <ul className="mb-0 mt-3 grid list-none gap-2 border-l-2 border-blue-100 pl-3">
+                          {[...etapa.subEtapas].sort((a, b) => a.ordem - b.ordem).map((subEtapa) => (
+                            <li key={subEtapa.id}>
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <span className="text-xs font-medium text-slate-700">{subEtapa.nome}</span>
+                                <span className="text-xs text-slate-500">{etapaStatusLabel[subEtapa.status] ?? subEtapa.status} · {subEtapa.percentualConcluido}%</span>
+                              </div>
+                              {subEtapa.observacoes && <p className="mb-0 mt-1 text-xs text-slate-500">{subEtapa.observacoes}</p>}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-center">
+                  <p className="mb-3 text-xs text-slate-500">
+                    Ainda não há etapas cadastradas para esta obra.
+                  </p>
+                  {obra.tipoObra ? (
+                    <button
+                      type="button"
+                      disabled={etapasLoading}
+                      onClick={handleInicializarEtapas}
+                      className={styles.secondaryButton}
+                    >
+                      <Plus size={15} aria-hidden="true" />
+                      {etapasLoading ? "Inicializando etapas..." : `Inicializar etapas padrão de "${obra.tipoObra.nome}"`}
+                    </button>
+                  ) : (
+                    <p className="text-xs text-amber-700 font-medium">
+                      Dica: Selecione um Tipo de Obra ao editar os dados para vincular as etapas padronizadas.
+                    </p>
+                  )}
+                </div>
+              )}
+            </section>
+
+            {/* MEDIÇÕES E VISTORIAS */}
+            <section className={styles.card}>
+              <div className={styles.cardHeading}>
+                <div><span className={styles.step}><ClipboardList size={16} /></span><div><h2>Medições e vistorias</h2><p>Histórico técnico registrado pelos engenheiros</p></div></div>
+              </div>
+              {obra.medicoes && obra.medicoes.length ? (
+                <div className="divide-y divide-slate-100">
+                  {obra.medicoes.map((medicao) => (
+                    <article className="grid gap-1 py-3 sm:grid-cols-[1fr_auto] sm:items-start" key={medicao.id}>
+                      <div>
+                        <strong className="text-sm text-slate-800">{medicao.percentualExecutado}% executado</strong>
+                        <p className="m-0 mt-1 text-xs text-slate-500">{displayDate(medicao.dataVistoria)} · {medicao.engenheiro.nome}</p>
+                        {medicao.observacoesTecnicas && <p className="mb-0 mt-2 text-sm text-slate-700">{medicao.observacoesTecnicas}</p>}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
+                  <p className="m-0">
+                    Ainda não há medições cadastradas. As medições físicas e financeiras são enviadas pelo engenheiro fiscal responsável ({obra.engenheiro?.nome || "engenheiro atribuído"}) através das vistorias oficiais.
+                  </p>
+                </div>
+              )}
+            </section>
+
+            {/* REGISTROS DE CAMPO */}
+            <section className={styles.card}>
+              <div className={styles.cardHeading}>
+                <div><span className={styles.step}><ClipboardList size={16} /></span><div><h2>Registros de campo</h2><p>Diário de vistoria e intercorrências</p></div></div>
+              </div>
+              {obra.registrosCampo && obra.registrosCampo.length ? (
+                <div className="divide-y divide-slate-100">
+                  {obra.registrosCampo.map((registro) => (
+                    <article className="py-3" key={registro.id}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <strong className="text-sm text-slate-800">{displayDate(registro.dataVistoria)} · {registro.engenheiro.nome}</strong>
+                        <span className={styles.statusTag}>{registro.status === "ENVIADO" ? "Enviado" : "Rascunho"}</span>
+                      </div>
+                      {registro.intercorrencias.length > 0 && <p className="mb-0 mt-2 text-xs text-slate-600">Intercorrências: {registro.intercorrencias.join(", ")}</p>}
+                      {registro.observacoes && <p className="mb-0 mt-2 text-sm text-slate-700">{registro.observacoes}</p>}
+                      {registro.fotos && registro.fotos.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                          {registro.fotos.map((foto) => (
+                            <a className="text-xs font-medium text-blue-700 hover:underline" href={foto.url} target="_blank" rel="noreferrer" key={foto.id}>
+                              {foto.descricao || foto.tipo} · {displayDate(foto.dataFoto)}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
+                  <p className="m-0">
+                    Ainda não há registros de campo. O engenheiro fiscal pode preencher os diários de vistoria diretamente pelo aplicativo de campo.
+                  </p>
+                </div>
+              )}
+            </section>
+
+            {/* FOTOS DA OBRA */}
+            <section className={styles.card}>
+              <div className={styles.cardHeading}>
+                <div>
+                  <span className={styles.step}><ExternalLink size={16} /></span>
+                  <div>
+                    <h2>Fotos da obra</h2>
+                    <p>Galeria de arquivos e comprovações visuais</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={() => setMostrandoFormFoto(!mostrandoFormFoto)}
+                >
+                  <ImagePlus size={15} aria-hidden="true" />
+                  {mostrandoFormFoto ? "Fechar" : "Adicionar foto"}
+                </button>
+              </div>
+
+              {fotoMensagem && (
+                <div className={`mb-3 p-3 text-xs rounded border ${fotoMensagem.tipo === "sucesso" ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-red-50 text-red-800 border-red-200"}`}>
+                  {fotoMensagem.texto}
+                </div>
+              )}
+
+              {/* Formulário para adicionar foto via POST /api/obras/[id]/fotos */}
+              {mostrandoFormFoto && (
+                <form onSubmit={handleSalvarFoto} className="mb-4 rounded border border-blue-200 bg-blue-50/50 p-3">
+                  <h4 className="m-0 mb-2 text-xs font-bold text-slate-800">Cadastrar nova foto da obra</h4>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <label className="grid gap-1 sm:col-span-2">
+                      <span className="text-xs font-medium text-slate-600">URL da foto / imagem</span>
+                      <input
+                        type="url"
+                        required
+                        placeholder="https://exemplo.com/foto.jpg ou /fotos/exemplo.jpg"
+                        className="min-h-9 rounded border border-slate-300 bg-white px-3 text-xs"
+                        value={novaFotoUrl}
+                        onChange={(e) => setNovaFotoUrl(e.target.value)}
+                      />
+                    </label>
+
+                    <label className="grid gap-1">
+                      <span className="text-xs font-medium text-slate-600">Classificação</span>
+                      <select
+                        className="min-h-9 rounded border border-slate-300 bg-white px-2 text-xs"
+                        value={novaFotoTipo}
+                        onChange={(e) => setNovaFotoTipo(e.target.value as "RENDER_PROJETO" | "ANTES" | "EM_ANDAMENTO" | "CONCLUIDO")}
+                      >
+                        <option value="RENDER_PROJETO">Render / Projeto</option>
+                        <option value="ANTES">Antes da intervenção</option>
+                        <option value="EM_ANDAMENTO">Em andamento</option>
+                        <option value="CONCLUIDO">Concluído</option>
+                      </select>
+                    </label>
+
+                    <label className="grid gap-1">
+                      <span className="text-xs font-medium text-slate-600">Descrição / Legenda</span>
+                      <input
+                        type="text"
+                        placeholder="Ex: Fachada leste, fundações..."
+                        className="min-h-9 rounded border border-slate-300 bg-white px-3 text-xs"
+                        value={novaFotoDescricao}
+                        onChange={(e) => setNovaFotoDescricao(e.target.value)}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-3 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      disabled={salvandoFoto}
+                      onClick={() => setMostrandoFormFoto(false)}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className={styles.primaryButton}
+                      disabled={salvandoFoto}
+                    >
+                      <Save size={14} aria-hidden="true" />
+                      {salvandoFoto ? "Salvando..." : "Salvar foto"}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {obra.fotos && obra.fotos.length ? (
+                <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2">
+                  {obra.fotos.map((foto) => (
+                    <li className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-100 py-2" key={foto.id}>
+                      <span className="min-w-0 truncate text-sm text-slate-700">{foto.descricao || foto.tipo} · {displayDate(foto.dataFoto)}</span>
+                      <a className="shrink-0 text-xs font-semibold text-blue-700 hover:underline" href={foto.url} target="_blank" rel="noreferrer">Abrir</a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={styles.emptyState}>Ainda não há fotos cadastradas para esta obra.</p>
+              )}
+            </section>
+          </div>
 
           <Link className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-700" href="/area-do-servidor">
             <ArrowLeft size={16} aria-hidden="true" /> Voltar à visão geral

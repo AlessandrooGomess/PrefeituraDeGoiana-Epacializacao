@@ -63,12 +63,57 @@ export interface ObrasPaginadas {
   };
 }
 
+export interface TipoObraResumo {
+  id: string;
+  nome: string;
+  slug?: string;
+}
+
+export interface SubEtapaResumo {
+  id: string;
+  nome: string;
+  ordem: number;
+  status: string;
+  percentualConcluido: number;
+  dataInicio: string | null;
+  dataConclusao: string | null;
+  observacoes: string | null;
+}
+
+export interface EtapaResumo {
+  id: string;
+  nome: string;
+  nomeCidadao: string;
+  ordem: number;
+  status: string;
+  percentualConcluido: number;
+  dataInicio: string | null;
+  dataPrevisao: string | null;
+  dataConclusao: string | null;
+  observacoes: string | null;
+  subEtapas: SubEtapaResumo[];
+}
+
+export interface RegistroCampoResumo {
+  id: string;
+  dataVistoria: string;
+  status: string;
+  intercorrencias: string[];
+  observacoes: string | null;
+  engenheiro: { id?: string; nome: string; cargo?: string | null };
+  fotos: FotoResumo[];
+}
+
 export interface ObraDetalhe extends ObraItem {
   dataConclusaoReal: string | null;
   createdAt: string;
+  updatedAt?: string;
+  tipoObra?: TipoObraResumo | null;
   medicoes: MedicaoResumo[];
   fotos: FotoResumo[];
   engenheiro: EngenheiroResumo | null;
+  etapas?: EtapaResumo[];
+  registrosCampo?: RegistroCampoResumo[];
 }
 
 export interface MedicaoResumo {
