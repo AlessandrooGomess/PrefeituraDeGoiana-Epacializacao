@@ -30,7 +30,21 @@ export async function GET(_request: Request, context: RouteContext) {
 
     const etapas = await prisma.etapaObra.findMany({
       where: { obraId: id },
+      orderBy: { etapaTemplate: { ordem: "asc" } },
+      include: {
+        etapaTemplate: {
+          select: { nome: true, nomeCidadao: true, ordem: true, peso: true, ehContinua: true }
+        },
+        subEtapasObra: {
+          include: {
+            subEtapaTemplate: { select: { nome: true, ordem: true, peso: true } }
+          },
+          orderBy: { subEtapaTemplate: { ordem: "asc" } }
+        }
+      }
+    });
 
+    // Formata a resposta
     const formatado = etapas.map(etapa => ({
       id: etapa.id,
       status: etapa.status,
@@ -62,11 +76,12 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ message: "O identificador da obra é inválido." }, { status: 400 });
   }
 
+  // Cadastro de etapas é atribuição da secretaria; o engenheiro não pode cadastrar
   const auth = await requireUser([Role.SUPER_ADMIN, Role.GESTAO, Role.ADM_SECRETARIA]);
   if (auth.response) return auth.response;
 
   try {
-        let body: unknown;
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
@@ -75,6 +90,10 @@ export async function POST(request: Request, context: RouteContext) {
         { status: 400 },
       );
     }
+
+    const schema = z.object({
+      etapasTemplateIds: z.array(z.string().uuid())
+    });
 
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
@@ -95,7 +114,8 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ message: "Você não tem permissão para alterar esta obra." }, { status: 403 });
     }
 
-     await prisma.etapaObra.createMany({
+    // Cria as etapas da obra em lote
+    await prisma.etapaObra.createMany({
       data: data.etapasTemplateIds.map((templateId) => ({
         obraId: id,
         etapaTemplateId: templateId,
@@ -113,6 +133,7 @@ export async function POST(request: Request, context: RouteContext) {
         }
       }
     });
+
     return NextResponse.json(novasEtapas, { status: 201 });
   } catch (error) {
     if (
@@ -124,12 +145,7 @@ export async function POST(request: Request, context: RouteContext) {
         { status: 409 },
       );
     }
-    console.error("Erro ao instanciar etapas da obra:", error);
-    return NextResponse.json({ message: "Erro interno ao salvar etapas." }, { status: 500 });
-  }
 
-    return NextResponse.json(novasEtapas, { status: 201 });
-  } catch (error) {
     console.error("Erro ao instanciar etapas da obra:", error);
     return NextResponse.json({ message: "Erro interno ao salvar etapas." }, { status: 500 });
   }
