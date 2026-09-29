@@ -10,11 +10,13 @@ import { RegistroCampoActions } from "./RegistroCampoActions";
 
 interface RegistroCampoFormProps {
   obras: ObraItemResumo[];
+  // Obra já selecionada ao abrir o formulário (ex.: escolhida na tela de Início)
+  obraInicialId?: string;
 }
 
-export function RegistroCampoForm({ obras }: RegistroCampoFormProps) {
+export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormProps) {
   const [selectedObraId, setSelectedObraId] = useState<string>(
-    obras[0]?.id ?? ""
+    obraInicialId ?? obras[0]?.id ?? ""
   );
   const [fotos, setFotos] = useState<FotoItem[]>([
     {
