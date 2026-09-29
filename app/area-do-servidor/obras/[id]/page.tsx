@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getHomeByRole } from "@/lib/auth/role-routes";
 import { prisma } from "@/lib/prisma";
-import ObraDetalheClient from "./ObraDetalheClient";
+import ObraDetalheClient from "@/app/area-do-servidor/obras/[id]/ObraDetalheClient";
 
 export default async function ObraDetalhePage({
   params,

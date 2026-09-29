@@ -109,7 +109,7 @@ function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 border-b border-slate-100 py-3 last:border-b-0">
       <dt className="text-xs text-slate-500">{label}</dt>
-      <dd className="m-0 mt-1 break-words text-sm font-medium text-slate-800">{value}</dd>
+      <dd className="m-0 mt-1 wrap-break-word text-sm font-medium text-slate-800">{value}</dd>
     </div>
   );
 }
