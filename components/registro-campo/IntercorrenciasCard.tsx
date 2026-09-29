@@ -62,7 +62,7 @@ export function IntercorrenciasCard({
 
   return (
     <div
-      className={`rounded-xl border bg-white p-4 shadow-xs transition-colors ${
+      className={`h-full rounded-xl border bg-white p-4 md:p-5 shadow-xs transition-colors ${
         erro || contemScriptSuspeito
           ? "border-rose-400 bg-rose-50/20"
           : precisaDetalharOutros
@@ -71,7 +71,7 @@ export function IntercorrenciasCard({
       }`}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-900">Intercorrências</h3>
+        <h3 className="text-sm md:text-lg font-bold text-slate-900">Intercorrências</h3>
         {selecionadas.length > 0 && (
           <span className="text-[11px] font-semibold text-blue-600">
             {selecionadas.length} marcada{selecionadas.length > 1 ? "s" : ""}

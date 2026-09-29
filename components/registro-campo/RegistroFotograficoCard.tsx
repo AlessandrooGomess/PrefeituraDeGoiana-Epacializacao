@@ -92,7 +92,7 @@ export function RegistroFotograficoCard({
 
   return (
     <div
-      className={`rounded-xl border bg-white p-4 shadow-xs transition-colors ${
+      className={`h-full rounded-xl border bg-white p-4 md:p-5 shadow-xs transition-colors ${
         erro ? "border-rose-400 bg-rose-50/20" : "border-slate-200"
       }`}
     >
@@ -108,7 +108,7 @@ export function RegistroFotograficoCard({
       />
 
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-900">
+        <h3 className="text-sm md:text-lg font-bold text-slate-900">
           Registro Fotográfico <span className="text-rose-500">*</span>
         </h3>
 
@@ -146,7 +146,7 @@ export function RegistroFotograficoCard({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex h-32 w-32 shrink-0 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:border-blue-500 hover:bg-blue-50/50 hover:text-blue-600 transition-colors"
+          className="flex h-32 w-32 md:h-40 md:w-40 shrink-0 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:border-blue-500 hover:bg-blue-50/50 hover:text-blue-600 transition-colors"
         >
           <Camera className="h-6 w-6" />
           <span className="text-center text-[11px] font-medium leading-tight">
@@ -158,7 +158,7 @@ export function RegistroFotograficoCard({
         {fotos.map((foto) => (
           <div
             key={foto.id}
-            className="group relative h-32 w-32 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-xs"
+            className="group relative h-32 w-32 md:h-40 md:w-40 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-xs"
           >
             <img
               src={foto.url}
