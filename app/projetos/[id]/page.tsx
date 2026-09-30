@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import { ObraCabecalho } from "@/components/obra-detalhe/ObraCabecalho";
 import { ObraGaleria } from "@/components/obra-detalhe/ObraGaleria";
 import { ObraInformacoes } from "@/components/obra-detalhe/ObraInformacoes";
+import { ObraLinhaDoTempo } from "@/components/obra-detalhe/ObraLinhaDoTempo";
 import { PortalFooter } from "@/components/portal/PortalFooter";
 import Sidebar from "@/components/sidebar/Sidebar";
+import { montarLinhaDoTempo } from "@/lib/obras/linha-do-tempo";
 import { buscarObraPublica } from "@/lib/obras/obra-publica";
 import { formatarTempoDecorrido } from "@/lib/utils/tempo-decorrido";
 
@@ -41,6 +43,10 @@ export default async function ObraPublicaPage({ params }: { params: Promise<{ id
               fiscal={obra.engenheiro}
             />
           </div>
+
+          <aside className="space-y-6">
+            <ObraLinhaDoTempo marcos={montarLinhaDoTempo(obra.dataOrdemServico, obra.etapasObra)} />
+          </aside>
         </div>
       </main>
 
