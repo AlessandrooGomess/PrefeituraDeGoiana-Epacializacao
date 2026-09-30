@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./WorkCard.module.css";
 import type { ObraItem } from "@/types/obra";
 import { formatWorkForecast, getWorkProgress, STATUS_PRESENTATION } from "./workPresentation";
@@ -53,9 +54,9 @@ export default function WorkCard({ obra, onClose, onSelect, selected = false }: 
       <div className={styles.progress}>
         <span style={{ width: `${getWorkProgress(obra.percentualExecutado)}%` }} />
       </div>
-      <button className={styles.detailsButton} type="button">
+      <Link href={`/projetos/${obra.id}`} className={`${styles.detailsButton} block text-center no-underline`}>
         Ver Detalhes Completos
-      </button>
+      </Link>
     </article>
   );
 }
