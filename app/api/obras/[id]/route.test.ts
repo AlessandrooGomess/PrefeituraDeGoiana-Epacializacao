@@ -116,7 +116,7 @@ describe("GET /api/obras/[id]", () => {
         {
           id: "medicao-1",
           dataVistoria: new Date("2026-02-10T00:00:00.000Z"),
-          percentualExecutado: 42.5,
+          percentualExecutado: null,
           observacoesTecnicas: "Execução em andamento.",
           engenheiro: {
             id: "engenheiro-1",
@@ -157,7 +157,7 @@ describe("GET /api/obras/[id]", () => {
         titulo: "Reforma da UBS Central",
         valorContrato: 150000.5,
         dataOrdemServico: "2026-01-10T00:00:00.000Z",
-        percentualExecutado: 42.5,
+        percentualExecutado: null,
         imagemUrl: "/fotos/ubs-central.jpg",
         status: "EM_ANDAMENTO",
       }),

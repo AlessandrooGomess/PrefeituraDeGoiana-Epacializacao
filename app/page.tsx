@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./portal.module.css";
 import type { EixoComSecretarias, ObraItem, StatusObra } from "@/types/obra";
@@ -154,8 +155,8 @@ export default function Home() {
 
         <nav id="main-navigation" className={menuOpen ? styles["is-open"] : ""}>
           <a className={styles.active} href="#mapa" onClick={closeMenu}>Mapa</a>
-          <a href="/projetos" onClick={closeMenu}>Projetos</a>
-          <a href="/area-do-servidor" onClick={closeMenu}>Área do Servidor</a>
+          <Link href="/projetos" onClick={closeMenu}>Projetos</Link>
+          <Link href="/area-do-servidor" onClick={closeMenu}>Área do Servidor</Link>
         </nav>
 
         <div className={styles["portal-tools"]}>
