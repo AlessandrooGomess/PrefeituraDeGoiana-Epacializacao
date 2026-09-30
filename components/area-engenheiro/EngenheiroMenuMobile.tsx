@@ -73,7 +73,7 @@ export function EngenheiroMenuMobile() {
         ref={botaoAbrirRef}
         type="button"
         onClick={() => setAberto(true)}
-        className="md:hidden -ml-1 rounded-full p-1 text-white/90 hover:bg-blue-700 hover:text-white transition-colors"
+        className="md:hidden -ml-1 rounded-full p-1 text-white/90 hover:bg-white/15 hover:text-white transition-colors"
         aria-label="Abrir menu"
         aria-expanded={aberto}
         aria-controls={painelId}
@@ -94,7 +94,7 @@ export function EngenheiroMenuMobile() {
               aria-labelledby={tituloId}
               className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-white shadow-xl"
             >
-              <div className="flex items-center justify-between bg-blue-600 px-4 py-3.5 text-white">
+              <div className="flex items-center justify-between bg-(--cor-header-footer) px-4 py-3.5 text-white">
                 <h2 id={tituloId} className="text-base font-semibold tracking-wide">
                   Menu
                 </h2>
@@ -102,7 +102,7 @@ export function EngenheiroMenuMobile() {
                   ref={botaoFecharRef}
                   type="button"
                   onClick={fechar}
-                  className="rounded-full p-1 text-white/90 hover:bg-blue-700 hover:text-white transition-colors"
+                  className="rounded-full p-1 text-white/90 hover:bg-white/15 hover:text-white transition-colors"
                   aria-label="Fechar menu"
                 >
                   <X className="h-5 w-5" />
