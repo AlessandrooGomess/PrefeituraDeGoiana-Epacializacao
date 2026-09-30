@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import Sidebar from "@/components/sidebar/Sidebar";
 import { prisma } from "@/lib/prisma";
 import styles from "./area-do-servidor.module.css";
+import DeleteObraButton from "./DeleteObraButton";
 import { getHomeByRole } from "@/lib/auth/role-routes";
 
 export default async function AreaDoServidor() {
@@ -161,6 +162,14 @@ export default async function AreaDoServidor() {
                         <Pencil size={15} aria-hidden="true" />
                       </Link>
                     </div>
+                    
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span className={styles.statusTag}>
+                        {statusLabel[obra.status]}
+                      </span>
+                      <DeleteObraButton obraId={obra.id} titulo={obra.titulo} />
+                    </div>
+
                   </article>
                 ))}
               </div>

@@ -657,77 +657,11 @@ export default function ObraDetalheClient({
                         <strong className="text-sm text-slate-800">{etapa.nomeCidadao || etapa.nome}</strong>
                         <div className="flex items-center gap-2">
                           <span className={styles.statusTag}>{etapaStatusLabel[etapa.status] ?? etapa.status}</span>
-                          <button
-                            type="button"
-                            className="text-xs font-semibold text-blue-700 hover:underline"
-                            onClick={() => {
-                              if (etapaEditandoId === etapa.id) {
-                                setEtapaEditandoId(null);
-                              } else {
-                                setEtapaEditandoId(etapa.id);
-                                setEtapaStatusDraft(etapa.status);
-                                setEtapaPercentualDraft(etapa.percentualConcluido);
-                              }
-                            }}
-                          >
-                            {etapaEditandoId === etapa.id ? "Cancelar" : "Atualizar progresso"}
-                          </button>
+                          
                         </div>
                       </div>
 
-                      {/* Formulário inline para atualizar progresso da etapa via PATCH */}
-                      {etapaEditandoId === etapa.id && (
-                        <div className="mt-3 rounded border border-blue-200 bg-blue-50/60 p-3">
-                          <h4 className="m-0 mb-2 text-xs font-bold text-slate-800">Atualizar etapa: {etapa.nomeCidadao || etapa.nome}</h4>
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <label className="grid gap-1">
-                              <span className="text-xs font-medium text-slate-600">Status</span>
-                              <select
-                                className="min-h-9 rounded border border-slate-300 bg-white px-2 text-xs"
-                                value={etapaStatusDraft}
-                                onChange={(e) => setEtapaStatusDraft(e.target.value)}
-                              >
-                                <option value="PENDENTE">Pendente</option>
-                                <option value="EM_ANDAMENTO">Em andamento</option>
-                                <option value="CONCLUIDA">Concluída</option>
-                                <option value="PARALISADA">Paralisada</option>
-                              </select>
-                            </label>
-
-                            <label className="grid gap-1">
-                              <span className="text-xs font-medium text-slate-600">Percentual concluído ({etapaPercentualDraft}%)</span>
-                              <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                step="1"
-                                value={etapaPercentualDraft}
-                                onChange={(e) => setEtapaPercentualDraft(Number(e.target.value))}
-                                className="w-full"
-                              />
-                            </label>
-                          </div>
-                          <div className="mt-3 flex justify-end gap-2">
-                            <button
-                              type="button"
-                              className={styles.secondaryButton}
-                              disabled={etapasLoading}
-                              onClick={() => setEtapaEditandoId(null)}
-                            >
-                              Cancelar
-                            </button>
-                            <button
-                              type="button"
-                              className={styles.primaryButton}
-                              disabled={etapasLoading}
-                              onClick={() => handleSalvarEdicaoEtapa(etapa.id)}
-                            >
-                              <Check size={14} aria-hidden="true" />
-                              {etapasLoading ? "Salvando..." : "Salvar progresso"}
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                      
 
                       <p className="mb-0 mt-1 text-xs text-slate-500">
                         {etapa.percentualConcluido}% concluída
