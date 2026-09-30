@@ -109,7 +109,8 @@ export async function GET(_request: Request, context: RouteContext) {
       bairro: obra.bairro,
       latitude: obra.latitude,
       longitude: obra.longitude,
-      valorContrato: obra.valorContrato === null ? null : Number(obra.valorContrato),
+      valorContrato:
+        obra.valorContrato === null ? null : Number(obra.valorContrato),
       empresaContratada: obra.empresaContratada,
       numeroOrdemServico: obra.numeroOrdemServico,
       dataOrdemServico: serializeDate(obra.dataOrdemServico),
@@ -235,12 +236,14 @@ export async function PATCH(request: Request, context: RouteContext) {
     const relationErrors = await validateObraRelations({
       secretariaId: data.secretariaId ?? currentObra.secretariaId,
       eixoId: data.eixoId === undefined ? currentObra.eixoId : data.eixoId,
-      areaTematicaId: data.areaTematicaId === undefined
-        ? currentObra.areaTematicaId
-        : data.areaTematicaId,
-      engenheiroId: data.engenheiroId === undefined
-        ? currentObra.engenheiroId
-        : data.engenheiroId,
+      areaTematicaId:
+        data.areaTematicaId === undefined
+          ? currentObra.areaTematicaId
+          : data.areaTematicaId,
+      engenheiroId:
+        data.engenheiroId === undefined
+          ? currentObra.engenheiroId
+          : data.engenheiroId,
     });
 
     if (relationErrors.length > 0) {
@@ -256,15 +259,15 @@ export async function PATCH(request: Request, context: RouteContext) {
     const businessRuleErrors = getObraBusinessRuleIssues({
       dataOrdemServico:
         data.dataOrdemServico === undefined
-          ? currentObra.dataOrdemServico?.toISOString() ?? null
+          ? (currentObra.dataOrdemServico?.toISOString() ?? null)
           : data.dataOrdemServico,
       previsaoConclusao:
         data.previsaoConclusao === undefined
-          ? currentObra.previsaoConclusao?.toISOString() ?? null
+          ? (currentObra.previsaoConclusao?.toISOString() ?? null)
           : data.previsaoConclusao,
       dataConclusaoReal:
         data.dataConclusaoReal === undefined
-          ? currentObra.dataConclusaoReal?.toISOString() ?? null
+          ? (currentObra.dataConclusaoReal?.toISOString() ?? null)
           : data.dataConclusaoReal,
       status: data.status ?? currentObra.status,
     });
@@ -287,7 +290,8 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (data.bairro !== undefined) updateData.bairro = data.bairro;
     if (data.latitude !== undefined) updateData.latitude = data.latitude;
     if (data.longitude !== undefined) updateData.longitude = data.longitude;
-    if (data.valorContrato !== undefined) updateData.valorContrato = data.valorContrato;
+    if (data.valorContrato !== undefined)
+      updateData.valorContrato = data.valorContrato;
     if (data.empresaContratada !== undefined) {
       updateData.empresaContratada = data.empresaContratada;
     }
@@ -310,10 +314,13 @@ export async function PATCH(request: Request, context: RouteContext) {
         : null;
     }
     if (data.status !== undefined) updateData.status = data.status;
-    if (data.secretariaId !== undefined) updateData.secretariaId = data.secretariaId;
+    if (data.secretariaId !== undefined)
+      updateData.secretariaId = data.secretariaId;
     if (data.eixoId !== undefined) updateData.eixoId = data.eixoId;
-    if (data.areaTematicaId !== undefined) updateData.areaTematicaId = data.areaTematicaId;
-    if (data.engenheiroId !== undefined) updateData.engenheiroId = data.engenheiroId;
+    if (data.areaTematicaId !== undefined)
+      updateData.areaTematicaId = data.areaTematicaId;
+    if (data.engenheiroId !== undefined)
+      updateData.engenheiroId = data.engenheiroId;
 
     const obra = await prisma.obra.update({
       where: { id },
@@ -374,7 +381,10 @@ export async function DELETE(_request: Request, context: RouteContext) {
     );
   }
 
-  const authorization = await requireUser([Role.SUPER_ADMIN, Role.GESTAO]);
+  const authorization = await requireUser([
+    Role.SUPER_ADMIN,
+    Role.ADM_SECRETARIA,
+  ]);
 
   if (authorization.response) {
     return authorization.response;

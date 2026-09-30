@@ -5,7 +5,6 @@ import { FormEvent, useRef, useState } from "react";
 import {
   AlertCircle,
   Building2,
-  CheckCircle2,
   HelpCircle,
   Loader2,
   Save,
@@ -107,7 +106,6 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
         delete next[field];
       }
 
-      // Validação de limites de data (a partir de 2020 até 2050)
       if (field === "dataOrdemServico" || field === "previsaoConclusao") {
         if (value && value < MIN_OBRA_DATE) {
           next[field] =
@@ -118,7 +116,6 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
           next[field] = "A data limite permitida é até 2050.";
         }
 
-        // Validação dinâmica entre data da OS e previsão de conclusão
         const os = field === "dataOrdemServico" ? value : nextForm.dataOrdemServico;
         const conclusao = field === "previsaoConclusao" ? value : nextForm.previsaoConclusao;
 
@@ -203,12 +200,10 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // Prevenção imediata de duplo clique / submissões concorrentes
     if (isSubmittingRef.current || status === "sending") {
       return;
     }
 
-    // 1. Validação preventiva no cliente
     const clientErrors = validateClientForm();
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors);
@@ -250,7 +245,6 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
       if (!response.ok) {
         const apiErrors: FieldErrors = {};
 
-        // Extrai e mapeia erros do Zod retornados pelo backend
         if (responseData?.errors && Array.isArray(responseData.errors)) {
           responseData.errors.forEach((err: { path?: string[]; message?: string }) => {
             const fieldName = err.path?.[0] as keyof FormState | undefined;
@@ -260,7 +254,6 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
           });
         }
 
-        // Extrai relações inválidas
         if (responseData?.fields && Array.isArray(responseData.fields)) {
           responseData.fields.forEach((fieldName: string) => {
             if (fieldName in initialForm) {
