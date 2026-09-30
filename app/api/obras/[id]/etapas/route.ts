@@ -1,3 +1,4 @@
+import { calcularProgressoObra } from "@/lib/obras/calcular-progresso";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -62,7 +63,8 @@ export async function GET(_request: Request, context: RouteContext) {
       }))
     }));
 
-    return NextResponse.json(formatado, { status: 200 });
+    const progressoGeral = await calcularProgressoObra(id);
+    return NextResponse.json({ etapas: formatado, progressoGeral }, { status: 200 });
   } catch (error) {
     console.error("Erro ao buscar etapas da obra:", error);
     return NextResponse.json({ message: "Erro interno ao carregar etapas." }, { status: 500 });

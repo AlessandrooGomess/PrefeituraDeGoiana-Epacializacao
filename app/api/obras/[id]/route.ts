@@ -198,9 +198,17 @@ export async function GET(_request: Request, context: RouteContext) {
       secretaria: obra.secretaria,
       eixo: obra.eixo,
       areaTematica: obra.areaTematica,
-      percentualExecutado: obra.medicoes?.[0]
-        ? Number(obra.medicoes[0].percentualExecutado)
-        : null,
+      percentualExecutado: (() => {
+        if (!obra.etapasObra || obra.etapasObra.length === 0) return null;
+        let somaPesos = 0;
+        let somaPonderada = 0;
+        for (const etapa of obra.etapasObra) {
+          const peso = etapa.etapaTemplate.peso;
+          somaPesos += peso;
+          somaPonderada += Number(etapa.percentualConcluido) * peso;
+        }
+        return somaPesos === 0 ? null : Math.round((somaPonderada / somaPesos) * 100) / 100;
+      })(),
       engenheiro: obra.engenheiro,
       tipoObra: obra.tipoObra
         ? {
