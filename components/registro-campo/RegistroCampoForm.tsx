@@ -37,6 +37,12 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
   const [progressoGeral, setProgressoGeral] = useState<number>(0);
   const [etapasCarregadas, setEtapasCarregadas] = useState(false);
 
+  // Calcula se a obra pode ter o progresso editado
+  const obraSelecionada = obras.find((o) => o.id === selectedObraId);
+  const statusBloqueados = ["PLANEJADA", "ORDEM_EMITIDA"];
+  const isBloqueada = obraSelecionada && obraSelecionada.status ? statusBloqueados.includes(obraSelecionada.status) : false;
+
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittingType, setSubmittingType] = useState<"rascunho" | "envio" | null>(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);

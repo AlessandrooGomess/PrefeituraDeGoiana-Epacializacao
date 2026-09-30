@@ -24,7 +24,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   try {
     const obra = await prisma.obra.findUnique({
       where: { id },
-      select: { secretariaId: true, engenheiroId: true, deletedAt: true },
+      select: { secretariaId: true, engenheiroId: true, deletedAt: true, status: true },
     });
 
     if (!obra || obra.deletedAt) {
@@ -33,6 +33,13 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     if (!canManageObra(auth.user, obra)) {
       return NextResponse.json({ message: "Você não tem permissão para alterar esta obra." }, { status: 403 });
+    }
+
+    if (obra.status === "PLANEJADA" || obra.status === "ORDEM_EMITIDA") {
+      return NextResponse.json(
+        { message: "A evolução física só pode ser alterada após a obra entrar em andamento." },
+        { status: 400 }
+      );
     }
 
     let body: unknown;
