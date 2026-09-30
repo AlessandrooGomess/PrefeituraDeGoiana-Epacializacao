@@ -55,6 +55,20 @@ export default function Home() {
 
   const onObrasLoaded = useCallback((items: ObraItem[]) => setObras(items), []);
   const onSelectObra = useCallback((obra: ObraItem) => setSelected(obra), []);
+  const onGeolocationSuccess = useCallback(
+    (latitude: number, longitude: number) => setUserLocation([latitude, longitude]),
+    [],
+  );
+
+  const toggleNearMe = () => {
+    setNotice(null);
+    if (userLocation) {
+      setUserLocation(null);
+      return;
+    }
+    setNearMeRequest((request) => request + 1);
+  };
+  const nearMeLabel = userLocation ? "Ver todas as obras" : "Perto de Mim";
 
   const eixoBySecretariaId = useMemo(
     () => new Map(
@@ -91,6 +105,9 @@ export default function Home() {
       }),
     [obras, eixoBySecretariaId, query, secretarias, statuses, selectedEixoIds, userLocation],
   );
+
+  // Referência estável evita que o mapa recrie todos os marcadores a cada render
+  const visibleObraIds = useMemo(() => filtered.map((obra) => obra.id), [filtered]);
 
   const toggle = <T,>(value: T, values: T[], setter: (next: T[]) => void) =>
     setter(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
@@ -196,13 +213,11 @@ export default function Home() {
             <button
               className={`${styles["near-button"]} ${styles["near-button-mobile"]}`}
               type="button"
-              onClick={() => {
-                setNotice(null);
-                setNearMeRequest((request) => request + 1);
-              }}
+              aria-pressed={Boolean(userLocation)}
+              onClick={toggleNearMe}
             >
               <Image src="/icons/mira-perto-de-mim.svg" alt="" width={18} height={18} />
-              Perto de Mim
+              {nearMeLabel}
             </button>
           </div>
 
@@ -211,13 +226,11 @@ export default function Home() {
           <button
             className={`${styles["near-button"]} ${styles["near-button-desktop"]}`}
             type="button"
-            onClick={() => {
-              setNotice(null);
-              setNearMeRequest((request) => request + 1);
-            }}
+            aria-pressed={Boolean(userLocation)}
+            onClick={toggleNearMe}
           >
             <Image src="/icons/mira-perto-de-mim.svg" alt="" width={18} height={18} />
-            Perto de Mim
+            {nearMeLabel}
           </button>
 
           <section>
@@ -285,10 +298,10 @@ export default function Home() {
             onFiltersLoaded={setEixos}
             onSelectObra={onSelectObra}
             selectedObraId={selected?.id}
-            visibleObraIds={filtered.map((obra) => obra.id)}
+            visibleObraIds={visibleObraIds}
             nearMeRequest={nearMeRequest}
             onGeolocationError={setNotice}
-            onGeolocationSuccess={(latitude, longitude) => setUserLocation([latitude, longitude])}
+            onGeolocationSuccess={onGeolocationSuccess}
           />
           <div className={styles["result-chip"]}>
             {filtered.length} {filtered.length === 1 ? "obra encontrada" : "obras encontradas"}
