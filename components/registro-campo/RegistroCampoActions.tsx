@@ -16,13 +16,14 @@ export function RegistroCampoActions({
   submittingType = null,
 }: RegistroCampoActionsProps) {
   return (
-    <div className="flex items-center gap-3 pt-2">
+    // Mobile: botões dividem a linha | Tablet+: largura fixa, um em cada extremidade
+    <div className="flex items-center gap-3 pt-2 md:justify-between">
       {/* Botão Secundário: Salvar Rascunho */}
       <button
         type="button"
         disabled={loading}
         onClick={onSalvarRascunho}
-        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-600 bg-white py-3 px-3 text-center text-xs font-bold text-blue-600 shadow-xs hover:bg-blue-50/60 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex-1 md:flex-none md:w-56 inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-600 bg-white py-3 md:py-3.5 px-3 text-center text-xs md:text-sm font-bold text-blue-600 shadow-xs hover:bg-blue-50/60 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading && submittingType === "rascunho" ? (
           <>
@@ -39,7 +40,7 @@ export function RegistroCampoActions({
         type="button"
         disabled={loading}
         onClick={onEnviarMedicao}
-        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 px-3 text-center text-xs font-bold text-white shadow-xs hover:bg-blue-700 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex-1 md:flex-none md:w-56 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 md:py-3.5 px-3 text-center text-xs md:text-sm font-bold text-white shadow-xs hover:bg-blue-700 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading && submittingType === "envio" ? (
           <>

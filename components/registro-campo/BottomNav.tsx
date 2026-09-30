@@ -1,55 +1,46 @@
-import { Home, BookOpen, CheckSquare, MessageSquare } from "lucide-react";
+import { AlertTriangle, BookOpen, CheckSquare, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
+export type BottomNavTab = "diario" | "checklist" | "ouvidoria";
+
 interface BottomNavProps {
-  activeTab?: "inicio" | "diario" | "checklist" | "ouvidoria";
+  // Sem aba ativa em telas fora das seções da barra (ex.: Início)
+  activeTab?: BottomNavTab;
 }
 
-export function BottomNav({ activeTab = "diario" }: BottomNavProps) {
+// O "Início" fica no menu lateral (tablet/desktop) e na gaveta do cabeçalho (mobile)
+const ABAS: { id: BottomNavTab; label: string; href: string; icon: LucideIcon }[] = [
+  { id: "diario", label: "Diário", href: "/area-do-engenheiro/registro-campo", icon: BookOpen },
+  { id: "checklist", label: "Checklist", href: "/area-do-engenheiro/checklist", icon: CheckSquare },
+  { id: "ouvidoria", label: "Ouvidoria", href: "/area-do-engenheiro/ouvidoria", icon: AlertTriangle },
+];
+
+export function BottomNav({ activeTab }: BottomNavProps) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white py-2 shadow-lg">
-      <div className="mx-auto flex max-w-md items-center justify-around px-4">
-        <Link
-          href="/area-do-engenheiro"
-          className={`flex flex-col items-center gap-1 text-[11px] font-medium ${
-            activeTab === "inicio" ? "text-blue-600" : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <Home className="h-5 w-5" />
-          <span>Início</span>
-        </Link>
+    <nav
+      aria-label="Seções do registro de campo"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white shadow-lg"
+    >
+      <div className="mx-auto flex max-w-md items-stretch justify-around px-4">
+        {ABAS.map(({ id, label, href, icon: Icon }) => {
+          const ativa = id === activeTab;
 
-        <Link
-          href="/area-do-engenheiro/registro-campo"
-          className="flex flex-col items-center gap-1 text-[11px] font-semibold text-white"
-        >
-          <div className="flex h-9 items-center justify-center rounded-lg bg-blue-600 px-3 shadow-xs">
-            <div className="flex items-center gap-1.5">
-              <BookOpen className="h-4 w-4" />
-              <span>Diário</span>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/area-do-engenheiro/checklist"
-          className={`flex flex-col items-center gap-1 text-[11px] font-medium ${
-            activeTab === "checklist" ? "text-blue-600" : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <CheckSquare className="h-5 w-5" />
-          <span>Checklist</span>
-        </Link>
-
-        <Link
-          href="/area-do-engenheiro/ouvidoria"
-          className={`flex flex-col items-center gap-1 text-[11px] font-medium ${
-            activeTab === "ouvidoria" ? "text-blue-600" : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <MessageSquare className="h-5 w-5" />
-          <span>Ouvidoria</span>
-        </Link>
+          return (
+            <Link
+              key={id}
+              href={href}
+              aria-current={ativa ? "page" : undefined}
+              className={`flex min-w-20 flex-col items-center gap-1 border-b-2 pt-2.5 pb-2 text-[11px] md:text-xs transition-colors ${
+                ativa
+                  ? "border-blue-600 font-semibold text-blue-600"
+                  : "border-transparent font-medium text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <Icon className="h-5 w-5" aria-hidden="true" />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
