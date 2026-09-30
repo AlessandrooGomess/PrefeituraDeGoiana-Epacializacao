@@ -10,6 +10,8 @@ export async function buscarObraPublica(id: string) {
     select: {
       id: true,
       titulo: true,
+      status: true,
+      areaTematica: { select: { nome: true } },
     },
   });
 }
