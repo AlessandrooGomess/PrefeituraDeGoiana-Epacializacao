@@ -174,9 +174,13 @@
 .secretariaLink strong { color: #0874d9; font-size: 13px; }
 .secretariaLink span { color: #53627b; font-size: 12px; }
 .workRow { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 0; border-top: 1px solid #e7edf5; }
-.workRow > div { display: grid; gap: 4px; }
+.workRowLink { display: grid; flex: 1; min-width: 0; gap: 4px; color: inherit; text-decoration: none; }
+.workRowLink:hover strong { color: #0874d9; }
+.workRowActions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+.workAction { display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid #d8e0ec; border-radius: 5px; background: white; color: #52647c; }
+.workAction:hover { border-color: #0874d9; background: #f2f8ff; color: #0874d9; }
 .workRow strong { color: #26354a; font-size: 13px; }
-.workRow span:not(.statusTag) { color: #718096; font-size: 11px; }
+.workRowLink span { color: #718096; font-size: 11px; }
 .emptyState { margin: 0; color: #718096; font-size: 13px; }
 .card { padding: 22px 24px; border: 1px solid #e0e7f0; border-radius: 8px; background: white; box-shadow: 0 1px 2px rgb(30 64 110 / 3%); }
 .cardHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 20px; }

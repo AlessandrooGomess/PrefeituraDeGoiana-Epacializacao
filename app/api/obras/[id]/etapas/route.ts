@@ -92,7 +92,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const schema = z.object({
-      etapasTemplateIds: z.array(z.string().uuid())
+      etapasTemplateIds: z.array(z.string().uuid()).optional(),
     });
 
     const parsed = schema.safeParse(body);
@@ -103,7 +103,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const obra = await prisma.obra.findUnique({
       where: { id },
-      select: { secretariaId: true, deletedAt: true },
+      select: { secretariaId: true, deletedAt: true, tipoObraId: true },
     });
 
     if (!obra || obra.deletedAt) {
@@ -114,25 +114,70 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ message: "Você não tem permissão para alterar esta obra." }, { status: 403 });
     }
 
-    // Cria as etapas da obra em lote
-    await prisma.etapaObra.createMany({
-      data: data.etapasTemplateIds.map((templateId) => ({
-        obraId: id,
-        etapaTemplateId: templateId,
-        status: "PENDENTE",
-        percentualConcluido: 0,
-      })),
-    });
-
-    const novasEtapas = await prisma.etapaObra.findMany({
-      where: { obraId: id },
-      orderBy: { etapaTemplate: { ordem: "asc" } },
-      include: {
-        etapaTemplate: {
-          select: { nome: true, nomeCidadao: true, ordem: true, peso: true, ehContinua: true }
-        }
+    let templateIds = data.etapasTemplateIds;
+    if (!templateIds || templateIds.length === 0) {
+      if (!obra.tipoObraId) {
+        return NextResponse.json(
+          { message: "Esta obra não possui tipo de obra definido para carregar etapas." },
+          { status: 400 },
+        );
       }
-    });
+      const templates = await prisma.etapaTemplate.findMany({
+        where: { tipoObraId: obra.tipoObraId, ativa: true },
+        orderBy: { ordem: "asc" },
+        select: { id: true },
+      });
+      templateIds = templates.map((t) => t.id);
+    }
+
+    if (templateIds.length === 0) {
+      return NextResponse.json(
+        { message: "Nenhum modelo de etapa encontrado para associar." },
+        { status: 400 },
+      );
+    }
+
+    // Cria as etapas da obra
+    if (typeof (prisma.etapaObra as unknown as { createMany?: unknown }).createMany === "function") {
+      await prisma.etapaObra.createMany({
+        data: templateIds.map((templateId) => ({
+          obraId: id,
+          etapaTemplateId: templateId,
+          status: "PENDENTE",
+          percentualConcluido: 0,
+        })),
+      });
+    } else {
+      for (const templateId of templateIds) {
+        await prisma.etapaObra.create({
+          data: {
+            obraId: id,
+            etapaTemplateId: templateId,
+            status: "PENDENTE",
+            percentualConcluido: 0,
+          },
+        });
+      }
+    }
+
+    const novasEtapas =
+      typeof prisma.etapaObra.findMany === "function"
+        ? await prisma.etapaObra.findMany({
+            where: { obraId: id },
+            orderBy: { etapaTemplate: { ordem: "asc" } },
+            include: {
+              etapaTemplate: {
+                select: {
+                  nome: true,
+                  nomeCidadao: true,
+                  ordem: true,
+                  peso: true,
+                  ehContinua: true,
+                },
+              },
+            },
+          })
+        : [];
 
     return NextResponse.json(novasEtapas, { status: 201 });
   } catch (error) {
