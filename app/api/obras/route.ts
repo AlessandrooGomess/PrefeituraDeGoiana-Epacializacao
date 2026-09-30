@@ -111,6 +111,12 @@ export async function GET(request: Request) {
             percentualExecutado: true,
           },
         },
+        etapasObra: {
+          select: {
+            percentualConcluido: true,
+            etapaTemplate: { select: { peso: true } },
+          },
+        },
         fotos: {
           take: 1,
           orderBy: {
@@ -159,9 +165,17 @@ export async function GET(request: Request) {
       eixo: obra.eixo,
       areaTematica: obra.areaTematica,
 
-      percentualExecutado: obra.medicoes[0]
-        ? Number(obra.medicoes[0].percentualExecutado)
-        : null,
+      percentualExecutado: (() => {
+        if (!obra.etapasObra || obra.etapasObra.length === 0) return null;
+        let somaPesos = 0;
+        let somaPonderada = 0;
+        for (const etapa of obra.etapasObra) {
+          const peso = etapa.etapaTemplate.peso;
+          somaPesos += peso;
+          somaPonderada += Number(etapa.percentualConcluido) * peso;
+        }
+        return somaPesos === 0 ? null : Math.round((somaPonderada / somaPesos) * 100) / 100;
+      })(),
     }));
 
     if (!paginada) {
@@ -294,7 +308,27 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(
+    
+    // Gera as etapas automaticamente baseadas no tipo de obra
+    if (data.tipoObraId) {
+      const templates = await prisma.etapaTemplate.findMany({
+        where: { tipoObraId: data.tipoObraId, ativa: true },
+        orderBy: { ordem: "asc" },
+      });
+
+      if (templates.length > 0) {
+        await prisma.etapaObra.createMany({
+          data: templates.map((t) => ({
+            obraId: obra.id,
+            etapaTemplateId: t.id,
+            status: "PENDENTE",
+            percentualConcluido: 0,
+          })),
+        });
+      }
+    }
+
+return NextResponse.json(
       {
         ...obra,
         createdAt: serializeDate(obra.createdAt),

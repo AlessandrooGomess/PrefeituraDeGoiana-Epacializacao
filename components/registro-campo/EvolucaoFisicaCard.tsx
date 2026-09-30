@@ -1,51 +1,129 @@
-interface EtapaPreview {
-  nome: string;
-  percentual: number;
+"use client";
+
+import { useState } from "react";
+
+export interface EtapaReal {
+  id: string;
+  status: string;
+  percentualConcluido: number;
+  template: {
+    nome: string;
+    nomeCidadao: string;
+    peso: number;
+    ordem: number;
+  };
 }
 
 interface EvolucaoFisicaCardProps {
-  etapas?: EtapaPreview[];
+  obraId: string;
+  etapas: EtapaReal[];
+  progressoGeral: number;
+  onEtapaAtualizada: (etapaId: string, concluida: boolean, novoProgresso: number) => void;
 }
 
 export function EvolucaoFisicaCard({
-  etapas = [
-    { nome: "Alvenaria", percentual: 65 },
-    { nome: "Instalações Elétricas", percentual: 20 },
-  ],
+  obraId,
+  etapas,
+  progressoGeral,
+  onEtapaAtualizada,
 }: EvolucaoFisicaCardProps) {
+  const [loading, setLoading] = useState<string | null>(null);
+
+  async function toggleEtapa(etapaId: string, marcarConcluida: boolean) {
+    setLoading(etapaId);
+    try {
+      const res = await fetch(`/api/obras/${obraId}/etapas/${etapaId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ concluida: marcarConcluida }),
+      });
+
+      if (!res.ok) throw new Error("Erro ao atualizar etapa.");
+
+      const data = await res.json();
+      onEtapaAtualizada(etapaId, marcarConcluida, data.progressoGeral);
+    } catch {
+      alert("Erro ao atualizar a etapa. Verifique sua conexão.");
+    } finally {
+      setLoading(null);
+    }
+  }
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 md:p-5 shadow-xs">
-      <h3 className="text-sm md:text-lg font-bold text-slate-900">Evolução Física da Etapa</h3>
-      {/* Mobile: etapas empilhadas | Tablet+: duas colunas separadas por linha vertical */}
-      <div className="mt-3.5 grid gap-3 md:grid-cols-2 md:gap-y-4 md:gap-x-0">
-        {etapas.map((etapa) => (
-          // Mobile: nome e % na mesma linha, barra abaixo | Tablet+: nome acima, barra com % à direita
-          <div
-            key={etapa.nome}
-            className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5 md:odd:pr-6 md:even:border-l md:even:border-slate-200 md:even:pl-6"
-          >
-            <span className="col-start-1 row-start-1 text-xs md:text-sm font-medium text-slate-700">
-              {etapa.nome}
-            </span>
-            <span className="col-start-2 row-start-1 md:row-start-2 text-xs md:text-sm font-semibold text-blue-600">
-              {etapa.percentual}%
-            </span>
-            <div
-              className="col-span-2 row-start-2 md:col-span-1 md:col-start-1 h-2 w-full overflow-hidden rounded-full bg-slate-100"
-              role="progressbar"
-              aria-label={`Evolução de ${etapa.nome}`}
-              aria-valuenow={etapa.percentual}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div
-                className="h-full rounded-full bg-blue-600 transition-all duration-300"
-                style={{ width: `${etapa.percentual}%` }}
-              />
-            </div>
-          </div>
-        ))}
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm md:text-lg font-bold text-slate-900">
+          Evolução Física da Obra
+        </h3>
+        <span className="text-sm font-bold text-blue-600">
+          {Math.round(progressoGeral)}%
+        </span>
       </div>
+
+      {/* Barra de progresso geral */}
+      <div
+        className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-100"
+        role="progressbar"
+        aria-label="Progresso geral da obra"
+        aria-valuenow={Math.round(progressoGeral)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
+          className="h-full rounded-full bg-blue-600 transition-all duration-500"
+          style={{ width: `${progressoGeral}%` }}
+        />
+      </div>
+
+      {/* Lista de etapas com checkbox */}
+      <div className="mt-4 divide-y divide-slate-100">
+        {etapas.map((etapa) => {
+          const concluida = etapa.status === "CONCLUIDA";
+          const isLoading = loading === etapa.id;
+
+          return (
+            <label
+              key={etapa.id}
+              className={`flex items-center gap-3 py-3 cursor-pointer ${
+                isLoading ? "opacity-50 pointer-events-none" : ""
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={concluida}
+                onChange={() => toggleEtapa(etapa.id, !concluida)}
+                disabled={isLoading}
+                className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div className="flex-1">
+                <span
+                  className={`text-sm font-medium ${
+                    concluida
+                      ? "text-slate-400 line-through"
+                      : "text-slate-800"
+                  }`}
+                >
+                  {etapa.template.nomeCidadao || etapa.template.nome}
+                </span>
+                <span className="ml-2 text-xs text-slate-400">
+                  (peso {etapa.template.peso})
+                </span>
+              </div>
+              {concluida && (
+                <span className="text-xs font-semibold text-emerald-600">
+                  Concluída
+                </span>
+              )}
+            </label>
+          );
+        })}
+      </div>
+
+      {etapas.length === 0 && (
+        <p className="mt-3 text-xs text-slate-400">
+          Nenhuma etapa vinculada a esta obra.
+        </p>
+      )}
     </div>
   );
 }
