@@ -294,7 +294,27 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(
+    
+    // Gera as etapas automaticamente baseadas no tipo de obra
+    if (data.tipoObraId) {
+      const templates = await prisma.etapaTemplate.findMany({
+        where: { tipoObraId: data.tipoObraId, ativa: true },
+        orderBy: { ordem: "asc" },
+      });
+
+      if (templates.length > 0) {
+        await prisma.etapaObra.createMany({
+          data: templates.map((t) => ({
+            obraId: obra.id,
+            etapaTemplateId: t.id,
+            status: "PENDENTE",
+            percentualConcluido: 0,
+          })),
+        });
+      }
+    }
+
+return NextResponse.json(
       {
         ...obra,
         createdAt: serializeDate(obra.createdAt),
