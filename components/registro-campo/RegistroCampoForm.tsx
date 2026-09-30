@@ -1,16 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { ObraInfoCard, ObraItemResumo } from "./ObraInfoCard";
-import { EvolucaoFisicaCard } from "./EvolucaoFisicaCard";
+import { EvolucaoFisicaCard, EtapaReal } from "./EvolucaoFisicaCard";
 import { RegistroFotograficoCard, FotoItem } from "./RegistroFotograficoCard";
 import { IntercorrenciasCard } from "./IntercorrenciasCard";
 import { RegistroCampoActions } from "./RegistroCampoActions";
 
 interface RegistroCampoFormProps {
   obras: ObraItemResumo[];
-  // Obra já selecionada ao abrir o formulário (ex.: escolhida na tela de Início)
   obraInicialId?: string;
 }
 
@@ -34,13 +33,33 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
   const [fotoErro, setFotoErro] = useState<string | null>(null);
   const [observacoesErro, setObservacoesErro] = useState<string | null>(null);
 
-  // Estados de feedback e submissão
+  const [etapas, setEtapas] = useState<EtapaReal[]>([]);
+  const [progressoGeral, setProgressoGeral] = useState<number>(0);
+  const [etapasCarregadas, setEtapasCarregadas] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittingType, setSubmittingType] = useState<"rascunho" | "envio" | null>(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
   const [mensagemErro, setMensagemErro] = useState<string | null>(null);
 
-  // Alterna seleção de intercorrência
+  useEffect(() => {
+    if (!selectedObraId) return;
+
+    setEtapasCarregadas(false);
+    fetch(`/api/obras/${selectedObraId}/etapas`)
+      .then((res) => res.json())
+      .then((data) => {
+        setEtapas(data.etapas ?? []);
+        setProgressoGeral(data.progressoGeral ?? 0);
+        setEtapasCarregadas(true);
+      })
+      .catch(() => {
+        setEtapas([]);
+        setProgressoGeral(0);
+        setEtapasCarregadas(true);
+      });
+  }, [selectedObraId]);
+
   const handleToggleIntercorrencia = (id: string) => {
     setIntercorrencias((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -48,20 +67,17 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
     if (observacoesErro) setObservacoesErro(null);
   };
 
-  // Enviar para a API
   const submitRegistro = async (status: "RASCUNHO" | "ENVIADO") => {
     setMensagemSucesso(null);
     setMensagemErro(null);
     setFotoErro(null);
     setObservacoesErro(null);
 
-    // 1. Validação estrita de fotos (apenas se for envio definitivo)
     if (status === "ENVIADO" && fotos.length === 0) {
       setFotoErro("Pelo menos uma foto com registro fotográfico é obrigatória para enviar a medição.");
       return;
     }
 
-    // 2. Validações completas do campo de observações adicionais
     const obsTrim = observacoes.trim();
 
     if (/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi.test(observacoes)) {
@@ -120,7 +136,6 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
           : "Medição de campo enviada com sucesso!"
       );
 
-      // Se for envio definitivo, limpa intercorrências e observações
       if (status === "ENVIADO") {
         setIntercorrencias([]);
         setObservacoes("");
@@ -161,13 +176,24 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
         subtituloFallback="Lote 03 - Fase de Estrutura"
       />
 
-      {/* Card 2: Evolução Física da Etapa (Reservado para mentoria) */}
-      <EvolucaoFisicaCard
-        etapas={[
-          { nome: "Alvenaria", percentual: 65 },
-          { nome: "Instalações Elétricas", percentual: 20 },
-        ]}
-      />
+            {/* Card 2: Evolução Física da Obra - Checklist real */}
+      {etapasCarregadas && (
+        <EvolucaoFisicaCard
+          obraId={selectedObraId}
+          etapas={etapas}
+          progressoGeral={progressoGeral}
+          onEtapaAtualizada={(etapaId, concluida, novoProgresso) => {
+            setEtapas((prev) =>
+              prev.map((e) =>
+                e.id === etapaId
+                  ? { ...e, status: concluida ? "CONCLUIDA" : "PENDENTE", percentualConcluido: concluida ? 100 : 0 }
+                  : e
+              )
+            );
+            setProgressoGeral(novoProgresso);
+          }}
+        />
+      )}
 
       {/* Cards 3 e 4: empilhados no mobile, lado a lado a partir do tablet */}
       <div className="grid gap-3.5 md:grid-cols-2 md:gap-5">
