@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ObraCabecalho } from "@/components/obra-detalhe/ObraCabecalho";
 import { ObraGaleria } from "@/components/obra-detalhe/ObraGaleria";
+import { ObraInformacoes } from "@/components/obra-detalhe/ObraInformacoes";
 import { PortalFooter } from "@/components/portal/PortalFooter";
 import Sidebar from "@/components/sidebar/Sidebar";
 import { buscarObraPublica } from "@/lib/obras/obra-publica";
@@ -24,15 +25,22 @@ export default async function ObraPublicaPage({ params }: { params: Promise<{ id
         />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <ObraGaleria
-            titulo={obra.titulo}
-            fotos={obra.fotos.map((foto) => ({
-              id: foto.id,
-              url: foto.url,
-              descricao: foto.descricao,
-              tempoDecorrido: formatarTempoDecorrido(foto.dataFoto),
-            }))}
-          />
+          <div className="space-y-6">
+            <ObraGaleria
+              titulo={obra.titulo}
+              fotos={obra.fotos.map((foto) => ({
+                id: foto.id,
+                url: foto.url,
+                descricao: foto.descricao,
+                tempoDecorrido: formatarTempoDecorrido(foto.dataFoto),
+              }))}
+            />
+            <ObraInformacoes
+              valorContrato={obra.valorContrato === null ? null : Number(obra.valorContrato)}
+              empresaContratada={obra.empresaContratada}
+              fiscal={obra.engenheiro}
+            />
+          </div>
         </div>
       </main>
 

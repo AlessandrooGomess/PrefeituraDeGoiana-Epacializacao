@@ -11,7 +11,10 @@ export async function buscarObraPublica(id: string) {
       id: true,
       titulo: true,
       status: true,
+      valorContrato: true,
+      empresaContratada: true,
       areaTematica: { select: { nome: true } },
+      engenheiro: { select: { nome: true, cargo: true } },
       fotos: {
         orderBy: { dataFoto: "desc" },
         select: { id: true, url: true, descricao: true, dataFoto: true },
