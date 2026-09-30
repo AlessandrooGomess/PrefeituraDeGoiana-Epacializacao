@@ -45,6 +45,7 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
   useEffect(() => {
     if (!selectedObraId) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEtapasCarregadas(false);
     fetch(`/api/obras/${selectedObraId}/etapas`)
       .then((res) => res.json())
