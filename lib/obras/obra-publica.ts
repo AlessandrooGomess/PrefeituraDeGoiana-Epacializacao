@@ -12,6 +12,10 @@ export async function buscarObraPublica(id: string) {
       titulo: true,
       status: true,
       areaTematica: { select: { nome: true } },
+      fotos: {
+        orderBy: { dataFoto: "desc" },
+        select: { id: true, url: true, descricao: true, dataFoto: true },
+      },
     },
   });
 }
