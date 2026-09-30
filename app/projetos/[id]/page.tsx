@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ObraCabecalho } from "@/components/obra-detalhe/ObraCabecalho";
+import { ObraDocumentacao } from "@/components/obra-detalhe/ObraDocumentacao";
 import { ObraGaleria } from "@/components/obra-detalhe/ObraGaleria";
 import { ObraInformacoes } from "@/components/obra-detalhe/ObraInformacoes";
 import { ObraLinhaDoTempo } from "@/components/obra-detalhe/ObraLinhaDoTempo";
@@ -46,6 +47,7 @@ export default async function ObraPublicaPage({ params }: { params: Promise<{ id
 
           <aside className="space-y-6">
             <ObraLinhaDoTempo marcos={montarLinhaDoTempo(obra.dataOrdemServico, obra.etapasObra)} />
+            <ObraDocumentacao />
           </aside>
         </div>
       </main>
