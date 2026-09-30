@@ -22,6 +22,10 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/obras/calcular-progresso", () => ({
+  calcularProgressoObra: vi.fn().mockResolvedValue(50)
+}));
+
 vi.mock("@/lib/auth/authorization", () => ({
   requireUser: mocks.requireUser,
   canAccessSecretaria: mocks.canAccessSecretaria,
@@ -50,7 +54,7 @@ function patchRequest() {
   return PATCH(
     new Request(`http://localhost/api/obras/${obraId}/etapas/${etapaId}`, {
       method: "PATCH",
-      body: JSON.stringify({ percentualConcluido: 50 }),
+      body: JSON.stringify({ concluida: true }),
     }),
     { params: Promise.resolve({ id: obraId, etapaId }) },
   );
@@ -137,10 +141,11 @@ describe("PATCH /api/obras/[id]/etapas/[etapaId]", () => {
       secretariaId,
       engenheiroId,
       deletedAt: null,
+      status: "EM_ANDAMENTO"
     });
     mocks.etapaObraUpdate.mockResolvedValue({
       id: etapaId,
-      percentualConcluido: 50,
+      concluida: true,
     });
 
     const response = await patchRequest();
@@ -157,6 +162,7 @@ describe("PATCH /api/obras/[id]/etapas/[etapaId]", () => {
       secretariaId,
       engenheiroId,
       deletedAt: null,
+      status: "EM_ANDAMENTO"
     });
     mocks.etapaObraUpdate.mockRejectedValue(
       new Prisma.PrismaClientKnownRequestError("Registro não encontrado.", {
