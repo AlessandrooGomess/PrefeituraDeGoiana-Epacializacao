@@ -19,6 +19,8 @@ interface EvolucaoFisicaCardProps {
   etapas: EtapaReal[];
   progressoGeral: number;
   onEtapaAtualizada: (etapaId: string, concluida: boolean, novoProgresso: number) => void;
+  somenteLeitura?: boolean;
+  mensagemBloqueio?: string;
 }
 
 export function EvolucaoFisicaCard({
@@ -26,6 +28,8 @@ export function EvolucaoFisicaCard({
   etapas,
   progressoGeral,
   onEtapaAtualizada,
+  somenteLeitura = false,
+  mensagemBloqueio,
 }: EvolucaoFisicaCardProps) {
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -84,15 +88,15 @@ export function EvolucaoFisicaCard({
           return (
             <label
               key={etapa.id}
-              className={`flex items-center gap-3 py-3 cursor-pointer ${
+              className={`flex items-center gap-3 py-3 ${somenteLeitura ? "cursor-not-allowed opacity-80" : "cursor-pointer"} ${
                 isLoading ? "opacity-50 pointer-events-none" : ""
               }`}
             >
               <input
                 type="checkbox"
                 checked={concluida}
-                onChange={() => toggleEtapa(etapa.id, !concluida)}
-                disabled={isLoading}
+                onChange={() => { if (!somenteLeitura) toggleEtapa(etapa.id, !concluida); }}
+                disabled={isLoading || somenteLeitura}
                 className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
               />
               <div className="flex-1">
