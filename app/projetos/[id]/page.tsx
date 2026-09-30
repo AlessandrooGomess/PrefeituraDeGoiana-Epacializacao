@@ -16,6 +16,9 @@ export default async function ObraPublicaPage({ params }: { params: Promise<{ id
 
   if (!obra) notFound();
 
+  const marcos = montarLinhaDoTempo(obra.dataOrdemServico, obra.etapasObra);
+  const faseAtual = marcos.find((marco) => marco.estado === "atual")?.titulo ?? null;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fbfcfd] pt-14.5 text-[#0f172a] font-sans antialiased">
       <Sidebar />
@@ -31,6 +34,7 @@ export default async function ObraPublicaPage({ params }: { params: Promise<{ id
           <div className="space-y-6">
             <ObraGaleria
               titulo={obra.titulo}
+              faseAtual={faseAtual}
               fotos={obra.fotos.map((foto) => ({
                 id: foto.id,
                 url: foto.url,
@@ -46,7 +50,7 @@ export default async function ObraPublicaPage({ params }: { params: Promise<{ id
           </div>
 
           <aside className="space-y-6">
-            <ObraLinhaDoTempo marcos={montarLinhaDoTempo(obra.dataOrdemServico, obra.etapasObra)} />
+            <ObraLinhaDoTempo marcos={marcos} />
             <ObraDocumentacao />
           </aside>
         </div>

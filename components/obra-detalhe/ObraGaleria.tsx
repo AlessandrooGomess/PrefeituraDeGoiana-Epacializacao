@@ -15,13 +15,15 @@ export interface FotoGaleria {
 
 interface ObraGaleriaProps {
   titulo: string;
+  // Etapa em andamento, exibida na legenda da foto em destaque
+  faseAtual: string | null;
   fotos: FotoGaleria[];
 }
 
 const MAX_MINIATURAS = 3;
 
 // Foto em destaque da obra com miniaturas para alternar entre as mais recentes
-export function ObraGaleria({ titulo, fotos }: ObraGaleriaProps) {
+export function ObraGaleria({ titulo, faseAtual, fotos }: ObraGaleriaProps) {
   const [indiceSelecionado, setIndiceSelecionado] = useState(0);
   const [modalAberto, setModalAberto] = useState(false);
   const fotoSelecionada = fotos[indiceSelecionado];
@@ -48,10 +50,9 @@ export function ObraGaleria({ titulo, fotos }: ObraGaleriaProps) {
               sizes="(max-width: 1024px) 100vw, 66vw"
               className="object-cover"
             />
-            <figcaption className="absolute bottom-3 left-3 max-w-[85%] rounded-md bg-white/90 px-3 py-1.5 text-xs text-slate-700 shadow-sm">
-              {fotoSelecionada.descricao && (
-                <p className="font-semibold text-slate-800">{fotoSelecionada.descricao}</p>
-              )}
+            <figcaption className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 max-w-[85%] rounded-md bg-white/90 px-2.5 py-1.5 sm:px-3 text-[11px] sm:text-xs text-slate-700 shadow-sm">
+              {faseAtual && <p className="font-semibold text-slate-800">Progresso atual: {faseAtual}</p>}
+              {fotoSelecionada.descricao && <p>{fotoSelecionada.descricao}</p>}
               <p>Foto atualizada {fotoSelecionada.tempoDecorrido}</p>
             </figcaption>
           </figure>
