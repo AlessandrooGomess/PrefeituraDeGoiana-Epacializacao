@@ -279,6 +279,7 @@ export async function POST(request: Request) {
         eixoId: data.eixoId ?? null,
         areaTematicaId: data.areaTematicaId ?? null,
         engenheiroId: data.engenheiroId ?? null,
+        tipoObraId: data.tipoObraId,
       },
       select: {
         id: true,

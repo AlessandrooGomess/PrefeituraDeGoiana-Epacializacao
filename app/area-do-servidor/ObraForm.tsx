@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useRef, useState } from "react";
 import {
   AlertCircle,
   Building2,
-  CheckCircle2,
   HelpCircle,
   Loader2,
   Save,
@@ -89,6 +89,7 @@ type ObraFormProps = {
 };
 
 export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: ObraFormProps) {
+  const router = useRouter();
   const isSubmittingRef = useRef(false);
   const [form, setForm] = useState(initialForm);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -280,9 +281,17 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
         return;
       }
 
-      setStatus("saved");
+      const obraId = responseData?.id;
+      if (typeof obraId !== "string" || !obraId) {
+        setStatus("error");
+        setMessage("A obra foi salva, mas não foi possível abrir a confirmação.");
+        return;
+      }
+
       setFieldErrors({});
-      setMessage("Obra cadastrada e publicada com sucesso!");
+      router.push(
+        `/area-do-servidor/nova-obra/confirmacao/${encodeURIComponent(obraId)}`,
+      );
     } catch {
       setStatus("error");
       setMessage("Erro de conexão ao tentar salvar a obra. Verifique sua rede e tente novamente.");

@@ -352,6 +352,7 @@ describe("PATCH /api/obras/[id]", () => {
           body: JSON.stringify({
             titulo: "Novo título",
             status: "EM_ANDAMENTO",
+            tipoObraId: "33333333-3333-4333-8333-333333333333",
           }),
         },
       ),
@@ -384,6 +385,7 @@ describe("PATCH /api/obras/[id]", () => {
         data: {
           titulo: "Novo título",
           status: "EM_ANDAMENTO",
+          tipoObraId: "33333333-3333-4333-8333-333333333333",
         },
       }),
     );

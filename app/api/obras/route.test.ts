@@ -216,6 +216,7 @@ describe("GET /api/obras", () => {
           bairro: "Centro",
           latitude: -7.55,
           longitude: -35,
+          tipoObraId: "770e8400-e29b-41d4-a716-446655440000",
           secretariaId: "660e8400-e29b-41d4-a716-446655440000",
         }),
       }),
