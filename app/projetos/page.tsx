@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Sidebar from "@/components/sidebar/Sidebar";
 import type { ObraItem as ObraApiItem, StatusObra } from "@/types/obra";
 import {
   Search,
@@ -17,6 +17,11 @@ import {
   Building2,
   X,
 } from "lucide-react";
+import {
+  MAX_SEARCH_LENGTH,
+  matchesSearch,
+  sanitizeSearchInput,
+} from "@/lib/utils/search";
 
 interface ProjetoItem {
   id: string;
@@ -44,6 +49,11 @@ interface ProjetoItem {
   bairro?: string;
   secretaria?: string;
   descricao?: string | null;
+  eixoId: string | null;
+  eixoNome: string | null;
+  areaTematicaId: string | null;
+  areaTematicaNome: string | null;
+  empresaContratada?: string | null;
 }
 
 const STATUS_LABEL: Record<StatusObra, ProjetoItem["status"]> = {
@@ -108,6 +118,11 @@ function mapearObra(obra: ObraApiItem): ProjetoItem {
     bairro: obra.bairro,
     secretaria: obra.secretaria.nome,
     descricao: obra.descricao,
+    eixoId: obra.eixo?.id ?? null,
+    eixoNome: obra.eixo?.nome ?? null,
+    areaTematicaId: obra.areaTematica?.id ?? null,
+    areaTematicaNome: obra.areaTematica?.nome ?? null,
+    empresaContratada: obra.empresaContratada,
   };
 }
 
@@ -217,6 +232,8 @@ export default function PaginaCarteiraProjetos() {
   const [termoBusca, setTermoBusca] = useState("");
   const [statusFiltro, setStatusFiltro] = useState<string>("Todos");
   const [mostrarFiltrosMenu, setMostrarFiltrosMenu] = useState(false);
+  const [eixosSelecionados, setEixosSelecionados] = useState<string[]>([]);
+  const [areasSelecionadas, setAreasSelecionadas] = useState<string[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [projetoSelecionado, setProjetoSelecionado] =
@@ -265,50 +282,47 @@ export default function PaginaCarteiraProjetos() {
 
   const projetosFiltrados = useMemo(() => {
     return projetos.filter((item) => {
-      const matchTexto =
-        item.titulo.toLowerCase().includes(termoBusca.toLowerCase()) ||
-        item.codigo.toLowerCase().includes(termoBusca.toLowerCase()) ||
-        item.categoriaLabel.toLowerCase().includes(termoBusca.toLowerCase());
+      const matchTexto = matchesSearch(
+        [
+          item.titulo,
+          item.codigo,
+          item.categoriaLabel,
+          item.bairro,
+          item.secretaria,
+          item.eixoNome,
+          item.areaTematicaNome,
+          item.empresaContratada,
+        ],
+        termoBusca,
+      );
 
       const matchStatus =
         statusFiltro === "Todos" || item.status === statusFiltro;
 
-      return matchTexto && matchStatus;
+      const matchEixo =
+        !eixosSelecionados.length ||
+        (item.eixoId && eixosSelecionados.includes(item.eixoId));
+      const matchArea =
+        !areasSelecionadas.length ||
+        (item.areaTematicaId && areasSelecionadas.includes(item.areaTematicaId));
+
+      return matchTexto && matchStatus && matchEixo && matchArea;
     });
-  }, [projetos, termoBusca, statusFiltro]);
+  }, [projetos, termoBusca, statusFiltro, eixosSelecionados, areasSelecionadas]);
+
+  const eixos = useMemo(
+    () => Array.from(new Map(projetos.filter((item) => item.eixoId).map((item) => [item.eixoId, { id: item.eixoId!, nome: item.eixoNome! }])).values()),
+    [projetos],
+  );
+
+  const areas = useMemo(
+    () => Array.from(new Map(projetos.filter((item) => item.areaTematicaId && (!eixosSelecionados.length || (item.eixoId && eixosSelecionados.includes(item.eixoId)))).map((item) => [item.areaTematicaId, { id: item.areaTematicaId!, nome: item.areaTematicaNome! }])).values()),
+    [projetos, eixosSelecionados],
+  );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fbfcfd] text-[#0f172a] font-sans antialiased selection:bg-blue-100">
-      <header className="bg-(--cor-header-footer) text-white sticky top-0 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <nav className="ml-auto flex items-center space-x-8 text-sm font-medium">
-            <Link
-              href="/"
-              className="text-slate-300 hover:text-white transition-colors duration-150"
-            >
-              Mapa
-            </Link>
-
-            <div className="relative py-5">
-              <Link
-                href="/projetos"
-                className="text-white font-semibold flex items-center gap-1"
-              >
-                Projetos
-              </Link>
-
-              <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white rounded-t-full" />
-            </div>
-
-            <Link
-              href="/area-do-servidor"
-              className="text-slate-300 hover:text-white transition-colors duration-150"
-            >
-              Área do Servidor
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col bg-[#fbfcfd] pt-14.5 text-[#0f172a] font-sans antialiased selection:bg-blue-100">
+      <Sidebar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-8 border-b border-slate-100">
@@ -330,14 +344,31 @@ export default function PaginaCarteiraProjetos() {
               <input
                 type="text"
                 value={termoBusca}
-                onChange={(e) => setTermoBusca(e.target.value)}
+                onChange={(e) =>
+                  setTermoBusca(sanitizeSearchInput(e.target.value))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setTermoBusca("");
+                  if (e.key === "/" || e.key === "\\") e.preventDefault();
+                  if (
+                    (e.key === " " || e.key === "Spacebar") &&
+                    (e.currentTarget.selectionStart === 0 || !e.currentTarget.value)
+                  ) {
+                    e.preventDefault();
+                  }
+                }}
+                maxLength={MAX_SEARCH_LENGTH}
                 placeholder="Buscar por nome ou categoria..."
-                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-md text-xs sm:text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-(--cor-principal) focus:border-transparent transition"
+                aria-label="Buscar por nome ou categoria"
+                className="w-full pl-10 pr-9 py-2 bg-white border border-slate-200 rounded-md text-xs sm:text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-(--cor-principal) focus:border-transparent transition"
               />
               {termoBusca && (
                 <button
+                  type="button"
                   onClick={() => setTermoBusca("")}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                  aria-label="Limpar pesquisa"
+                  title="Limpar pesquisa"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -356,7 +387,7 @@ export default function PaginaCarteiraProjetos() {
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Filtros</span>
-                {statusFiltro !== "Todos" && (
+                {(statusFiltro !== "Todos" || eixosSelecionados.length > 0 || areasSelecionadas.length > 0) && (
                   <span className="w-2 h-2 rounded-full bg-blue-400 ml-1"></span>
                 )}
               </button>
@@ -393,6 +424,30 @@ export default function PaginaCarteiraProjetos() {
                       )}
                     </button>
                   ))}
+                  <div className="px-3 pt-3 pb-1.5 font-semibold text-slate-400 uppercase tracking-wider text-[10px]">
+                    Eixo Estratégico
+                  </div>
+                  {eixos.map((eixo) => (
+                    <label key={eixo.id} className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={eixosSelecionados.includes(eixo.id)}
+                        onChange={() => setEixosSelecionados((current) => current.includes(eixo.id) ? current.filter((id) => id !== eixo.id) : [...current, eixo.id])}
+                      />
+                      {eixo.nome}
+                    </label>
+                  ))}
+                  {areas.length > 0 && <div className="px-3 pt-3 pb-1.5 font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Áreas Temáticas</div>}
+                  {areas.map((area) => (
+                    <label key={area.id} className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={areasSelecionadas.includes(area.id)}
+                        onChange={() => setAreasSelecionadas((current) => current.includes(area.id) ? current.filter((id) => id !== area.id) : [...current, area.id])}
+                      />
+                      {area.nome}
+                    </label>
+                  ))}
                 </div>
               )}
             </div>
@@ -428,6 +483,8 @@ export default function PaginaCarteiraProjetos() {
               onClick={() => {
                 setTermoBusca("");
                 setStatusFiltro("Todos");
+                setEixosSelecionados([]);
+                setAreasSelecionadas([]);
               }}
               className="mt-4 px-4 py-1.5 text-xs font-semibold text-(--cor-principal) border border-slate-300 rounded hover:bg-slate-50 transition"
             >

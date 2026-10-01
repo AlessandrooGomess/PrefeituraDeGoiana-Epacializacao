@@ -1,0 +1,44 @@
+import { Role } from "@prisma/client";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import ObraForm from "../ObraForm";
+import { getHomeByRole } from "@/lib/auth/role-routes";
+
+export default async function NovaObraPage() {
+  const session = await auth();
+
+  if (!session?.user) redirect("/login");
+  if (session.user.role !== Role.ADM_SECRETARIA) redirect(getHomeByRole(session.user.role));
+  if (!session.user.secretariaId) redirect("/");
+
+  const secretaria = await prisma.secretaria.findUnique({
+    where: { id: session.user.secretariaId },
+    select: { id: true, nome: true, sigla: true, eixo: { select: { id: true, nome: true } } },
+  });
+
+  if (!secretaria) {
+    redirect("/login");
+  }
+
+  const engenheiros = await prisma.usuario.findMany({
+    where: { secretariaId: session.user.secretariaId, role: Role.ENGENHEIRO, ativo: true },
+    orderBy: { nome: "asc" },
+    select: { id: true, nome: true },
+  });
+
+  const tiposObra = await prisma.tipoObra.findMany({
+    where: { ativo: true },
+    orderBy: { nome: "asc" },
+    select: { id: true, nome: true },
+  });
+
+  return (
+    <ObraForm 
+      user={{ name: session.user.name ?? session.user.email ?? "Usuário", role: session.user.role }} 
+      secretaria={secretaria} 
+      engenheiros={engenheiros} 
+      tiposObra={tiposObra}
+    />
+  );
+}
