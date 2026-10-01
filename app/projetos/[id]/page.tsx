@@ -1,6 +1,14 @@
 import { notFound } from "next/navigation";
+import { ObraCabecalho } from "@/components/obra-detalhe/ObraCabecalho";
+import { ObraDocumentacao } from "@/components/obra-detalhe/ObraDocumentacao";
+import { ObraGaleria } from "@/components/obra-detalhe/ObraGaleria";
+import { ObraInformacoes } from "@/components/obra-detalhe/ObraInformacoes";
+import { ObraLinhaDoTempo } from "@/components/obra-detalhe/ObraLinhaDoTempo";
+import { PortalFooter } from "@/components/portal/PortalFooter";
 import Sidebar from "@/components/sidebar/Sidebar";
+import { montarLinhaDoTempo } from "@/lib/obras/linha-do-tempo";
 import { buscarObraPublica } from "@/lib/obras/obra-publica";
+import { formatarTempoDecorrido } from "@/lib/utils/tempo-decorrido";
 
 export default async function ObraPublicaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -8,30 +16,47 @@ export default async function ObraPublicaPage({ params }: { params: Promise<{ id
 
   if (!obra) notFound();
 
+  const marcos = montarLinhaDoTempo(obra.dataOrdemServico, obra.etapasObra);
+  const faseAtual = marcos.find((marco) => marco.estado === "atual")?.titulo ?? null;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fbfcfd] pt-14.5 text-[#0f172a] font-sans antialiased">
       <Sidebar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-2xl sm:text-4xl font-extrabold text-(--cor-principal) tracking-tight">{obra.titulo}</h1>
+        <ObraCabecalho
+          titulo={obra.titulo}
+          status={obra.status}
+          areaTematica={obra.areaTematica?.nome ?? null}
+        />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          {/* Coluna principal: galeria de fotos e cards de informações */}
-          <div className="space-y-6" />
+          <div className="space-y-6">
+            <ObraGaleria
+              titulo={obra.titulo}
+              faseAtual={faseAtual}
+              fotos={obra.fotos.map((foto) => ({
+                id: foto.id,
+                url: foto.url,
+                descricao: foto.descricao,
+                tempoDecorrido: formatarTempoDecorrido(foto.dataFoto),
+              }))}
+            />
+            <ObraInformacoes
+              valorContrato={obra.valorContrato === null ? null : Number(obra.valorContrato)}
+              empresaContratada={obra.empresaContratada}
+              fiscal={obra.engenheiro}
+            />
+          </div>
 
-          {/* Coluna lateral: evolução da obra e documentação */}
-          <aside className="space-y-6" />
+          <aside className="space-y-6">
+            <ObraLinhaDoTempo marcos={marcos} />
+            <ObraDocumentacao />
+          </aside>
         </div>
       </main>
 
-      <footer className="bg-(--cor-header-footer) text-slate-300 py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-end text-[11px] font-medium space-y-3 sm:space-y-0 sm:space-x-8">
-          <a href="#privacidade" className="hover:text-white transition">Privacidade</a>
-          <a href="#transparencia" className="hover:text-white transition">Transparência</a>
-          <a href="#contato" className="hover:text-white transition">Contato</a>
-          <a href="#acessibilidade" className="hover:text-white transition">Acessibilidade</a>
-        </div>
-      </footer>
+      <PortalFooter />
     </div>
   );
 }
