@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export async function buscarObraPublica(id: string) {
   if (!z.uuid().safeParse(id).success) return null;
 
-  const obra = await prisma.obra.findFirst({
+  return prisma.obra.findFirst({
     where: { id, deletedAt: null },
     select: {
       id: true,
@@ -14,9 +14,6 @@ export async function buscarObraPublica(id: string) {
       valorContrato: true,
       empresaContratada: true,
       dataOrdemServico: true,
-      previsaoConclusao: true,
-      dataConclusaoReal: true,
-      secretaria: { select: { nome: true, sigla: true } },
       areaTematica: { select: { nome: true } },
       engenheiro: { select: { nome: true, cargo: true } },
       fotos: {
@@ -29,26 +26,11 @@ export async function buscarObraPublica(id: string) {
           id: true,
           status: true,
           percentualConcluido: true,
-          dataInicio: true,
           dataPrevisao: true,
           dataConclusao: true,
-          etapaTemplate: { select: { nomeCidadao: true, ordem: true } },
+          etapaTemplate: { select: { nomeCidadao: true } },
         },
       },
     },
   });
-
-  if (!obra) return null;
-
-  // Decimal do Prisma não é serializável para componentes client
-  return {
-    ...obra,
-    valorContrato: obra.valorContrato === null ? null : Number(obra.valorContrato),
-    etapasObra: obra.etapasObra.map((etapa) => ({
-      ...etapa,
-      percentualConcluido: Number(etapa.percentualConcluido),
-    })),
-  };
 }
-
-export type ObraPublica = NonNullable<Awaited<ReturnType<typeof buscarObraPublica>>>;
