@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { ObraCabecalho } from "@/components/obra-detalhe/ObraCabecalho";
 import { ObraDocumentacao } from "@/components/obra-detalhe/ObraDocumentacao";
 import { ObraGaleria } from "@/components/obra-detalhe/ObraGaleria";
@@ -24,6 +26,15 @@ export default async function ObraPublicaPage({ params }: { params: Promise<{ id
       <Sidebar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div>
+          <Link 
+            href="/projetos" 
+            className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            Voltar para Carteira de Projetos
+          </Link>
+        </div>
         <ObraCabecalho
           titulo={obra.titulo}
           status={obra.status}
