@@ -1,4 +1,4 @@
-.sidebar {
+﻿.sidebar {
   position: fixed;
   inset: 0 0 auto;
   z-index: 50;
@@ -73,6 +73,11 @@
   .navigation a { height: auto; padding: 11px 12px; border: 0; border-radius: 4px; color: #53627b; font-size: 12px; }
   .navigation a:hover, .navigation .active { background: #eef5ff; color: #126bcc; }
   .userText { display: none; }
-  .user { margin-left: auto; padding-left: 0; border-left: 0; }
-  .menuButton { display: inline-grid; place-items: center; margin-left: 4px; }
+  .user { padding-left: 0; border-left: 0; }
+  .user, .menuButton { margin-left: auto; }
+  .user + .menuButton { margin-left: 4px; }
+  .menuButton { display: inline-grid; place-items: center; }
 }
+
+
+
