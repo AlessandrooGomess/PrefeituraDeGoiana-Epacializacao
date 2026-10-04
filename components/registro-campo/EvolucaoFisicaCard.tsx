@@ -30,7 +30,7 @@ interface EvolucaoFisicaCardProps {
   obraId: string;
   etapas: EtapaReal[];
   progressoGeral: number;
-  onSubEtapaAtualizada: (etapaId: string, subEtapaId: string, concluida: boolean, novoProgressoGeral: number, etapaAtualizada: any) => void;
+  onSubEtapaAtualizada: (etapaId: string, subEtapaId: string, concluida: boolean, novoProgressoGeral: number, etapaAtualizada: { status: string, percentualConcluido: number }) => void;
   somenteLeitura?: boolean;
   mensagemBloqueio?: string;
 }
