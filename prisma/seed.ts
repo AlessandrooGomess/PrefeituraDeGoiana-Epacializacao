@@ -258,148 +258,189 @@ async function main() {
 
   console.log("📑 Criando Tipos de Obra e Templates de Etapas...");
 
-  const tipoConstrucao = await prisma.tipoObra.create({
+  const tipoPavimentacao = await prisma.tipoObra.create({
     data: {
-      nome: "Construção de Prédio Público",
-      slug: "construcao-predio-publico",
-      descricao:
-        "Obras de construção do zero de edificações como escolas, hospitais, etc.",
+      nome: "Pavimentação",
+      slug: "pavimentacao",
+      descricao: "Obras de asfalto, calçamento e infraestrutura viária.",
       etapasTemplate: {
         create: [
-          {
-            nome: "Serviços Preliminares",
-            nomeCidadao: "Preparação do Terreno",
-            ordem: 1,
-            peso: 5,
-          },
-          { nome: "Fundações", nomeCidadao: "Fundações", ordem: 2, peso: 15 },
-          {
-            nome: "Superestrutura",
-            nomeCidadao: "Estrutura e Paredes",
-            ordem: 3,
-            peso: 25,
-          },
-          {
-            nome: "Alvenaria e Fechamentos",
-            nomeCidadao: "Cobertura e Esquadrias",
-            ordem: 4,
-            peso: 20,
-          },
-          {
-            nome: "Instalações Elétricas/Hidráulicas",
-            nomeCidadao: "Instalações",
-            ordem: 5,
-            peso: 15,
-          },
-          {
-            nome: "Acabamentos",
-            nomeCidadao: "Acabamentos e Pintura",
-            ordem: 6,
-            peso: 20,
-          },
-        ],
-      },
-    },
+          { nome: "Início da Obra", nomeCidadao: "Preparação", ordem: 1, peso: 10, subEtapasTemplate: { create: [
+            { nome: "Placa de obra", ordem: 1, peso: 10 },
+            { nome: "Serviços preliminares", ordem: 2, peso: 50 },
+            { nome: "Administração local", ordem: 3, peso: 40 }
+          ]}},
+          { nome: "Terraplanagem", nomeCidadao: "Terraplanagem", ordem: 2, peso: 20, subEtapasTemplate: { create: [
+            { nome: "Corte e aterro", ordem: 1, peso: 50 },
+            { nome: "Regularização", ordem: 2, peso: 50 }
+          ]}},
+          { nome: "Base da Pavimentação", nomeCidadao: "Base da Rua", ordem: 3, peso: 20, subEtapasTemplate: { create: [
+            { nome: "Base e sub-base", ordem: 1, peso: 100 }
+          ]}},
+          { nome: "Preparação", nomeCidadao: "Preparação Asfalto", ordem: 4, peso: 10, subEtapasTemplate: { create: [
+            { nome: "Imprimação (pintura de ligação)", ordem: 1, peso: 100 }
+          ]}},
+          { nome: "Drenagem", nomeCidadao: "Drenagem", ordem: 5, peso: 25, subEtapasTemplate: { create: [
+            { nome: "Meio fio e sarjetas", ordem: 1, peso: 50 },
+            { nome: "Rede e equipamentos coletores", ordem: 2, peso: 50 }
+          ]}},
+          { nome: "Sinalização", nomeCidadao: "Sinalização", ordem: 6, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Horizontal", ordem: 1, peso: 50 },
+            { nome: "Vertical", ordem: 2, peso: 50 }
+          ]}},
+        ]
+      }
+    }
   });
 
   const tipoReforma = await prisma.tipoObra.create({
     data: {
       nome: "Reforma de Prédio Público",
       slug: "reforma-predio-publico",
-      descricao:
-        "Obras de melhoria, ampliação ou reparo estrutural em prédios existentes.",
+      descricao: "Obras de melhoria, ampliação ou reparo estrutural em prédios existentes.",
       etapasTemplate: {
         create: [
-          {
-            nome: "Demolições e Retiradas",
-            nomeCidadao: "Início da Reforma",
-            ordem: 1,
-            peso: 10,
-          },
-          {
-            nome: "Recuperação Estrutural",
-            nomeCidadao: "Estrutura",
-            ordem: 2,
-            peso: 20,
-          },
-          {
-            nome: "Alvenaria",
-            nomeCidadao: "Paredes e Telhado",
-            ordem: 3,
-            peso: 15,
-          },
-          {
-            nome: "Instalações",
-            nomeCidadao: "Instalações",
-            ordem: 4,
-            peso: 20,
-          },
-          {
-            nome: "Acabamentos",
-            nomeCidadao: "Acabamentos",
-            ordem: 5,
-            peso: 25,
-          },
-          {
-            nome: "Limpeza Final e Entrega",
-            nomeCidadao: "Entrega",
-            ordem: 6,
-            peso: 10,
-          },
-        ],
-      },
-    },
+          { nome: "Início da Obra", nomeCidadao: "Preparação", ordem: 1, peso: 5, subEtapasTemplate: { create: [
+            { nome: "Placa de obra", ordem: 1, peso: 20 },
+            { nome: "Serviços preliminares", ordem: 2, peso: 40 },
+            { nome: "Administração local", ordem: 3, peso: 40 }
+          ]}},
+          { nome: "Estruturas", nomeCidadao: "Estruturas", ordem: 2, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Recuperação estrutural", ordem: 1, peso: 100 }
+          ]}},
+          { nome: "Coberta", nomeCidadao: "Telhado", ordem: 3, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Telhado (telhamento e retelhamento)", ordem: 1, peso: 40 },
+            { nome: "Estrutura da coberta", ordem: 2, peso: 40 },
+            { nome: "Forro", ordem: 3, peso: 20 }
+          ]}},
+          { nome: "Paredes", nomeCidadao: "Paredes", ordem: 4, peso: 10, subEtapasTemplate: { create: [
+            { nome: "Demolições", ordem: 1, peso: 40 },
+            { nome: "Construções", ordem: 2, peso: 60 }
+          ]}},
+          { nome: "Instalações", nomeCidadao: "Instalações", ordem: 5, peso: 20, subEtapasTemplate: { create: [
+            { nome: "Hidrossanitária", ordem: 1, peso: 40 },
+            { nome: "Elétrica", ordem: 2, peso: 40 },
+            { nome: "Lógica", ordem: 3, peso: 20 }
+          ]}},
+          { nome: "Pisos", nomeCidadao: "Pisos e Calçadas", ordem: 6, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Contra piso", ordem: 1, peso: 30 },
+            { nome: "Revestimento", ordem: 2, peso: 50 },
+            { nome: "Passeio e calçadas", ordem: 3, peso: 20 }
+          ]}},
+          { nome: "Acabamentos", nomeCidadao: "Acabamentos", ordem: 7, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Revestimento", ordem: 1, peso: 30 },
+            { nome: "Esquadrias", ordem: 2, peso: 30 },
+            { nome: "Pinturas", ordem: 3, peso: 40 }
+          ]}},
+          { nome: "Paisagismos e Equipamentos", nomeCidadao: "Paisagismo", ordem: 8, peso: 5, subEtapasTemplate: { create: [
+            { nome: "Paisagismos e Equipamentos", ordem: 1, peso: 100 }
+          ]}}
+        ]
+      }
+    }
   });
 
-  const tipoVias = await prisma.tipoObra.create({
+  const tipoReformaAmpliacao = await prisma.tipoObra.create({
     data: {
-      nome: "Obras de Vias e Pavimentação",
-      slug: "vias-pavimentacao",
-      descricao: "Obras de asfalto, calçamento e infraestrutura viária.",
+      nome: "Reforma com Ampliação de Prédio Público",
+      slug: "reforma-ampliacao-predio-publico",
+      descricao: "Obras de reforma e aumento da área construída.",
       etapasTemplate: {
         create: [
-          {
-            nome: "Terraplanagem",
-            nomeCidadao: "Terraplanagem",
-            ordem: 1,
-            peso: 20,
-          },
-          {
-            nome: "Sub-base e Base",
-            nomeCidadao: "Base da Rua",
-            ordem: 2,
-            peso: 25,
-          },
-          {
-            nome: "Imprimação e Pintura de Ligação",
-            nomeCidadao: "Preparação Asfalto",
-            ordem: 3,
-            peso: 10,
-          },
-          {
-            nome: "Revestimento Asfáltico/Pavimentação",
-            nomeCidadao: "Pavimentação",
-            ordem: 4,
-            peso: 30,
-          },
-          {
-            nome: "Meio-fio e Sarjeta",
-            nomeCidadao: "Meio-fio",
-            ordem: 5,
-            peso: 10,
-          },
-          {
-            nome: "Sinalização",
-            nomeCidadao: "Sinalização",
-            ordem: 6,
-            peso: 5,
-          },
-        ],
-      },
-    },
+          { nome: "Início da Obra", nomeCidadao: "Preparação", ordem: 1, peso: 5, subEtapasTemplate: { create: [
+            { nome: "Placa de obra", ordem: 1, peso: 20 },
+            { nome: "Serviços preliminares", ordem: 2, peso: 40 },
+            { nome: "Administração local", ordem: 3, peso: 40 }
+          ]}},
+          { nome: "Fundações e Superestruturas", nomeCidadao: "Fundações e Estrutura", ordem: 2, peso: 20, subEtapasTemplate: { create: [
+            { nome: "Fundações (sapatas, blocos e vigas baldrames)", ordem: 1, peso: 30 },
+            { nome: "Pilares", ordem: 2, peso: 20 },
+            { nome: "Vigas", ordem: 3, peso: 20 },
+            { nome: "Lajes", ordem: 4, peso: 30 }
+          ]}},
+          { nome: "Estruturas (Reforma)", nomeCidadao: "Recuperação", ordem: 3, peso: 10, subEtapasTemplate: { create: [
+            { nome: "Recuperação estrutural", ordem: 1, peso: 100 }
+          ]}},
+          { nome: "Coberta", nomeCidadao: "Telhado", ordem: 4, peso: 10, subEtapasTemplate: { create: [
+            { nome: "Telhado (telhamento e retelhamento)", ordem: 1, peso: 40 },
+            { nome: "Estrutura da coberta", ordem: 2, peso: 40 },
+            { nome: "Forro", ordem: 3, peso: 20 }
+          ]}},
+          { nome: "Paredes", nomeCidadao: "Paredes", ordem: 5, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Demolições", ordem: 1, peso: 40 },
+            { nome: "Construções", ordem: 2, peso: 60 }
+          ]}},
+          { nome: "Instalações", nomeCidadao: "Instalações", ordem: 6, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Hidrossanitária", ordem: 1, peso: 40 },
+            { nome: "Elétrica", ordem: 2, peso: 40 },
+            { nome: "Lógica", ordem: 3, peso: 20 }
+          ]}},
+          { nome: "Pisos", nomeCidadao: "Pisos e Calçadas", ordem: 7, peso: 10, subEtapasTemplate: { create: [
+            { nome: "Contra piso", ordem: 1, peso: 30 },
+            { nome: "Revestimento", ordem: 2, peso: 50 },
+            { nome: "Passeio e calçadas", ordem: 3, peso: 20 }
+          ]}},
+          { nome: "Acabamentos", nomeCidadao: "Acabamentos", ordem: 8, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Revestimento", ordem: 1, peso: 30 },
+            { nome: "Esquadrias", ordem: 2, peso: 30 },
+            { nome: "Pinturas", ordem: 3, peso: 40 }
+          ]}}
+        ]
+      }
+    }
   });
 
-  const obraPontaDePedras = await prisma.obra.create({
+  const tipoConstrucao = await prisma.tipoObra.create({
+    data: {
+      nome: "Construção de Prédio Público",
+      slug: "construcao-predio-publico",
+      descricao: "Obras de construção do zero de edificações como escolas, hospitais, etc.",
+      etapasTemplate: {
+        create: [
+          { nome: "Início da Obra", nomeCidadao: "Preparação do Terreno", ordem: 1, peso: 5, subEtapasTemplate: { create: [
+            { nome: "Placa de obra", ordem: 1, peso: 10 },
+            { nome: "Serviços preliminares", ordem: 2, peso: 20 },
+            { nome: "Administração local", ordem: 3, peso: 30 },
+            { nome: "Locação de gabarito", ordem: 4, peso: 20 },
+            { nome: "Tapume", ordem: 5, peso: 20 }
+          ]}},
+          { nome: "Fundações e Superestruturas", nomeCidadao: "Fundações e Estrutura", ordem: 2, peso: 25, subEtapasTemplate: { create: [
+            { nome: "Fundações (sapatas, blocos e vigas baldrames)", ordem: 1, peso: 30 },
+            { nome: "Pilares", ordem: 2, peso: 20 },
+            { nome: "Vigas", ordem: 3, peso: 20 },
+            { nome: "Lajes", ordem: 4, peso: 30 }
+          ]}},
+          { nome: "Coberta", nomeCidadao: "Telhado", ordem: 3, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Telhado (telhamento e retelhamento)", ordem: 1, peso: 40 },
+            { nome: "Estrutura da coberta", ordem: 2, peso: 40 },
+            { nome: "Forro", ordem: 3, peso: 20 }
+          ]}},
+          { nome: "Paredes", nomeCidadao: "Paredes", ordem: 4, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Demolições", ordem: 1, peso: 10 },
+            { nome: "Construções", ordem: 2, peso: 90 }
+          ]}},
+          { nome: "Instalações", nomeCidadao: "Instalações", ordem: 5, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Hidrossanitária", ordem: 1, peso: 40 },
+            { nome: "Elétrica", ordem: 2, peso: 40 },
+            { nome: "Lógica", ordem: 3, peso: 20 }
+          ]}},
+          { nome: "Pisos", nomeCidadao: "Pisos e Calçadas", ordem: 6, peso: 10, subEtapasTemplate: { create: [
+            { nome: "Contra piso", ordem: 1, peso: 30 },
+            { nome: "Revestimento", ordem: 2, peso: 50 },
+            { nome: "Passeio e calçadas", ordem: 3, peso: 20 }
+          ]}},
+          { nome: "Acabamentos", nomeCidadao: "Acabamentos", ordem: 7, peso: 15, subEtapasTemplate: { create: [
+            { nome: "Revestimento", ordem: 1, peso: 30 },
+            { nome: "Esquadrias", ordem: 2, peso: 30 },
+            { nome: "Pinturas", ordem: 3, peso: 40 }
+          ]}}
+        ]
+      }
+    }
+  });
+
+  
+const obraPontaDePedras = await prisma.obra.create({
     data: {
       titulo:
         "Pavimentação em Paralelepípedo e Drenagem no Centro de Ponta de Pedras",
@@ -707,15 +748,16 @@ async function main() {
     },
   });
 
-  console.log("🔗 Associando os Tipos de Obra e calculando progresso...");
+  
+console.log("🔗 Associando os Tipos de Obra e calculando progresso...");
 
   const associacoes = [
-    { obraId: obraPontaDePedras.id, tipo: tipoVias, progresso: 40 },
-    { obraId: obraCarneDeVaca.id, tipo: tipoVias, progresso: 25 },
+    { obraId: obraPontaDePedras.id, tipo: tipoPavimentacao, progresso: 40 },
+    { obraId: obraCarneDeVaca.id, tipo: tipoPavimentacao, progresso: 25 },
     { obraId: obraRestauroCentro.id, tipo: tipoReforma, progresso: 15 },
-    { obraId: obraTejucupapo.id, tipo: tipoVias, progresso: 60 },
-    { obraId: obraAsfaltoCentro.id, tipo: tipoVias, progresso: 100 },
-    { obraId: obraEscolaAngelo.id, tipo: tipoReforma, progresso: 35 },
+    { obraId: obraTejucupapo.id, tipo: tipoPavimentacao, progresso: 60 },
+    { obraId: obraAsfaltoCentro.id, tipo: tipoPavimentacao, progresso: 100 },
+    { obraId: obraEscolaAngelo.id, tipo: tipoReformaAmpliacao, progresso: 35 },
     { obraId: obraFeiraFlexeiras.id, tipo: tipoConstrucao, progresso: 100 },
   ];
 
@@ -728,6 +770,7 @@ async function main() {
     const templates = await prisma.etapaTemplate.findMany({
       where: { tipoObraId: assoc.tipo.id },
       orderBy: { ordem: "asc" },
+      include: { subEtapasTemplate: true },
     });
 
     for (let i = 0; i < templates.length; i++) {
@@ -755,19 +798,28 @@ async function main() {
           status: statusEtapa,
           dataInicio: limitProgresso > 0 ? new Date("2025-06-01") : null,
           dataConclusao: limitProgresso === 100 ? new Date("2025-08-01") : null,
+          subEtapasObra: {
+            create: template.subEtapasTemplate.map((sub) => ({
+              subEtapaTemplateId: sub.id,
+              percentualConcluido: limitProgresso,
+              status: statusEtapa,
+              dataInicio: limitProgresso > 0 ? new Date("2025-06-01") : null,
+              dataConclusao: limitProgresso === 100 ? new Date("2025-08-01") : null,
+            }))
+          }
         },
       });
     }
   }
 
-  console.log("✨ Todas as 7 obras foram inseridas com sucesso!");
 }
 
 main()
-  .catch((e: unknown) => {
-    console.error("❌ Erro durante o seed:", e);
+  .catch((e) => {
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
   });
+

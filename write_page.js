@@ -1,4 +1,8 @@
-import { Role } from "@prisma/client";
+﻿const fs = require('fs');
+
+const path = 'app/area-do-engenheiro/page.tsx';
+
+let code = import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getHomeByRole } from "@/lib/auth/role-routes";
@@ -12,7 +16,6 @@ import {
 import { calcularProgressoObra } from "@/lib/obras/calcular-progresso";
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export default async function AreaDoEngenheiro() {
   const session = await auth();
@@ -48,17 +51,17 @@ export default async function AreaDoEngenheiro() {
     }))
   );
 
-  const primeiroNome = session.user.name?.trim().split(/\s+/)[0];
+  const primeiroNome = session.user.name?.trim().split(/\\s+/)[0];
   const isEngenheiro = session.user.role === Role.ENGENHEIRO;
   const descricaoLista = isEngenheiro
-    ? `Você é responsável por ${obras.length} ${obras.length === 1 ? "obra" : "obras"}:`
-    : `${obras.length} ${obras.length === 1 ? "obra disponível" : "obras disponíveis"} para registro:`;
+    ? \Você é responsável por \ \:\
+    : \\ \ para registro:\;
 
   return (
     <EngenheiroShell titulo="Área do Engenheiro">
       <div className="space-y-0.5 md:space-y-1">
         <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">
-          Olá{primeiroNome ? `, ${primeiroNome}` : ""}! Veio fazer o registro do dia?
+          Olá{primeiroNome ? \, \\ : ""}! Veio fazer o registro do dia?
         </h2>
         <p className="text-xs md:text-sm text-slate-500">
           {obras.length > 0 ? descricaoLista : "Escolha uma obra para iniciar a vistoria."}
@@ -81,3 +84,6 @@ export default async function AreaDoEngenheiro() {
     </EngenheiroShell>
   );
 }
+;
+
+fs.writeFileSync(path, code, 'utf8');

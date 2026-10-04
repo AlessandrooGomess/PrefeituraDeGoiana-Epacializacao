@@ -139,7 +139,6 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    // Cria as etapas da obra
     if (typeof (prisma.etapaObra as unknown as { createMany?: unknown }).createMany === "function") {
       await prisma.etapaObra.createMany({
         data: templateIds.map((templateId) => ({
