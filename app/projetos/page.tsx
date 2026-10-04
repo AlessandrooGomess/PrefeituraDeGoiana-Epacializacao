@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { PortalFooter } from "@/components/portal/PortalFooter";
 import Sidebar from "@/components/sidebar/Sidebar";
 import type { ObraItem as ObraApiItem, StatusObra } from "@/types/obra";
 import {
@@ -722,7 +723,6 @@ export default function PaginaCarteiraProjetos() {
                   />
                 </div>
               </div>
-
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
@@ -743,22 +743,7 @@ export default function PaginaCarteiraProjetos() {
         </div>
       )}
 
-      <footer className="bg-(--cor-header-footer) text-slate-300 py-6 border-t border-(--cor-header-footer) mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-end text-[11px] font-medium space-y-3 sm:space-y-0 sm:space-x-8">
-          <a href="#privacidade" className="hover:text-white transition">
-            Privacidade
-          </a>
-          <a href="#transparencia" className="hover:text-white transition">
-            Transparência
-          </a>
-          <a href="#contato" className="hover:text-white transition">
-            Contato
-          </a>
-          <a href="#acessibilidade" className="hover:text-white transition">
-            Acessibilidade
-          </a>
-        </div>
-      </footer>
+      <PortalFooter />
     </div>
   );
 }
