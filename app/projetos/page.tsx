@@ -1,7 +1,9 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { PortalFooter } from "@/components/portal/PortalFooter";
 import Sidebar from "@/components/sidebar/Sidebar";
 import type { ObraItem as ObraApiItem, StatusObra } from "@/types/obra";
 import {
@@ -304,19 +306,51 @@ export default function PaginaCarteiraProjetos() {
         (item.eixoId && eixosSelecionados.includes(item.eixoId));
       const matchArea =
         !areasSelecionadas.length ||
-        (item.areaTematicaId && areasSelecionadas.includes(item.areaTematicaId));
+        (item.areaTematicaId &&
+          areasSelecionadas.includes(item.areaTematicaId));
 
       return matchTexto && matchStatus && matchEixo && matchArea;
     });
-  }, [projetos, termoBusca, statusFiltro, eixosSelecionados, areasSelecionadas]);
+  }, [
+    projetos,
+    termoBusca,
+    statusFiltro,
+    eixosSelecionados,
+    areasSelecionadas,
+  ]);
 
   const eixos = useMemo(
-    () => Array.from(new Map(projetos.filter((item) => item.eixoId).map((item) => [item.eixoId, { id: item.eixoId!, nome: item.eixoNome! }])).values()),
+    () =>
+      Array.from(
+        new Map(
+          projetos
+            .filter((item) => item.eixoId)
+            .map((item) => [
+              item.eixoId,
+              { id: item.eixoId!, nome: item.eixoNome! },
+            ]),
+        ).values(),
+      ),
     [projetos],
   );
 
   const areas = useMemo(
-    () => Array.from(new Map(projetos.filter((item) => item.areaTematicaId && (!eixosSelecionados.length || (item.eixoId && eixosSelecionados.includes(item.eixoId)))).map((item) => [item.areaTematicaId, { id: item.areaTematicaId!, nome: item.areaTematicaNome! }])).values()),
+    () =>
+      Array.from(
+        new Map(
+          projetos
+            .filter(
+              (item) =>
+                item.areaTematicaId &&
+                (!eixosSelecionados.length ||
+                  (item.eixoId && eixosSelecionados.includes(item.eixoId))),
+            )
+            .map((item) => [
+              item.areaTematicaId,
+              { id: item.areaTematicaId!, nome: item.areaTematicaNome! },
+            ]),
+        ).values(),
+      ),
     [projetos, eixosSelecionados],
   );
 
@@ -352,7 +386,8 @@ export default function PaginaCarteiraProjetos() {
                   if (e.key === "/" || e.key === "\\") e.preventDefault();
                   if (
                     (e.key === " " || e.key === "Spacebar") &&
-                    (e.currentTarget.selectionStart === 0 || !e.currentTarget.value)
+                    (e.currentTarget.selectionStart === 0 ||
+                      !e.currentTarget.value)
                   ) {
                     e.preventDefault();
                   }
@@ -387,7 +422,9 @@ export default function PaginaCarteiraProjetos() {
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Filtros</span>
-                {(statusFiltro !== "Todos" || eixosSelecionados.length > 0 || areasSelecionadas.length > 0) && (
+                {(statusFiltro !== "Todos" ||
+                  eixosSelecionados.length > 0 ||
+                  areasSelecionadas.length > 0) && (
                   <span className="w-2 h-2 rounded-full bg-blue-400 ml-1"></span>
                 )}
               </button>
@@ -428,22 +465,44 @@ export default function PaginaCarteiraProjetos() {
                     Eixo Estratégico
                   </div>
                   {eixos.map((eixo) => (
-                    <label key={eixo.id} className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
+                    <label
+                      key={eixo.id}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         checked={eixosSelecionados.includes(eixo.id)}
-                        onChange={() => setEixosSelecionados((current) => current.includes(eixo.id) ? current.filter((id) => id !== eixo.id) : [...current, eixo.id])}
+                        onChange={() =>
+                          setEixosSelecionados((current) =>
+                            current.includes(eixo.id)
+                              ? current.filter((id) => id !== eixo.id)
+                              : [...current, eixo.id],
+                          )
+                        }
                       />
                       {eixo.nome}
                     </label>
                   ))}
-                  {areas.length > 0 && <div className="px-3 pt-3 pb-1.5 font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Áreas Temáticas</div>}
+                  {areas.length > 0 && (
+                    <div className="px-3 pt-3 pb-1.5 font-semibold text-slate-400 uppercase tracking-wider text-[10px]">
+                      Áreas Temáticas
+                    </div>
+                  )}
                   {areas.map((area) => (
-                    <label key={area.id} className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
+                    <label
+                      key={area.id}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         checked={areasSelecionadas.includes(area.id)}
-                        onChange={() => setAreasSelecionadas((current) => current.includes(area.id) ? current.filter((id) => id !== area.id) : [...current, area.id])}
+                        onChange={() =>
+                          setAreasSelecionadas((current) =>
+                            current.includes(area.id)
+                              ? current.filter((id) => id !== area.id)
+                              : [...current, area.id],
+                          )
+                        }
                       />
                       {area.nome}
                     </label>
@@ -664,8 +723,7 @@ export default function PaginaCarteiraProjetos() {
                   />
                 </div>
               </div>
-
-              <div className="mt-6 flex justify-end">
+              <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setProjetoSelecionado(null)}
@@ -673,28 +731,19 @@ export default function PaginaCarteiraProjetos() {
                 >
                   Fechar
                 </button>
+                <Link
+                  href={`/projetos/${projetoSelecionado.id}`}
+                  className="px-4 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition flex items-center justify-center"
+                >
+                  Ver detalhes
+                </Link>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <footer className="bg-(--cor-header-footer) text-slate-300 py-6 border-t border-(--cor-header-footer) mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-end text-[11px] font-medium space-y-3 sm:space-y-0 sm:space-x-8">
-          <a href="#privacidade" className="hover:text-white transition">
-            Privacidade
-          </a>
-          <a href="#transparencia" className="hover:text-white transition">
-            Transparência
-          </a>
-          <a href="#contato" className="hover:text-white transition">
-            Contato
-          </a>
-          <a href="#acessibilidade" className="hover:text-white transition">
-            Acessibilidade
-          </a>
-        </div>
-      </footer>
+      <PortalFooter />
     </div>
   );
 }

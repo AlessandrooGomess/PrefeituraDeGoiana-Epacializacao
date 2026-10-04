@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/authorization";
 import { canManageObra } from "@/lib/auth/obra-access";
-import { Prisma, Role } from "@prisma/client";
+import { Role } from "@prisma/client";
 import { calcularProgressoObra } from "@/lib/obras/calcular-progresso";
 
 interface RouteContext {
