@@ -37,7 +37,6 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
   const [progressoGeral, setProgressoGeral] = useState<number>(0);
   const [etapasCarregadas, setEtapasCarregadas] = useState(false);
 
-  // Calcula se a obra pode ter o progresso editado
   const obraSelecionada = obras.find((o) => o.id === selectedObraId);
   const statusBloqueados = ["PLANEJADA", "ORDEM_EMITIDA"];
   const isBloqueada = obraSelecionada && obraSelecionada.status ? statusBloqueados.includes(obraSelecionada.status) : false;
@@ -158,7 +157,6 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
 
   return (
     <div className="space-y-3.5 md:space-y-5">
-      {/* Mensagem de Sucesso */}
       {mensagemSucesso && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-semibold text-emerald-800 shadow-xs">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -166,7 +164,6 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
         </div>
       )}
 
-      {/* Mensagem de Erro Geral */}
       {mensagemErro && (
         <div className="flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs font-semibold text-rose-800 shadow-xs">
           <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
@@ -174,7 +171,6 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
         </div>
       )}
 
-      {/* Card 1: Identificação da Obra */}
       <ObraInfoCard
         obras={obras}
         selectedObraId={selectedObraId}
@@ -183,28 +179,37 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
         subtituloFallback="Lote 03 - Fase de Estrutura"
       />
 
-            {/* Card 2: Evolução Física da Obra - Checklist real */}
       {etapasCarregadas && (
         <EvolucaoFisicaCard
           obraId={selectedObraId}
           etapas={etapas}
           progressoGeral={progressoGeral}
-          onEtapaAtualizada={(etapaId, concluida, novoProgresso) => {
+          somenteLeitura={isBloqueada}
+          mensagemBloqueio="A evolução física desta obra ainda não pode ser editada pois ela não está em andamento."
+          onSubEtapaAtualizada={(etapaId, subEtapaId, concluida, novoProgressoGeral, etapaAtualizada) => {
             setEtapas((prev) =>
-              prev.map((e) =>
-                e.id === etapaId
-                  ? { ...e, status: concluida ? "CONCLUIDA" : "PENDENTE", percentualConcluido: concluida ? 100 : 0 }
-                  : e
-              )
+              prev.map((e) => {
+                if (e.id === etapaId) {
+                  return {
+                    ...e,
+                    percentualConcluido: etapaAtualizada.percentualConcluido,
+                    status: etapaAtualizada.status,
+                    subEtapas: e.subEtapas.map((sub) => 
+                      sub.id === subEtapaId 
+                        ? { ...sub, status: concluida ? "CONCLUIDA" : "PENDENTE", percentualConcluido: concluida ? 100 : 0 }
+                        : sub
+                    )
+                  };
+                }
+                return e;
+              })
             );
-            setProgressoGeral(novoProgresso);
+            setProgressoGeral(novoProgressoGeral);
           }}
         />
       )}
 
-      {/* Cards 3 e 4: empilhados no mobile, lado a lado a partir do tablet */}
       <div className="grid gap-3.5 md:grid-cols-2 md:gap-5">
-        {/* Card 3: Registro Fotográfico com GPS */}
         <RegistroFotograficoCard
           fotos={fotos}
           onChangeFotos={(novas) => {
@@ -214,7 +219,6 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
           erro={fotoErro}
         />
 
-        {/* Card 4: Intercorrências e Observações Adicionais */}
         <IntercorrenciasCard
           selecionadas={intercorrencias}
           onToggle={handleToggleIntercorrencia}
@@ -227,7 +231,6 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
         />
       </div>
 
-      {/* Ações: Salvar Rascunho / Enviar Medição */}
       <RegistroCampoActions
         onSalvarRascunho={() => submitRegistro("RASCUNHO")}
         onEnviarMedicao={() => submitRegistro("ENVIADO")}

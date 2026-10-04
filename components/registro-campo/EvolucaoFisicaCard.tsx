@@ -2,6 +2,17 @@
 
 import { useState } from "react";
 
+export interface SubEtapaReal {
+  id: string;
+  status: string;
+  percentualConcluido: number;
+  template: {
+    nome: string;
+    peso: number;
+    ordem: number;
+  };
+}
+
 export interface EtapaReal {
   id: string;
   status: string;
@@ -12,13 +23,14 @@ export interface EtapaReal {
     peso: number;
     ordem: number;
   };
+  subEtapas: SubEtapaReal[];
 }
 
 interface EvolucaoFisicaCardProps {
   obraId: string;
   etapas: EtapaReal[];
   progressoGeral: number;
-  onEtapaAtualizada: (etapaId: string, concluida: boolean, novoProgresso: number) => void;
+  onSubEtapaAtualizada: (etapaId: string, subEtapaId: string, concluida: boolean, novoProgressoGeral: number, etapaAtualizada: any) => void;
   somenteLeitura?: boolean;
   mensagemBloqueio?: string;
 }
@@ -27,25 +39,25 @@ export function EvolucaoFisicaCard({
   obraId,
   etapas,
   progressoGeral,
-  onEtapaAtualizada,
+  onSubEtapaAtualizada,
   somenteLeitura = false,
   mensagemBloqueio,
 }: EvolucaoFisicaCardProps) {
   const [loading, setLoading] = useState<string | null>(null);
 
-  async function toggleEtapa(etapaId: string, marcarConcluida: boolean) {
-    setLoading(etapaId);
+  async function toggleSubEtapa(etapaId: string, subEtapaId: string, marcarConcluida: boolean) {
+    setLoading(subEtapaId);
     try {
-      const res = await fetch(`/api/obras/${obraId}/etapas/${etapaId}`, {
+      const res = await fetch(`/api/obras/${obraId}/subetapas/${subEtapaId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ concluida: marcarConcluida }),
       });
 
-      if (!res.ok) throw new Error("Erro ao atualizar etapa.");
+      if (!res.ok) throw new Error("Erro ao atualizar sub-etapa.");
 
       const data = await res.json();
-      onEtapaAtualizada(etapaId, marcarConcluida, data.progressoGeral);
+      onSubEtapaAtualizada(etapaId, subEtapaId, marcarConcluida, data.progressoGeral, data.etapa);
     } catch {
       alert("Erro ao atualizar a etapa. Verifique sua conexão.");
     } finally {
@@ -79,48 +91,57 @@ export function EvolucaoFisicaCard({
         />
       </div>
 
-      {/* Lista de etapas com checkbox */}
-      <div className="mt-4 divide-y divide-slate-100">
-        {etapas.map((etapa) => {
-          const concluida = etapa.status === "CONCLUIDA";
-          const isLoading = loading === etapa.id;
+      {mensagemBloqueio && somenteLeitura && (
+         <p className="mt-3 text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+           {mensagemBloqueio}
+         </p>
+      )}
 
-          return (
-            <label
-              key={etapa.id}
-              className={`flex items-center gap-3 py-3 ${somenteLeitura ? "cursor-not-allowed opacity-80" : "cursor-pointer"} ${
-                isLoading ? "opacity-50 pointer-events-none" : ""
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={concluida}
-                onChange={() => { if (!somenteLeitura) toggleEtapa(etapa.id, !concluida); }}
-                disabled={isLoading || somenteLeitura}
-                className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-              />
-              <div className="flex-1">
-                <span
-                  className={`text-sm font-medium ${
-                    concluida
-                      ? "text-slate-400 line-through"
-                      : "text-slate-800"
-                  }`}
-                >
-                  {etapa.template.nomeCidadao || etapa.template.nome}
-                </span>
-                <span className="ml-2 text-xs text-slate-400">
-                  (peso {etapa.template.peso})
-                </span>
-              </div>
-              {concluida && (
-                <span className="text-xs font-semibold text-emerald-600">
-                  Concluída
-                </span>
+      {/* Lista de etapas e sub-etapas */}
+      <div className="mt-5 space-y-4">
+        {etapas.map((etapa) => (
+          <div key={etapa.id} className="border border-slate-100 rounded-lg p-3 bg-slate-50">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-semibold text-slate-800 text-sm">
+                {etapa.template.nomeCidadao || etapa.template.nome}
+              </span>
+              <span className="text-xs font-bold text-slate-500">{Math.round(etapa.percentualConcluido)}%</span>
+            </div>
+            
+            <div className="divide-y divide-slate-100 bg-white rounded-md border border-slate-100">
+              {etapa.subEtapas && etapa.subEtapas.length > 0 ? (
+                etapa.subEtapas.map((sub) => {
+                  const concluida = sub.status === "CONCLUIDA";
+                  const isLoading = loading === sub.id;
+
+                  return (
+                    <label
+                      key={sub.id}
+                      className={`flex items-center gap-3 py-2 px-3 ${somenteLeitura ? "cursor-not-allowed opacity-80" : "cursor-pointer hover:bg-slate-50"} ${
+                        isLoading ? "opacity-50 pointer-events-none" : ""
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={concluida}
+                        onChange={() => { if (!somenteLeitura) toggleSubEtapa(etapa.id, sub.id, !concluida); }}
+                        disabled={isLoading || somenteLeitura}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div className="flex-1">
+                        <span className={`text-sm ${concluida ? "text-slate-400 line-through" : "text-slate-700"}`}>
+                          {sub.template.nome}
+                        </span>
+                      </div>
+                    </label>
+                  );
+                })
+              ) : (
+                <p className="p-2 text-xs text-slate-400 text-center">Nenhuma sub-etapa cadastrada.</p>
               )}
-            </label>
-          );
-        })}
+            </div>
+          </div>
+        ))}
       </div>
 
       {etapas.length === 0 && (

@@ -44,7 +44,6 @@ export async function PATCH(request: Request, context: RouteContext) {
     const body = await request.json();
     const { concluida } = z.object({ concluida: z.boolean() }).parse(body);
 
-    // 1. Atualiza a SubEtapa
     const subEtapaAtualizada = await prisma.subEtapaObra.update({
       where: { id: subEtapaId },
       data: {
@@ -55,7 +54,6 @@ export async function PATCH(request: Request, context: RouteContext) {
       include: { etapaObra: true }
     });
 
-    // 2. Recalcula a Etapa Pai com base nos pesos das sub-etapas
     const etapaId = subEtapaAtualizada.etapaObraId;
     const todasSubEtapas = await prisma.subEtapaObra.findMany({
       where: { etapaObraId: etapaId },
