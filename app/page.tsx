@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { PortalFooter } from "@/components/portal/PortalFooter";
 import styles from "./portal.module.css";
 import type { EixoComSecretarias, ObraItem, StatusObra } from "@/types/obra";
 import WorkCard from "@/components/map/WorkCard";
@@ -107,7 +108,6 @@ export default function Home() {
     [obras, eixoBySecretariaId, query, secretarias, statuses, selectedEixoIds, userLocation],
   );
 
-  // Referência estável evita que o mapa recrie todos os marcadores a cada render
   const visibleObraIds = useMemo(() => filtered.map((obra) => obra.id), [filtered]);
 
   const toggle = <T,>(value: T, values: T[], setter: (next: T[]) => void) =>
@@ -311,12 +311,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer>
-        <a href="#privacidade">Privacidade</a>
-        <a href="#transparencia">Transparência</a>
-        <a href="#contato">Contato</a>
-        <a href="#acessibilidade">Acessibilidade</a>
-      </footer>
+      <PortalFooter />
     </div>
   );
 }
