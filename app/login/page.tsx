@@ -164,7 +164,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   required
                   placeholder="••••••••"
-                  className="w-full bg-[#F3F3FA] border border-[#C2C6D3] text-[#6B7280] text-[16px] py-3 pl-11 pr-12 focus:outline-none focus:ring-1 focus:ring-[#1170D6] focus:border-[#1170D6] transition-colors font-sans"
+                  className="[&::-ms-reveal]:hidden w-full bg-[#F3F3FA] border border-[#C2C6D3] w-full bg-[#F3F3FA] border border-[#C2C6D3] text-[#6B7280] text-[16px] py-3 pl-11 pr-12 focus:outline-none focus:ring-1 focus:ring-[#1170D6] focus:border-[#1170D6] transition-colors font-sans"
                 />
                 <button
                   type="button"
