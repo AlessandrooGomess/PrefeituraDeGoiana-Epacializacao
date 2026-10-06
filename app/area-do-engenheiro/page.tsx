@@ -9,6 +9,10 @@ import {
   ObraResponsavelCard,
   type ObraResponsavel,
 } from "@/components/area-engenheiro/ObraResponsavelCard";
+import { calcularProgressoObra } from "@/lib/obras/calcular-progresso";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function AreaDoEngenheiro() {
   const session = await auth();
@@ -30,22 +34,19 @@ export default async function AreaDoEngenheiro() {
       titulo: true,
       bairro: true,
       status: true,
-      medicoes: {
-        take: 1,
-        orderBy: { dataVistoria: "desc" },
-        select: { percentualExecutado: true },
-      },
     },
     orderBy: { updatedAt: "desc" },
   });
 
-  const obras: ObraResponsavel[] = obrasDb.map((obra) => ({
-    id: obra.id,
-    titulo: obra.titulo,
-    bairro: obra.bairro,
-    status: obra.status,
-    percentualExecutado: obra.medicoes[0] ? Number(obra.medicoes[0].percentualExecutado) : null,
-  }));
+  const obras: ObraResponsavel[] = await Promise.all(
+    obrasDb.map(async (obra) => ({
+      id: obra.id,
+      titulo: obra.titulo,
+      bairro: obra.bairro,
+      status: obra.status,
+      percentualExecutado: await calcularProgressoObra(obra.id),
+    }))
+  );
 
   const primeiroNome = session.user.name?.trim().split(/\s+/)[0];
   const isEngenheiro = session.user.role === Role.ENGENHEIRO;

@@ -23,7 +23,7 @@ export function ObraResponsavelCard({ obra }: ObraResponsavelCardProps) {
   return (
     <Link
       href={`/area-do-engenheiro/registro-campo?obra=${encodeURIComponent(obra.id)}`}
-      className="group flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs transition-colors hover:border-blue-300 hover:bg-blue-50/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+      className="group flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs transition-colors hover:border-(--cor-header-footer)/40 hover:bg-(--cor-header-footer)/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--cor-header-footer)"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
@@ -46,7 +46,7 @@ export function ObraResponsavelCard({ obra }: ObraResponsavelCardProps) {
       <div className="space-y-1.5">
         <div className="flex justify-between text-xs font-medium">
           <span className="text-slate-600">Execução física</span>
-          <span className="font-semibold text-blue-600">{progresso}%</span>
+          <span className="font-semibold text-(--cor-header-footer)">{progresso}%</span>
         </div>
         <div
           className="h-2 w-full overflow-hidden rounded-full bg-slate-100"
@@ -56,11 +56,11 @@ export function ObraResponsavelCard({ obra }: ObraResponsavelCardProps) {
           aria-valuemin={0}
           aria-valuemax={100}
         >
-          <div className="h-full rounded-full bg-blue-600" style={{ width: `${progresso}%` }} />
+          <div className="h-full rounded-full bg-(--cor-header-footer)" style={{ width: `${progresso}%` }} />
         </div>
       </div>
 
-      <span className="flex items-center justify-end gap-1 text-xs font-bold text-blue-600">
+      <span className="flex items-center justify-end gap-1 text-xs font-bold text-(--cor-header-footer)">
         Fazer registro
         <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
       </span>
