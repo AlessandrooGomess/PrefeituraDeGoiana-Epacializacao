@@ -1,5 +1,6 @@
-﻿.portal-shell {
-  height: 100dvh;
+.portal-shell {
+  min-height: 100vh;
+  flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -138,6 +139,7 @@
   min-height: 0;
   display: grid;
   grid-template-columns: 268px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .filter-panel {
