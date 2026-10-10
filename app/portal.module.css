@@ -181,7 +181,7 @@
   gap: 8px;
   padding: 10px 14px;
   border: 1px solid var(--cor-principal);
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--cor-principal);
   color: #fff;
   cursor: pointer;
@@ -203,7 +203,7 @@
   width: 100%;
   padding: 10px 14px;
   border: 1px solid var(--cor-principal);
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--cor-principal);
   color: #fff;
   cursor: pointer;
