@@ -298,21 +298,18 @@ export default function MapContainer({
       />
 
       {/* Card Flutuante de Informações de Status no Canto Superior Esquerdo */}
-      <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-xs px-3.5 py-2 rounded-lg shadow-md border border-slate-200 flex items-center gap-2.5">
-        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-        <div className="text-xs font-medium text-slate-700">
-          {loading ? (
-            <span>Buscando obras...</span>
-          ) : error ? (
-            <span className="text-rose-600 font-semibold">Falha ao obter obras</span>
-          ) : (
-            <span>
-              <strong className="text-slate-900 font-bold">{obrasValidasCount}</strong>{" "}
-              obras georreferenciadas
-            </span>
-          )}
+      {(loading || error) && (
+        <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-xs px-3.5 py-2 rounded-lg shadow-md border border-slate-200 flex items-center gap-2.5">
+          {loading && <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />}
+          <div className="text-xs font-medium text-slate-700">
+            {loading ? (
+              <span>Buscando obras...</span>
+            ) : (
+              <span className="text-rose-600 font-semibold">Falha ao obter obras</span>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Alerta de Erro caso a API falhe */}
       {error && (
