@@ -13,7 +13,6 @@ export default async function AreaDoServidor() {
   const session = await auth();
 
   const allowedRoles: Role[] = [
-    Role.SUPER_ADMIN,
     Role.GESTAO,
     Role.ADM_SECRETARIA,
   ];

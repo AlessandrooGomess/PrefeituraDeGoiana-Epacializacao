@@ -23,7 +23,7 @@ export default async function ObraPublicaPage({ params }: { params: Promise<{ id
   const faseAtual = marcos.find((marco) => marco.estado === "atual")?.titulo ?? null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fbfcfd] pt-14.5 text-[#0f172a] font-sans antialiased">
+    <div className="min-h-screen flex flex-col bg-[#fbfcfd] text-[#0f172a] font-sans antialiased">
       <Sidebar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">

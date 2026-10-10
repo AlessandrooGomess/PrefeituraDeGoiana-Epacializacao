@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Sidebar from "@/components/sidebar/Sidebar";
 import { PortalFooter } from "@/components/portal/PortalFooter";
 import styles from "./portal.module.css";
 import type { EixoComSecretarias, ObraItem, StatusObra } from "@/types/obra";
@@ -138,28 +139,8 @@ export default function Home() {
 
   return (
     <div className={styles["portal-shell"]}>
-      <header className={styles["portal-header"]}>
-        <div className={styles["portal-logo-slot"]} aria-label="Espaço reservado para a logo da Prefeitura de Goiana" />
-        <div className={styles["portal-brand"]}>PORTAL DE INFRAESTRUTURA</div>
-
-        <button
-          className={styles["menu-toggle"]}
-          type="button"
-          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
-          aria-expanded={menuOpen}
-          aria-controls="main-navigation"
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          <Image src="/icons/menu.svg" alt="" width={22} height={19} />
-        </button>
-
-        <nav id="main-navigation" className={menuOpen ? styles["is-open"] : ""}>
-          <a className={styles.active} href="#mapa" onClick={closeMenu}>Mapa</a>
-          <Link href="/projetos" onClick={closeMenu}>Projetos</Link>
-          <Link href="/area-do-servidor" onClick={closeMenu}>Área do Servidor</Link>
-        </nav>
-
-        <div className={styles["portal-tools"]}>
+      <Sidebar
+        toolsNode={
           <label className={styles.search}>
             <Image src="/icons/lupa.svg" alt="" width={16} height={16} />
             <input
@@ -193,8 +174,8 @@ export default function Home() {
               </button>
             )}
           </label>
-        </div>
-      </header>
+        }
+      />
 
       <main id="mapa" className={styles["portal-content"]}>
         <aside

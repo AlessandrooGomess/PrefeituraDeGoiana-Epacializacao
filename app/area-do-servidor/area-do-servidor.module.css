@@ -1,6 +1,5 @@
 .shell {
   min-height: 100vh;
-  padding-top: 58px;
   overflow-x: hidden;
   background: #f8fafc;
   color: #334155;
@@ -261,6 +260,7 @@
 .secretariaLink span { color: #64748b; font-size: 12px; }
 
 .workRow { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; border-top: 1px solid #f1f5f9; transition: background 0.2s ease; }
+.workRow:first-child { border-top: none; }
 .workRow:hover { background: #f8fafc; margin: 0 -12px; padding: 18px 12px; border-radius: 8px; border-top-color: transparent; }
 .workRowLink { display: grid; flex: 1; min-width: 0; gap: 6px; color: inherit; text-decoration: none; }
 .workRowLink:hover strong { color: var(--cor-principal); }
@@ -355,7 +355,7 @@
 }
 
 @media (max-width: 680px) {
-  .shell { padding-top: 64px; }
+  .shell { }
   .header { min-height: 64px; gap: 12px; }
   .logoMark { width: 56px; height: 38px; font-size: 14px; }
   .brand { font-size: 15px; }
