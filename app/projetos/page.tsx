@@ -727,13 +727,13 @@ export default function PaginaCarteiraProjetos() {
                 <button
                   type="button"
                   onClick={() => setProjetoSelecionado(null)}
-                  className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-md transition"
+                  className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                 >
                   Fechar
                 </button>
                 <Link
                   href={`/projetos/${projetoSelecionado.id}`}
-                  className="px-4 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition flex items-center justify-center"
+                  className="px-4 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md flex items-center justify-center"
                 >
                   Ver detalhes
                 </Link>
