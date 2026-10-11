@@ -266,11 +266,6 @@ export default function MapContainer({
       () => onGeolocationError?.("Não foi possível acessar sua localização.")
     );
   }, [mapLoaded, nearMeRequest, onGeolocationError, onGeolocationSuccess]);
-
-  const obrasValidasCount = obras.filter((o) =>
-    isValidCoordinate(o.latitude, o.longitude)
-  ).length;
-
   return (
     <div
       className={`relative w-full h-full flex-1 ${className}`}
