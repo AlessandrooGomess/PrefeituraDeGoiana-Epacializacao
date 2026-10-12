@@ -3,7 +3,14 @@ import styles from "@/app/area-do-servidor/area-do-servidor.module.css";
 import { updateSecretaria, deleteSecretaria } from "../../actions";
 import { useRouter } from "next/navigation";
 
-export default function SecretariaEditForm({ secretaria }: { secretaria: any }) {
+interface SecretariaData {
+  id: string;
+  nome: string;
+  sigla: string;
+  corIdentificacao: string | null;
+}
+
+export default function SecretariaEditForm({ secretaria }: { secretaria: SecretariaData }) {
   const router = useRouter();
 
   return (
