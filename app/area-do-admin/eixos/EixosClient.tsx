@@ -5,7 +5,20 @@ import { createEixo } from "../actions";
 import Link from "next/link";
 import { FolderPlus, ChevronRight } from "lucide-react";
 
-export default function EixosClient({ eixos }: { eixos: any[] }) {
+interface EixoItem {
+  id: string;
+  nome: string;
+  slug: string;
+  descricao: string | null;
+  cor: string | null;
+  areas: Array<{ nome: string }>;
+  _count: {
+    obras: number;
+    secretarias: number;
+  };
+}
+
+export default function EixosClient({ eixos }: { eixos: EixoItem[] }) {
   const [isModalOpen, setModalOpen] = useState(false);
 
   return (
@@ -51,7 +64,7 @@ export default function EixosClient({ eixos }: { eixos: any[] }) {
                   </strong>
                   <span>{eixo.descricao || `Slug: ${eixo.slug}`}</span>
                   {eixo.areas.length > 0 && (
-                    <span style={{ marginTop: 4 }}>Áreas: {eixo.areas.map((a: any) => a.nome).join(", ")}</span>
+                    <span style={{ marginTop: 4 }}>Áreas: {eixo.areas.map((a) => a.nome).join(", ")}</span>
                   )}
                 </div>
                 <div style={{ textAlign: "right", display: "flex", gap: 12 }}>
