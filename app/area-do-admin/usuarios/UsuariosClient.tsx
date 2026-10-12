@@ -3,9 +3,34 @@ import { useState } from "react";
 import styles from "@/app/area-do-servidor/area-do-servidor.module.css";
 import { createUsuario } from "../actions";
 import Link from "next/link";
-import { UserPlus, Users, ChevronRight } from "lucide-react";
+import { UserPlus, ChevronRight } from "lucide-react";
+import { Role } from "@prisma/client";
 
-export default function UsuariosClient({ usuarios, secretarias }: { usuarios: any[], secretarias: any[] }) {
+interface UsuarioItem {
+  id: string;
+  nome: string;
+  email: string;
+  role: Role;
+  ativo: boolean;
+  secretaria?: {
+    sigla: string;
+    nome: string;
+  } | null;
+}
+
+interface SecretariaResumo {
+  id: string;
+  sigla: string;
+  nome: string;
+}
+
+export default function UsuariosClient({
+  usuarios,
+  secretarias,
+}: {
+  usuarios: UsuarioItem[];
+  secretarias: SecretariaResumo[];
+}) {
   const [isModalOpen, setModalOpen] = useState(false);
 
   return (
