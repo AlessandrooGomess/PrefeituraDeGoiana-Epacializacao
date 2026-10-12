@@ -1,21 +1,62 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { ObraInfoCard, ObraItemResumo } from "./ObraInfoCard";
 import { EvolucaoFisicaCard, EtapaReal } from "./EvolucaoFisicaCard";
 import { RegistroFotograficoCard, FotoItem } from "./RegistroFotograficoCard";
 import { IntercorrenciasCard } from "./IntercorrenciasCard";
 import { RegistroCampoActions } from "./RegistroCampoActions";
+import {
+  calcularMediaPonderada,
+  statusPorPercentual,
+} from "@/lib/obras/progresso";
+
+function aplicarSubEtapa(
+  etapas: EtapaReal[],
+  etapaId: string,
+  subEtapaId: string,
+  concluida: boolean,
+): EtapaReal[] {
+  return etapas.map((etapa) => {
+    if (etapa.id !== etapaId) return etapa;
+
+    const subEtapas = etapa.subEtapas.map((sub) =>
+      sub.id === subEtapaId
+        ? {
+            ...sub,
+            status: concluida ? "CONCLUIDA" : "PENDENTE",
+            percentualConcluido: concluida ? 100 : 0,
+          }
+        : sub,
+    );
+    const percentualConcluido = calcularMediaPonderada(
+      subEtapas.map((sub) => ({
+        percentual: sub.percentualConcluido,
+        peso: sub.template.peso,
+      })),
+    );
+
+    return {
+      ...etapa,
+      subEtapas,
+      percentualConcluido,
+      status: statusPorPercentual(percentualConcluido),
+    };
+  });
+}
 
 interface RegistroCampoFormProps {
   obras: ObraItemResumo[];
   obraInicialId?: string;
 }
 
-export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormProps) {
+export function RegistroCampoForm({
+  obras,
+  obraInicialId,
+}: RegistroCampoFormProps) {
   const [selectedObraId, setSelectedObraId] = useState<string>(
-    obraInicialId ?? obras[0]?.id ?? ""
+    obraInicialId ?? obras[0]?.id ?? "",
   );
   const [fotos, setFotos] = useState<FotoItem[]>([
     {
@@ -34,16 +75,26 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
   const [observacoesErro, setObservacoesErro] = useState<string | null>(null);
 
   const [etapas, setEtapas] = useState<EtapaReal[]>([]);
-  const [progressoGeral, setProgressoGeral] = useState<number>(0);
   const [etapasCarregadas, setEtapasCarregadas] = useState(false);
+  const progressoGeral = calcularMediaPonderada(
+    etapas.map((e) => ({
+      percentual: e.percentualConcluido,
+      peso: e.template.peso,
+    })),
+  );
+  const filaRef = useRef<Promise<void>>(Promise.resolve());
 
   const obraSelecionada = obras.find((o) => o.id === selectedObraId);
   const statusBloqueados = ["PLANEJADA", "ORDEM_EMITIDA"];
-  const isBloqueada = obraSelecionada && obraSelecionada.status ? statusBloqueados.includes(obraSelecionada.status) : false;
-
+  const isBloqueada =
+    obraSelecionada && obraSelecionada.status
+      ? statusBloqueados.includes(obraSelecionada.status)
+      : false;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittingType, setSubmittingType] = useState<"rascunho" | "envio" | null>(null);
+  const [submittingType, setSubmittingType] = useState<
+    "rascunho" | "envio" | null
+  >(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
   const [mensagemErro, setMensagemErro] = useState<string | null>(null);
 
@@ -56,21 +107,58 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
       .then((res) => res.json())
       .then((data) => {
         setEtapas(data.etapas ?? []);
-        setProgressoGeral(data.progressoGeral ?? 0);
         setEtapasCarregadas(true);
       })
       .catch(() => {
         setEtapas([]);
-        setProgressoGeral(0);
         setEtapasCarregadas(true);
       });
   }, [selectedObraId]);
 
   const handleToggleIntercorrencia = (id: string) => {
     setIntercorrencias((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
     if (observacoesErro) setObservacoesErro(null);
+  };
+
+  const handleToggleSubEtapa = (
+    etapaId: string,
+    subEtapaId: string,
+    concluida: boolean,
+  ) => {
+    // 1. Atualiza a tela imediatamente
+    setEtapas((prev) => aplicarSubEtapa(prev, etapaId, subEtapaId, concluida));
+    setMensagemErro(null);
+
+    // 2. Envia ao servidor em fila (um por vez) para evitar corrida no cálculo da etapa
+    const obraId = selectedObraId;
+    filaRef.current = filaRef.current.then(async () => {
+      try {
+        const res = await fetch(
+          `/api/obras/${obraId}/subetapas/${subEtapaId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ concluida }),
+          },
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.message);
+        }
+      } catch (err) {
+        // 3. Desfaz a marcação se o servidor recusar
+        setEtapas((prev) =>
+          aplicarSubEtapa(prev, etapaId, subEtapaId, !concluida),
+        );
+        setMensagemErro(
+          err instanceof Error && err.message
+            ? err.message
+            : "Não foi possível salvar a etapa. Verifique sua conexão.",
+        );
+      }
+    });
   };
 
   const submitRegistro = async (status: "RASCUNHO" | "ENVIADO") => {
@@ -80,25 +168,33 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
     setObservacoesErro(null);
 
     if (status === "ENVIADO" && fotos.length === 0) {
-      setFotoErro("Pelo menos uma foto com registro fotográfico é obrigatória para enviar a medição.");
+      setFotoErro(
+        "Pelo menos uma foto com registro fotográfico é obrigatória para enviar a medição.",
+      );
       return;
     }
 
     const obsTrim = observacoes.trim();
 
-    if (/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi.test(observacoes)) {
-      setObservacoesErro("Código de script malicioso não é permitido nas observações.");
+    if (
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi.test(observacoes)
+    ) {
+      setObservacoesErro(
+        "Código de script malicioso não é permitido nas observações.",
+      );
       return;
     }
 
     if (observacoes.length > 5000) {
-      setObservacoesErro("As observações adicionais não podem ultrapassar 5.000 caracteres.");
+      setObservacoesErro(
+        "As observações adicionais não podem ultrapassar 5.000 caracteres.",
+      );
       return;
     }
 
     if (intercorrencias.includes("OUTROS") && obsTrim.length < 10) {
       setObservacoesErro(
-        "Ao selecionar 'Outros', detalhe o motivo nas observações adicionais (mínimo de 10 caracteres)."
+        "Ao selecionar 'Outros', detalhe o motivo nas observações adicionais (mínimo de 10 caracteres).",
       );
       return;
     }
@@ -111,7 +207,9 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
       intercorrencias,
       observacoes: obsTrim || null,
       fotos: fotos.map((f) => ({
-        url: f.url.startsWith("blob:") ? "/fotos/obra-escola-angelo.jpg" : f.url,
+        url: f.url.startsWith("blob:")
+          ? "/fotos/obra-escola-angelo.jpg"
+          : f.url,
         descricao: f.descricao ?? null,
         latitude: f.latitude ?? null,
         longitude: f.longitude ?? null,
@@ -139,7 +237,7 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
       setMensagemSucesso(
         status === "RASCUNHO"
           ? "Rascunho da vistoria salvo com sucesso!"
-          : "Medição de campo enviada com sucesso!"
+          : "Medição de campo enviada com sucesso!",
       );
 
       if (status === "ENVIADO") {
@@ -147,7 +245,10 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
         setObservacoes("");
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro desconhecido ao salvar vistoria.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Erro desconhecido ao salvar vistoria.";
       setMensagemErro(msg);
     } finally {
       setIsSubmitting(false);
@@ -181,31 +282,11 @@ export function RegistroCampoForm({ obras, obraInicialId }: RegistroCampoFormPro
 
       {etapasCarregadas && (
         <EvolucaoFisicaCard
-          obraId={selectedObraId}
           etapas={etapas}
           progressoGeral={progressoGeral}
           somenteLeitura={isBloqueada}
           mensagemBloqueio="A evolução física desta obra ainda não pode ser editada pois ela não está em andamento."
-          onSubEtapaAtualizada={(etapaId, subEtapaId, concluida, novoProgressoGeral, etapaAtualizada) => {
-            setEtapas((prev) =>
-              prev.map((e) => {
-                if (e.id === etapaId) {
-                  return {
-                    ...e,
-                    percentualConcluido: etapaAtualizada.percentualConcluido,
-                    status: etapaAtualizada.status,
-                    subEtapas: e.subEtapas.map((sub) => 
-                      sub.id === subEtapaId 
-                        ? { ...sub, status: concluida ? "CONCLUIDA" : "PENDENTE", percentualConcluido: concluida ? 100 : 0 }
-                        : sub
-                    )
-                  };
-                }
-                return e;
-              })
-            );
-            setProgressoGeral(novoProgressoGeral);
-          }}
+          onToggleSubEtapa={handleToggleSubEtapa}
         />
       )}
 
