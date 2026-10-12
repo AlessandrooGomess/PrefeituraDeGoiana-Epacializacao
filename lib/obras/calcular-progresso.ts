@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { calcularMediaPonderada } from "@/lib/obras/progresso";
 
 export async function calcularProgressoObra(obraId: string): Promise<number> {
   const etapas = await prisma.etapaObra.findMany({
@@ -11,19 +12,10 @@ export async function calcularProgressoObra(obraId: string): Promise<number> {
     },
   });
 
-  if (etapas.length === 0) return 0;
-
-  let somaPonderada = 0;
-  let somaPesos = 0;
-
-  for (const etapa of etapas) {
-    const peso = etapa.etapaTemplate.peso;
-    const percentual = Number(etapa.percentualConcluido);
-    somaPonderada += percentual * peso;
-    somaPesos += peso;
-  }
-
-  if (somaPesos === 0) return 0;
-
-  return Math.round((somaPonderada / somaPesos) * 100) / 100;
+  return calcularMediaPonderada(
+    etapas.map((etapa) => ({
+      percentual: Number(etapa.percentualConcluido),
+      peso: etapa.etapaTemplate.peso,
+    })),
+  );
 }
