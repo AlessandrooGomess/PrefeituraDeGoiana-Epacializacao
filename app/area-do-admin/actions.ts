@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { Role } from "@prisma/client";
 
 export async function createSecretaria(data: FormData) {
   const nome = data.get("nome") as string;
@@ -45,7 +46,7 @@ export async function updateSecretaria(id: string, data: FormData) {
 export async function createUsuario(data: FormData) {
   const nome = data.get("nome") as string;
   const email = data.get("email") as string;
-  const role = data.get("role") as any;
+  const role = data.get("role") as Role;
   const secretariaId = data.get("secretariaId") as string;
   const password = data.get("password") as string;
 
@@ -76,7 +77,7 @@ export async function toggleUsuarioStatus(id: string, currentStatus: boolean) {
 export async function updateUsuario(id: string, data: FormData) {
   const nome = data.get("nome") as string;
   const email = data.get("email") as string;
-  const role = data.get("role") as any;
+  const role = data.get("role") as Role;
   const secretariaId = data.get("secretariaId") as string;
   
   await prisma.usuario.update({

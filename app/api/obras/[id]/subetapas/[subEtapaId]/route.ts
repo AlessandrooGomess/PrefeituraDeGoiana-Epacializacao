@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/authorization";
 import { canManageObra } from "@/lib/auth/obra-access";
-import { Role } from "@prisma/client";
-import { calcularProgressoObra } from "@/lib/obras/calcular-progresso";
+import { calcularMediaPonderada, statusPorPercentual } from "@/lib/obras/progresso";
 
 interface RouteContext {
   params: Promise<{ id: string; subEtapaId: string }>;
 }
+
+const bodySchema = z.object({ concluida: z.boolean() });
 
 export async function PATCH(request: Request, context: RouteContext) {
   const { id, subEtapaId } = await context.params;
@@ -17,14 +19,42 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ message: "Identificador inválido." }, { status: 400 });
   }
 
-  const auth = await requireUser([Role.SUPER_ADMIN, Role.ENGENHEIRO]);
-  if (auth.response) return auth.response;
+  const body = bodySchema.safeParse(await request.json().catch(() => null));
+  if (!body.success) {
+    return NextResponse.json({ message: "Dados inválidos." }, { status: 400 });
+  }
+  const { concluida } = body.data;
 
   try {
-    const obra = await prisma.obra.findUnique({
-      where: { id },
-      select: { secretariaId: true, engenheiroId: true, deletedAt: true, status: true },
-    });
+    // Sessão e dados da obra em paralelo: 1 ida ao banco em vez de várias em sequência
+    const [auth, obra] = await Promise.all([
+      requireUser([Role.SUPER_ADMIN, Role.ENGENHEIRO]),
+      prisma.obra.findUnique({
+        where: { id },
+        select: {
+          secretariaId: true,
+          engenheiroId: true,
+          deletedAt: true,
+          status: true,
+          etapasObra: {
+            select: {
+              id: true,
+              percentualConcluido: true,
+              etapaTemplate: { select: { peso: true } },
+              subEtapasObra: {
+                select: {
+                  id: true,
+                  percentualConcluido: true,
+                  subEtapaTemplate: { select: { peso: true } },
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    if (auth.response) return auth.response;
 
     if (!obra || obra.deletedAt) {
       return NextResponse.json({ message: "Obra não encontrada." }, { status: 404 });
@@ -41,53 +71,57 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
 
-    const body = await request.json();
-    const { concluida } = z.object({ concluida: z.boolean() }).parse(body);
-
-    const subEtapaAtualizada = await prisma.subEtapaObra.update({
-      where: { id: subEtapaId },
-      data: {
-        status: concluida ? "CONCLUIDA" : "PENDENTE",
-        percentualConcluido: concluida ? 100 : 0,
-        dataConclusao: concluida ? new Date() : null,
-      },
-      include: { etapaObra: true }
-    });
-
-    const etapaId = subEtapaAtualizada.etapaObraId;
-    const todasSubEtapas = await prisma.subEtapaObra.findMany({
-      where: { etapaObraId: etapaId },
-      include: { subEtapaTemplate: { select: { peso: true } } }
-    });
-
-    let somaPonderada = 0;
-    let somaPesos = 0;
-    for (const sub of todasSubEtapas) {
-      somaPesos += sub.subEtapaTemplate.peso;
-      somaPonderada += Number(sub.percentualConcluido) * sub.subEtapaTemplate.peso;
+    // Garante que a sub-etapa pertence a ESTA obra
+    const etapa = obra.etapasObra.find((e) => e.subEtapasObra.some((s) => s.id === subEtapaId));
+    if (!etapa) {
+      return NextResponse.json({ message: "Sub-etapa não encontrada nesta obra." }, { status: 404 });
     }
 
-    const novoPercentualEtapa = somaPesos === 0 ? 0 : Math.round((somaPonderada / somaPesos) * 100) / 100;
-    const etapaConcluida = novoPercentualEtapa === 100;
+    const novoPercentualSub = concluida ? 100 : 0;
+    const novoStatusSub = concluida ? "CONCLUIDA" : "PENDENTE";
 
-    const etapaAtualizada = await prisma.etapaObra.update({
-      where: { id: etapaId },
-      data: {
-        percentualConcluido: novoPercentualEtapa,
-        status: etapaConcluida ? "CONCLUIDA" : (novoPercentualEtapa > 0 ? "EM_ANDAMENTO" : "PENDENTE"),
-        dataConclusao: etapaConcluida ? new Date() : null,
-      }
-    });
+    const novoPercentualEtapa = calcularMediaPonderada(
+      etapa.subEtapasObra.map((sub) => ({
+        percentual: sub.id === subEtapaId ? novoPercentualSub : Number(sub.percentualConcluido),
+        peso: sub.subEtapaTemplate.peso,
+      })),
+    );
+    const novoStatusEtapa = statusPorPercentual(novoPercentualEtapa);
 
-    // 3. Recalcula Progresso Geral da Obra
-    const progressoGeral = await calcularProgressoObra(id);
+    const progressoGeral = calcularMediaPonderada(
+      obra.etapasObra.map((e) => ({
+        percentual: e.id === etapa.id ? novoPercentualEtapa : Number(e.percentualConcluido),
+        peso: e.etapaTemplate.peso,
+      })),
+    );
+
+    const agora = new Date();
+    await prisma.$transaction([
+      prisma.subEtapaObra.update({
+        where: { id: subEtapaId },
+        data: {
+          status: novoStatusSub,
+          percentualConcluido: novoPercentualSub,
+          dataConclusao: concluida ? agora : null,
+        },
+        select: { id: true },
+      }),
+      prisma.etapaObra.update({
+        where: { id: etapa.id },
+        data: {
+          percentualConcluido: novoPercentualEtapa,
+          status: novoStatusEtapa,
+          dataConclusao: novoStatusEtapa === "CONCLUIDA" ? agora : null,
+        },
+        select: { id: true },
+      }),
+    ]);
 
     return NextResponse.json({
-      subEtapa: { ...subEtapaAtualizada, percentualConcluido: Number(subEtapaAtualizada.percentualConcluido) },
-      etapa: { ...etapaAtualizada, percentualConcluido: Number(etapaAtualizada.percentualConcluido) },
-      progressoGeral
+      subEtapa: { id: subEtapaId, status: novoStatusSub, percentualConcluido: novoPercentualSub },
+      etapa: { id: etapa.id, status: novoStatusEtapa, percentualConcluido: novoPercentualEtapa },
+      progressoGeral,
     });
-
   } catch (error) {
     console.error("Erro ao atualizar sub-etapa:", error);
     return NextResponse.json({ message: "Erro interno ao atualizar sub-etapa." }, { status: 500 });

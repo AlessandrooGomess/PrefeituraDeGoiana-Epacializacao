@@ -160,15 +160,8 @@ export default async function AreaDoServidor() {
                       >
                         <Pencil size={15} aria-hidden="true" />
                       </Link>
-                    </div>
-                    
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span className={styles.statusTag}>
-                        {statusLabel[obra.status]}
-                      </span>
                       <DeleteObraButton obraId={obra.id} titulo={obra.titulo} />
                     </div>
-
                   </article>
                 ))}
               </div>

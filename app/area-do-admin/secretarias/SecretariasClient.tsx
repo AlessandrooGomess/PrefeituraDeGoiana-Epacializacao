@@ -5,7 +5,18 @@ import { createSecretaria } from "../actions";
 import Link from "next/link";
 import { Building2, Plus, ChevronRight } from "lucide-react";
 
-export default function SecretariasClient({ secretarias }: { secretarias: any[] }) {
+interface SecretariaItem {
+  id: string;
+  nome: string;
+  sigla: string;
+  corIdentificacao: string | null;
+  _count?: {
+    obras: number;
+    usuarios: number;
+  };
+}
+
+export default function SecretariasClient({ secretarias }: { secretarias: SecretariaItem[] }) {
   const [isModalOpen, setModalOpen] = useState(false);
 
   return (

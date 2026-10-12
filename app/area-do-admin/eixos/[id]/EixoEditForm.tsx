@@ -3,7 +3,15 @@ import styles from "@/app/area-do-servidor/area-do-servidor.module.css";
 import { updateEixo, deleteEixo } from "../../actions";
 import { useRouter } from "next/navigation";
 
-export default function EixoEditForm({ eixo }: { eixo: any }) {
+interface EixoData {
+  id: string;
+  nome: string;
+  slug: string;
+  descricao: string | null;
+  cor: string | null;
+}
+
+export default function EixoEditForm({ eixo }: { eixo: EixoData }) {
   const router = useRouter();
 
   return (

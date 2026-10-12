@@ -2,8 +2,30 @@
 import styles from "@/app/area-do-servidor/area-do-servidor.module.css";
 import { updateUsuario, deleteUsuario, toggleUsuarioStatus } from "../../actions";
 import { useRouter } from "next/navigation";
+import { Role } from "@prisma/client";
 
-export default function UsuarioEditForm({ usuario, secretarias }: { usuario: any, secretarias: any[] }) {
+interface UsuarioData {
+  id: string;
+  nome: string;
+  email: string;
+  role: Role;
+  secretariaId: string | null;
+  ativo: boolean;
+}
+
+interface SecretariaOption {
+  id: string;
+  sigla: string;
+  nome: string;
+}
+
+export default function UsuarioEditForm({
+  usuario,
+  secretarias,
+}: {
+  usuario: UsuarioData;
+  secretarias: SecretariaOption[];
+}) {
   const router = useRouter();
 
   return (
