@@ -26,6 +26,7 @@ export default async function AreaDoServidor() {
   }
 
   const isSecretaria = session.user.role === Role.ADM_SECRETARIA;
+  const isGestao = session.user.role === Role.GESTAO;
   const secretariaId = session.user.secretariaId;
 
   if (isSecretaria && !secretariaId) {
@@ -37,24 +38,6 @@ export default async function AreaDoServidor() {
     ...(isSecretaria && secretariaId ? { secretariaId } : {}),
   };
 
-  const [obras, totalObras, emAndamento, concluidas] = await Promise.all([
-    prisma.obra.findMany({
-      where,
-      orderBy: { updatedAt: "desc" },
-      take: 8,
-      select: {
-        id: true,
-        titulo: true,
-        status: true,
-        updatedAt: true,
-        secretaria: { select: { nome: true } },
-      },
-    }),
-    prisma.obra.count({ where }),
-    prisma.obra.count({ where: { ...where, status: "EM_ANDAMENTO" } }),
-    prisma.obra.count({ where: { ...where, status: "CONCLUIDA" } }),
-  ]);
-
   const statusLabel = {
     PLANEJADA: "Em planejamento",
     ORDEM_EMITIDA: "Ordem emitida",
@@ -62,6 +45,49 @@ export default async function AreaDoServidor() {
     PARALISADA: "Paralisada",
     CONCLUIDA: "Concluída",
   } as const;
+
+  let obras: Array<{
+    id: string;
+    titulo: string;
+    status: keyof typeof statusLabel;
+    updatedAt: Date;
+    secretaria: { nome: string };
+  }> = [];
+  let totalObras = 0;
+  let emAndamento = 0;
+  let concluidas = 0;
+
+  try {
+    const [obrasResult, statusCounts] = await Promise.all([
+      prisma.obra.findMany({
+        where,
+        orderBy: { updatedAt: "desc" },
+        take: 8,
+        select: {
+          id: true,
+          titulo: true,
+          status: true,
+          updatedAt: true,
+          secretaria: { select: { nome: true } },
+        },
+      }),
+      prisma.obra.groupBy({
+        by: ["status"],
+        where,
+        _count: { _all: true },
+      }),
+    ]);
+
+    obras = obrasResult as typeof obras;
+    for (const item of statusCounts) {
+      const count = item._count._all;
+      totalObras += count;
+      if (item.status === "EM_ANDAMENTO") emAndamento = count;
+      if (item.status === "CONCLUIDA") concluidas = count;
+    }
+  } catch (error) {
+    console.error("Erro ao carregar dados da área do servidor:", error);
+  }
 
   return (
     <div className={styles.shell}>
@@ -74,39 +100,46 @@ export default async function AreaDoServidor() {
       <div className={styles.body}>
         <aside className={styles.sidebar}>
           <div className={styles.profile}>
-            <div className={styles.profileIcon}>GP</div>
+            <div className={styles.profileIcon}>{isGestao ? "PM" : "GP"}</div>
             <div>
-              <strong>Gestão Pública</strong>
-              <small>Área administrativa</small>
+              <strong>{isGestao ? "Gabinete do Prefeito" : "Gestão Pública"}</strong>
+              <small>{isGestao ? "Prefeito Municipal" : "Área administrativa"}</small>
             </div>
           </div>
           <div className={styles.navList}>
             <span className={`${styles.navItem} ${styles.navItemActive}`}>
               Visão geral
             </span>
-            <Link className={styles.navItem} href="/area-do-servidor/nova-obra">
-              Cadastrar obra
-            </Link>
+            {isSecretaria && (
+              <Link className={styles.navItem} href="/area-do-servidor/nova-obra">
+                Cadastrar obra
+              </Link>
+            )}
           </div>
         </aside>
         <main className={styles.main}>
           <div className={styles.pageHeading}>
             <div>
               <div className={styles.breadcrumb}>
-                Área administrativa <span>/</span> Visão geral
+                {isGestao ? "Gabinete do Prefeito" : "Área administrativa"} <span>/</span> Visão geral
               </div>
-              <h1 className={styles.pageTitle}>Obras e Projetos</h1>
+              <h1 className={styles.pageTitle}>
+                {isGestao ? "Painel de Obras do Município" : "Obras e Projetos"}
+              </h1>
               <p>
-                Acompanhe as obras sob sua responsabilidade e registre novos
-                projetos.
+                {isGestao
+                  ? "Acompanhamento panorâmico de todas as obras municipais e investimentos em Goiana."
+                  : "Acompanhe as obras sob sua responsabilidade e registre novos projetos."}
               </p>
             </div>
-            <Link
-              className={styles.primaryButton}
-              href="/area-do-servidor/nova-obra"
-            >
-              Cadastrar obra
-            </Link>
+            {isSecretaria && (
+              <Link
+                className={styles.primaryButton}
+                href="/area-do-servidor/nova-obra"
+              >
+                Cadastrar obra
+              </Link>
+            )}
           </div>
           <section className={styles.metrics} aria-label="Resumo das obras">
             <div className={styles.metric}>
@@ -160,7 +193,9 @@ export default async function AreaDoServidor() {
                       >
                         <Pencil size={15} aria-hidden="true" />
                       </Link>
-                      <DeleteObraButton obraId={obra.id} titulo={obra.titulo} />
+                      {isSecretaria && (
+                        <DeleteObraButton obraId={obra.id} titulo={obra.titulo} />
+                      )}
                     </div>
                   </article>
                 ))}
