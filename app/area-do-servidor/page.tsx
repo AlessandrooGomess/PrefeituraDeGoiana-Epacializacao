@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import styles from "./area-do-servidor.module.css";
 import DeleteObraButton from "./DeleteObraButton";
 import { getHomeByRole } from "@/lib/auth/role-routes";
+import PrefeitoDashboard from "./PrefeitoDashboard";
 
 export default async function AreaDoServidor() {
   const session = await auth();
@@ -23,6 +24,10 @@ export default async function AreaDoServidor() {
 
   if (!allowedRoles.includes(session.user.role)) {
     redirect(getHomeByRole(session.user.role));
+  }
+
+  if (session.user.role === Role.GESTAO) {
+    return <PrefeitoDashboard name={session.user.name ?? "Prefeito"} />;
   }
 
   const isSecretaria = session.user.role === Role.ADM_SECRETARIA;
