@@ -25,6 +25,10 @@ export default async function AreaDoServidor() {
     redirect(getHomeByRole(session.user.role));
   }
 
+  if (session.user.role === Role.GESTAO) {
+    redirect("/area-do-prefeito");
+  }
+
   const isSecretaria = session.user.role === Role.ADM_SECRETARIA;
   const isGestao = session.user.role === Role.GESTAO;
   const secretariaId = session.user.secretariaId;
