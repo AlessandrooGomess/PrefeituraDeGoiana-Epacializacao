@@ -26,7 +26,11 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
 
   const areaHref = user?.role ? getHomeByRole(user.role) : SERVIDOR_HOME;
   const areaLabel =
-    user?.role === "ENGENHEIRO" ? "Minha Área" : "Área do Servidor";
+    user?.role === "ENGENHEIRO"
+      ? "Minha Área"
+      : user?.role === "GESTAO"
+        ? "Área do Prefeito"
+        : "Área do Servidor";
   const areaActive =
     areaHref !== "/" && pathname.startsWith(areaHref);
 

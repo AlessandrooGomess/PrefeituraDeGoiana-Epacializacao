@@ -25,6 +25,10 @@ export default async function AreaDoServidor() {
     redirect(getHomeByRole(session.user.role));
   }
 
+  if (session.user.role === Role.GESTAO) {
+    redirect("/area-do-prefeito");
+  }
+
   const isSecretaria = session.user.role === Role.ADM_SECRETARIA;
   const secretariaId = session.user.secretariaId;
 
@@ -37,24 +41,6 @@ export default async function AreaDoServidor() {
     ...(isSecretaria && secretariaId ? { secretariaId } : {}),
   };
 
-  const [obras, totalObras, emAndamento, concluidas] = await Promise.all([
-    prisma.obra.findMany({
-      where,
-      orderBy: { updatedAt: "desc" },
-      take: 8,
-      select: {
-        id: true,
-        titulo: true,
-        status: true,
-        updatedAt: true,
-        secretaria: { select: { nome: true } },
-      },
-    }),
-    prisma.obra.count({ where }),
-    prisma.obra.count({ where: { ...where, status: "EM_ANDAMENTO" } }),
-    prisma.obra.count({ where: { ...where, status: "CONCLUIDA" } }),
-  ]);
-
   const statusLabel = {
     PLANEJADA: "Em planejamento",
     ORDEM_EMITIDA: "Ordem emitida",
@@ -62,6 +48,49 @@ export default async function AreaDoServidor() {
     PARALISADA: "Paralisada",
     CONCLUIDA: "Concluída",
   } as const;
+
+  let obras: Array<{
+    id: string;
+    titulo: string;
+    status: keyof typeof statusLabel;
+    updatedAt: Date;
+    secretaria: { nome: string };
+  }> = [];
+  let totalObras = 0;
+  let emAndamento = 0;
+  let concluidas = 0;
+
+  try {
+    const [obrasResult, statusCounts] = await Promise.all([
+      prisma.obra.findMany({
+        where,
+        orderBy: { updatedAt: "desc" },
+        take: 8,
+        select: {
+          id: true,
+          titulo: true,
+          status: true,
+          updatedAt: true,
+          secretaria: { select: { nome: true } },
+        },
+      }),
+      prisma.obra.groupBy({
+        by: ["status"],
+        where,
+        _count: { _all: true },
+      }),
+    ]);
+
+    obras = obrasResult as typeof obras;
+    for (const item of statusCounts) {
+      const count = item._count._all;
+      totalObras += count;
+      if (item.status === "EM_ANDAMENTO") emAndamento = count;
+      if (item.status === "CONCLUIDA") concluidas = count;
+    }
+  } catch (error) {
+    console.error("Erro ao carregar dados da área do servidor:", error);
+  }
 
   return (
     <div className={styles.shell}>
@@ -160,7 +189,9 @@ export default async function AreaDoServidor() {
                       >
                         <Pencil size={15} aria-hidden="true" />
                       </Link>
-                      <DeleteObraButton obraId={obra.id} titulo={obra.titulo} />
+                      {isSecretaria && (
+                        <DeleteObraButton obraId={obra.id} titulo={obra.titulo} />
+                      )}
                     </div>
                   </article>
                 ))}
