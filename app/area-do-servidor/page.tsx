@@ -30,7 +30,6 @@ export default async function AreaDoServidor() {
   }
 
   const isSecretaria = session.user.role === Role.ADM_SECRETARIA;
-  const isGestao = session.user.role === Role.GESTAO;
   const secretariaId = session.user.secretariaId;
 
   if (isSecretaria && !secretariaId) {
@@ -104,46 +103,39 @@ export default async function AreaDoServidor() {
       <div className={styles.body}>
         <aside className={styles.sidebar}>
           <div className={styles.profile}>
-            <div className={styles.profileIcon}>{isGestao ? "PM" : "GP"}</div>
+            <div className={styles.profileIcon}>GP</div>
             <div>
-              <strong>{isGestao ? "Gabinete do Prefeito" : "Gestão Pública"}</strong>
-              <small>{isGestao ? "Prefeito Municipal" : "Área administrativa"}</small>
+              <strong>Gestão Pública</strong>
+              <small>Área administrativa</small>
             </div>
           </div>
           <div className={styles.navList}>
             <span className={`${styles.navItem} ${styles.navItemActive}`}>
               Visão geral
             </span>
-            {isSecretaria && (
-              <Link className={styles.navItem} href="/area-do-servidor/nova-obra">
-                Cadastrar obra
-              </Link>
-            )}
+            <Link className={styles.navItem} href="/area-do-servidor/nova-obra">
+              Cadastrar obra
+            </Link>
           </div>
         </aside>
         <main className={styles.main}>
           <div className={styles.pageHeading}>
             <div>
               <div className={styles.breadcrumb}>
-                {isGestao ? "Gabinete do Prefeito" : "Área administrativa"} <span>/</span> Visão geral
+                Área administrativa <span>/</span> Visão geral
               </div>
-              <h1 className={styles.pageTitle}>
-                {isGestao ? "Painel de Obras do Município" : "Obras e Projetos"}
-              </h1>
+              <h1 className={styles.pageTitle}>Obras e Projetos</h1>
               <p>
-                {isGestao
-                  ? "Acompanhamento panorâmico de todas as obras municipais e investimentos em Goiana."
-                  : "Acompanhe as obras sob sua responsabilidade e registre novos projetos."}
+                Acompanhe as obras sob sua responsabilidade e registre novos
+                projetos.
               </p>
             </div>
-            {isSecretaria && (
-              <Link
-                className={styles.primaryButton}
-                href="/area-do-servidor/nova-obra"
-              >
-                Cadastrar obra
-              </Link>
-            )}
+            <Link
+              className={styles.primaryButton}
+              href="/area-do-servidor/nova-obra"
+            >
+              Cadastrar obra
+            </Link>
           </div>
           <section className={styles.metrics} aria-label="Resumo das obras">
             <div className={styles.metric}>
