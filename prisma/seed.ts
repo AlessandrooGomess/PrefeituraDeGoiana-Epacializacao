@@ -208,6 +208,7 @@ async function main() {
   );
 
   const senhaAdmin = await hash(process.env.SEED_SENHA_ADMIN || "12345678", 12);
+  const senhaPrefeito = await hash(process.env.SEED_SENHA_PREFEITO || "12345678", 12);
   const senhaSec = await hash(process.env.SEED_SENHA_GESTOR_SEDUO || "12345678", 12);
   const senhaEng = await hash(process.env.SEED_SENHA_ENG_SEDUO || "12345678", 12);
 
@@ -218,6 +219,16 @@ async function main() {
       cargo: "Gestor de Tecnologia e Transparência",
       role: Role.SUPER_ADMIN,
       passwordHash: senhaAdmin,
+    },
+  });
+
+  await prisma.usuario.create({
+    data: {
+      nome: "Prefeito Municipal - Gestão de Goiana",
+      email: "prefeito@goiana.pe.gov.br",
+      cargo: "Prefeito Municipal",
+      role: Role.GESTAO,
+      passwordHash: senhaPrefeito,
     },
   });
 

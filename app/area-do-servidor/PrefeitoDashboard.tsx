@@ -202,21 +202,17 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
             </div>
           </div>
           <nav className={styles.navList} aria-label="Navegação da gestão">
-            <Link className={`${styles.navItem} ${styles.navItemActive}`} href="/area-do-servidor">
+            <Link className={`${styles.navItem} ${styles.navItemActive}`} href="/area-do-prefeito">
               <TrendingUp size={16} aria-hidden="true" />
               Painel de gestão
             </Link>
-            <Link className={styles.navItem} href="/area-do-servidor/obras">
+            <Link className={styles.navItem} href="/projetos">
               <MapPinned size={16} aria-hidden="true" />
               Obras
             </Link>
             <Link className={styles.navItem} href="/">
               <MapPinned size={16} aria-hidden="true" />
               Mapa
-            </Link>
-            <Link className={styles.navItem} href="/area-do-servidor/nova-obra">
-              <CalendarDays size={16} aria-hidden="true" />
-              Cadastrar obra
             </Link>
           </nav>
           <div className={styles.sidebarBottom}>
@@ -234,7 +230,7 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
               <h1>Bom dia, {firstName}</h1>
               <p className={styles.updated}><span /> Dados atualizados agora</p>
             </div>
-            <Link className={styles.allWorks} href="/area-do-servidor/obras">
+            <Link className={styles.allWorks} href="/projetos">
               Mais infraestrutura.<br />Uma Goiana melhor.
             </Link>
           </header>
@@ -273,7 +269,7 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
             <section className={styles.panel}>
               <div className={styles.panelHeading}>
                 <div><h2>Obras em destaque</h2><p>Acompanhamento das frentes em execução</p></div>
-                <Link href="/area-do-servidor/obras">Ver todas <ArrowUpRight size={14} /></Link>
+                <Link href="/projetos">Ver todas <ArrowUpRight size={14} /></Link>
               </div>
               {obrasDestaque.length ? (
                 <div className={styles.featuredList}>
