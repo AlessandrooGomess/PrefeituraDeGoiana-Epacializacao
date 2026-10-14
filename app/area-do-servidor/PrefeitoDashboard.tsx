@@ -3,8 +3,10 @@ import {
   ArrowUpRight,
   CalendarDays,
   CheckCircle2,
+  Building2,
   CircleDollarSign,
   Clock3,
+  Map as MapIcon,
   MapPinned,
   PauseCircle,
   PlayCircle,
@@ -35,12 +37,32 @@ const dateFormat = new Intl.DateTimeFormat("pt-BR", {
   year: "numeric",
 });
 
+const timeZone = "America/Recife";
+
 const dashboardDateFormat = new Intl.DateTimeFormat("pt-BR", {
   weekday: "long",
   day: "2-digit",
   month: "long",
   year: "numeric",
+  timeZone,
 });
+
+const updatedFormat = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone,
+});
+
+const hourFormat = new Intl.DateTimeFormat("pt-BR", {
+  hour: "numeric",
+  hourCycle: "h23",
+  timeZone,
+});
+
+const DAY_MS = 86_400_000;
 
 const statusInfo = {
   PLANEJADA: { label: "Planejadas", color: "#f5b83d" },
@@ -57,48 +79,39 @@ function progressFor(status: string, measurement?: { percentualExecutado: unknow
   return status === "CONCLUIDA" ? 100 : 0;
 }
 
+function greetingFor(date: Date) {
+  const hour = Number(hourFormat.format(date));
+  if (hour < 12) return "Bom dia";
+  if (hour < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
+function isLate(obra: { status: string; previsaoConclusao: Date | null }, now: Date) {
+  return obra.status !== "CONCLUIDA" && obra.previsaoConclusao !== null && obra.previsaoConclusao < now;
+}
+
+function isAtRisk(obra: { status: string; previsaoConclusao: Date | null }, now: Date) {
+  return obra.status === "PARALISADA" || isLate(obra, now);
+}
+
+function delayLabel(previsaoConclusao: Date | null, now: Date) {
+  if (!previsaoConclusao) return "prazo não informado";
+  if (previsaoConclusao >= now) return `prazo ${dateFormat.format(previsaoConclusao)}`;
+  const days = Math.ceil((now.getTime() - previsaoConclusao.getTime()) / DAY_MS);
+  return `${days} ${days === 1 ? "dia" : "dias"} de atraso`;
+}
+
+function percent(part: number, total: number) {
+  return total ? Math.round((part / total) * 100) : 0;
+}
+
 export default async function PrefeitoDashboard({ name }: { name: string }) {
   const now = new Date();
   const nextMonth = new Date(now);
   nextMonth.setDate(nextMonth.getDate() + 30);
   const firstName = name.trim().split(/\s+/)[0] || "Prefeito";
 
-  const [
-    totalObras,
-    emAndamento,
-    concluidas,
-    paralisadas,
-    atrasadas,
-    proximasEntregas,
-    investimento,
-    obrasDestaque,
-    entregas,
-    totalEmRisco,
-    riscos,
-    obrasPorEixo,
-  ] = await Promise.all([
-    prisma.obra.count({ where: { deletedAt: null } }),
-    prisma.obra.count({ where: { deletedAt: null, status: "EM_ANDAMENTO" } }),
-    prisma.obra.count({ where: { deletedAt: null, status: "CONCLUIDA" } }),
-    prisma.obra.count({ where: { deletedAt: null, status: "PARALISADA" } }),
-    prisma.obra.count({
-      where: {
-        deletedAt: null,
-        status: { not: "CONCLUIDA" },
-        previsaoConclusao: { lt: now },
-      },
-    }),
-    prisma.obra.count({
-      where: {
-        deletedAt: null,
-        status: { not: "CONCLUIDA" },
-        previsaoConclusao: { gte: now, lte: nextMonth },
-      },
-    }),
-    prisma.obra.aggregate({
-      where: { deletedAt: null },
-      _sum: { valorContrato: true },
-    }),
+  const [obrasDestaque, entregas, riscos, carteira] = await Promise.all([
     prisma.obra.findMany({
       where: { deletedAt: null, status: "EM_ANDAMENTO" },
       orderBy: { updatedAt: "desc" },
@@ -131,15 +144,6 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
         secretaria: { select: { sigla: true } },
       },
     }),
-    prisma.obra.count({
-      where: {
-        deletedAt: null,
-        OR: [
-          { status: "PARALISADA" },
-          { status: { not: "CONCLUIDA" }, previsaoConclusao: { lt: now } },
-        ],
-      },
-    }),
     prisma.obra.findMany({
       where: {
         deletedAt: null,
@@ -163,13 +167,43 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
       select: {
         status: true,
         valorContrato: true,
+        previsaoConclusao: true,
+        updatedAt: true,
         eixo: { select: { nome: true } },
+        secretaria: { select: { sigla: true } },
+        medicoes: {
+          orderBy: { dataVistoria: "desc" },
+          take: 1,
+          select: { percentualExecutado: true },
+        },
       },
     }),
   ]);
 
-  const investimentoTotal = Number(investimento._sum.valorContrato ?? 0);
-  const eixoInvestimento = obrasPorEixo.reduce<Record<string, number>>((totals, obra) => {
+  const totalObras = carteira.length;
+  const statusCounts = Object.fromEntries(
+    Object.keys(statusInfo).map((status) => [status, carteira.filter((obra) => obra.status === status).length]),
+  ) as Record<keyof typeof statusInfo, number>;
+  const emAndamento = statusCounts.EM_ANDAMENTO;
+  const concluidas = statusCounts.CONCLUIDA;
+  const paralisadas = statusCounts.PARALISADA;
+  const atrasadas = carteira.filter((obra) => isLate(obra, now)).length;
+  const proximasEntregas = carteira.filter(
+    (obra) => obra.status !== "CONCLUIDA" && obra.previsaoConclusao !== null
+      && obra.previsaoConclusao >= now && obra.previsaoConclusao <= nextMonth,
+  ).length;
+  const totalEmRisco = carteira.filter((obra) => isAtRisk(obra, now)).length;
+  const ultimaAtualizacao = carteira.reduce<Date | null>(
+    (latest, obra) => (!latest || obra.updatedAt > latest ? obra.updatedAt : latest),
+    null,
+  );
+
+  const investimentoTotal = carteira.reduce((total, obra) => total + Number(obra.valorContrato ?? 0), 0);
+  const investimentoExecutado = carteira.reduce(
+    (total, obra) => total + Number(obra.valorContrato ?? 0) * (progressFor(obra.status, obra.medicoes[0]) / 100),
+    0,
+  );
+  const eixoInvestimento = carteira.reduce<Record<string, number>>((totals, obra) => {
     const eixo = obra.eixo?.nome ?? "Sem eixo definido";
     totals[eixo] = (totals[eixo] ?? 0) + Number(obra.valorContrato ?? 0);
     return totals;
@@ -178,16 +212,18 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
     .sort((first, second) => second[1] - first[1])
     .slice(0, 3);
   const maiorEixo = Math.max(1, ...eixosOrdenados.map(([, value]) => value));
-  const concluidasPercentual = totalObras
-    ? Math.round((concluidas / totalObras) * 100)
-    : 0;
-  const statusCounts = [
-    ["PLANEJADA", obrasPorEixo.filter((obra) => obra.status === "PLANEJADA").length],
-    ["ORDEM_EMITIDA", obrasPorEixo.filter((obra) => obra.status === "ORDEM_EMITIDA").length],
-    ["EM_ANDAMENTO", emAndamento],
-    ["PARALISADA", paralisadas],
-    ["CONCLUIDA", concluidas],
-  ] as const;
+
+  const secretarias = Object.entries(
+    carteira.reduce<Record<string, { total: number; emRisco: number }>>((totals, obra) => {
+      const sigla = obra.secretaria.sigla;
+      totals[sigla] ??= { total: 0, emRisco: 0 };
+      totals[sigla].total += 1;
+      if (isAtRisk(obra, now)) totals[sigla].emRisco += 1;
+      return totals;
+    }, {}),
+  ).sort((first, second) => second[1].emRisco - first[1].emRisco || second[1].total - first[1].total);
+  const maiorSecretaria = Math.max(1, ...secretarias.map(([, counts]) => counts.total));
+  const concluidasPercentual = percent(concluidas, totalObras);
 
   return (
     <div className={styles.shell}>
@@ -211,28 +247,27 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
               Obras
             </Link>
             <Link className={styles.navItem} href="/">
-              <MapPinned size={16} aria-hidden="true" />
+              <MapIcon size={16} aria-hidden="true" />
               Mapa
             </Link>
           </nav>
-          <div className={styles.sidebarBottom}>
-            <span className={styles.navItem}>
-              <CheckCircle2 size={16} aria-hidden="true" />
-              Dados atualizados
-            </span>
-          </div>
         </aside>
 
         <main className={styles.dashboard}>
           <header className={styles.heading}>
             <div>
               <p className={styles.eyebrow}>{dashboardDateFormat.format(now).toLocaleUpperCase("pt-BR")}</p>
-              <h1>Bom dia, {firstName}</h1>
-              <p className={styles.updated}><span /> Dados atualizados agora</p>
+              <h1>{greetingFor(now)}, {firstName}</h1>
+              <p className={styles.updated}>
+                <span />
+                {ultimaAtualizacao
+                  ? `Última atualização de obra em ${updatedFormat.format(ultimaAtualizacao)}`
+                  : "Nenhuma obra cadastrada"}
+              </p>
             </div>
-            <Link className={styles.allWorks} href="/projetos">
+            <p className={styles.slogan}>
               Mais infraestrutura.<br />Uma Goiana melhor.
-            </Link>
+            </p>
           </header>
 
           <section className={styles.metrics} aria-label="Indicadores de gestão">
@@ -242,11 +277,11 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
             </article>
             <article className={styles.metric}>
               <span className={`${styles.metricIcon} ${styles.green}`}><PlayCircle size={19} /></span>
-              <div><small>Em andamento</small><strong>{emAndamento}</strong><span>{totalObras ? Math.round((emAndamento / totalObras) * 100) : 0}% da carteira</span></div>
+              <div><small>Em andamento</small><strong>{emAndamento}</strong><span>{percent(emAndamento, totalObras)}% da carteira</span></div>
             </article>
             <article className={styles.metric}>
               <span className={`${styles.metricIcon} ${styles.red}`}><AlertTriangle size={19} /></span>
-              <div><small>Atrasadas</small><strong>{atrasadas}</strong><span>{totalObras ? Math.round((atrasadas / totalObras) * 100) : 0}% da carteira</span></div>
+              <div><small>Atrasadas</small><strong>{atrasadas}</strong><span>{percent(atrasadas, totalObras)}% da carteira</span></div>
             </article>
             <article className={styles.metric}>
               <span className={`${styles.metricIcon} ${styles.cyan}`}><CalendarDays size={19} /></span>
@@ -260,8 +295,8 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
               <i><i style={{ width: `${concluidasPercentual}%` }} /></i>
             </div>
             <div className={styles.statusTrack}>
-              <span><PauseCircle size={13} /> Paralisadas <b>{paralisadas} ({totalObras ? Math.round((paralisadas / totalObras) * 100) : 0}%)</b></span>
-              <i><i className={styles.pausedProgress} style={{ width: `${totalObras ? (paralisadas / totalObras) * 100 : 0}%` }} /></i>
+              <span><PauseCircle size={13} /> Paralisadas <b>{paralisadas} ({percent(paralisadas, totalObras)}%)</b></span>
+              <i><i className={styles.pausedProgress} style={{ width: `${percent(paralisadas, totalObras)}%` }} /></i>
             </div>
           </section>
 
@@ -296,10 +331,9 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
               </div>
               <div className={styles.mapFrame}><DashboardMap /></div>
               <div className={styles.mapLegend}>
-                {statusCounts.map(([status, count]) => {
-                  const info = statusInfo[status];
-                  return <span key={status}><i style={{ background: info.color }} />{info.label}<b>{count}</b></span>;
-                })}
+                {Object.entries(statusInfo).map(([status, info]) => (
+                  <span key={status}><i style={{ background: info.color }} />{info.label}<b>{statusCounts[status as keyof typeof statusInfo]}</b></span>
+                ))}
               </div>
             </section>
           </div>
@@ -333,7 +367,7 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
                   {riscos.map((obra) => (
                     <Link href={`/area-do-servidor/obras/${obra.id}`} className={styles.riskRow} key={obra.id}>
                       <span className={styles.riskMark}><Clock3 size={14} /></span>
-                      <span><strong>{obra.titulo}</strong><small>{obra.secretaria.sigla} · prazo {obra.previsaoConclusao ? dateFormat.format(obra.previsaoConclusao) : "não informado"}</small></span>
+                      <span><strong>{obra.titulo}</strong><small>{obra.secretaria.sigla} · {delayLabel(obra.previsaoConclusao, now)}</small></span>
                       <b>{obra.status === "PARALISADA" ? "Paralisada" : "Atrasada"}</b>
                     </Link>
                   ))}
@@ -341,11 +375,15 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
               ) : <p className={styles.empty}>Nenhuma obra com prazo vencido.</p>}
             </section>
 
-            <section className={`${styles.panel} ${styles.investmentPanel}`}>
+            <section className={styles.panel}>
               <div className={styles.panelHeading}>
-                <div><h2><TrendingUp size={16} /> Investimento por eixo</h2><p>Valores dos contratos ativos</p></div>
+                <div><h2><TrendingUp size={16} /> Investimento por eixo</h2><p>Valor contratado de todas as obras</p></div>
               </div>
               <div className={styles.investmentTotal}>{fullCurrency.format(investimentoTotal)}</div>
+              <p className={styles.executed}>
+                {fullCurrency.format(investimentoExecutado)} executados
+                ({percent(investimentoExecutado, investimentoTotal)}%, conforme a última medição)
+              </p>
               <div className={styles.axisList}>
                 {eixosOrdenados.length ? eixosOrdenados.map(([axis, value], index) => (
                   <div className={styles.axisRow} key={axis}>
@@ -355,6 +393,22 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
                     <b>{currency.format(value)}</b>
                   </div>
                 )) : <p className={styles.empty}>Sem valores de contrato cadastrados.</p>}
+              </div>
+            </section>
+
+            <section className={styles.panel}>
+              <div className={styles.panelHeading}>
+                <div><h2><Building2 size={16} /> Obras por secretaria</h2><p>Total da carteira e obras em risco</p></div>
+              </div>
+              <div className={styles.axisList}>
+                {secretarias.length ? secretarias.map(([sigla, counts]) => (
+                  <div className={styles.secretariaRow} key={sigla}>
+                    <span className={styles.axisName}>{sigla}</span>
+                    <i><i style={{ width: `${(counts.total / maiorSecretaria) * 100}%` }} /></i>
+                    <b>{counts.total}</b>
+                    <em className={counts.emRisco ? styles.riskBadge : styles.noRisk}>{counts.emRisco} em risco</em>
+                  </div>
+                )) : <p className={styles.empty}>Nenhuma obra cadastrada.</p>}
               </div>
             </section>
           </div>
