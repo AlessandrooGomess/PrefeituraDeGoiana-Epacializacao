@@ -225,6 +225,28 @@ export const updateObraSchema = z
 
 export type CreateObraInput = z.infer<typeof createObraSchema>;
 export type UpdateObraInput = z.infer<typeof updateObraSchema>;
+
+export const obraDraftSchema = z
+  .object({
+    titulo: z.string().max(255).default(""),
+    descricao: z.string().max(5000).default(""),
+    distrito: z.string().max(100).default(""),
+    endereco: z.string().max(255).default(""),
+    bairro: z.string().max(255).default(""),
+    latitude: z.string().max(30).default(""),
+    longitude: z.string().max(30).default(""),
+    engenheiroId: z.string().max(36).default(""),
+    empresaContratada: z.string().max(255).default(""),
+    numeroOrdemServico: z.string().max(100).default(""),
+    tipoObraId: z.string().max(36).default(""),
+    valorContrato: z.string().max(30).default(""),
+    dataOrdemServico: z.string().max(10).default(""),
+    previsaoConclusao: z.string().max(10).default(""),
+  })
+  .strict();
+
+export type ObraDraftInput = z.infer<typeof obraDraftSchema>;
+
 export const listObrasQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   pageSize: z.coerce.number().int().min(1).max(100).optional(),

@@ -5,6 +5,7 @@ interface ObraRelationIds {
   eixoId: string | null;
   areaTematicaId: string | null;
   engenheiroId: string | null;
+  tipoObraId?: string | null;
 }
 
 export async function validateObraRelations({
@@ -12,8 +13,9 @@ export async function validateObraRelations({
   eixoId,
   areaTematicaId,
   engenheiroId,
+  tipoObraId,
 }: ObraRelationIds): Promise<string[]> {
-  const [secretaria, eixo, areaTematica, engenheiro] = await Promise.all([
+  const [secretaria, eixo, areaTematica, engenheiro, tipoObra] = await Promise.all([
     prisma.secretaria.findUnique({
       where: { id: secretariaId },
       select: {
@@ -36,7 +38,18 @@ export async function validateObraRelations({
     engenheiroId
       ? prisma.usuario.findUnique({
           where: { id: engenheiroId },
-          select: { id: true, role: true, ativo: true },
+          select: {
+            id: true,
+            role: true,
+            ativo: true,
+            secretariaId: true,
+          },
+        })
+      : null,
+    tipoObraId
+      ? prisma.tipoObra.findUnique({
+          where: { id: tipoObraId },
+          select: { id: true },
         })
       : null,
   ]);
@@ -49,8 +62,11 @@ export async function validateObraRelations({
     engenheiroId && !engenheiro && "engenheiroId",
     engenheiroId &&
       engenheiro &&
-      (engenheiro.role !== "ENGENHEIRO" || !engenheiro.ativo) &&
+      (engenheiro.role !== "ENGENHEIRO" ||
+        !engenheiro.ativo ||
+        engenheiro.secretariaId !== secretariaId) &&
       "engenheiroId",
+    tipoObraId && !tipoObra && "tipoObraId",
     eixoId &&
       areaTematica &&
       areaTematica.eixoId !== eixoId &&
