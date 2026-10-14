@@ -18,5 +18,5 @@ export default async function AreaDoPrefeitoPage() {
     redirect(getHomeByRole(session.user.role));
   }
 
-  return <PrefeitoDashboard name={session.user.name ?? "Prefeito"} />;
+  return <PrefeitoDashboard name={session.user.name ?? "Prefeito"} role={session.user.role} />;
 }
