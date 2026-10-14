@@ -14,7 +14,6 @@ import {
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import Sidebar from "@/components/sidebar/Sidebar";
-import DashboardMap from "./DashboardMap";
 import PrefeitoFiltros from "./PrefeitoFiltros";
 import styles from "./prefeito-dashboard.module.css";
 
@@ -189,7 +188,7 @@ export default async function PrefeitoDashboard({
     prisma.obra.findMany({
       where: { ...whereCarteira, status: "EM_ANDAMENTO" },
       orderBy: { updatedAt: "desc" },
-      take: 5,
+      take: 6,
       select: {
         id: true,
         titulo: true,
@@ -211,7 +210,7 @@ export default async function PrefeitoDashboard({
         previsaoConclusao: { gte: now },
       },
       orderBy: { previsaoConclusao: "asc" },
-      take: 4,
+      take: 5,
       select: {
         id: true,
         titulo: true,
@@ -234,7 +233,7 @@ export default async function PrefeitoDashboard({
         ],
       },
       orderBy: { updatedAt: "desc" },
-      take: 4,
+      take: 5,
       select: {
         id: true,
         titulo: true,
@@ -308,7 +307,7 @@ export default async function PrefeitoDashboard({
   }, {});
   const eixosOrdenados = Object.entries(eixoInvestimento)
     .sort((first, second) => second[1] - first[1])
-    .slice(0, 3);
+    .slice(0, 4);
   const maiorEixo = Math.max(1, ...eixosOrdenados.map(([, value]) => value));
 
   const secretarias = Object.entries(
@@ -333,7 +332,7 @@ export default async function PrefeitoDashboard({
     }, {}),
   )
     .sort((a, b) => b[1].total - a[1].total || b[1].valor - a[1].valor)
-    .slice(0, 4);
+    .slice(0, 5);
   const maiorBairro = Math.max(1, ...bairros.map(([, data]) => data.total));
 
   return (
@@ -449,12 +448,12 @@ export default async function PrefeitoDashboard({
             </article>
           </section>
 
-          <div className={styles.primaryGrid}>
+          <div className={styles.dashboardGrid}>
             <section className={styles.panel}>
               <div className={styles.panelHeading}>
                 <div>
                   <h2>Obras em destaque</h2>
-                  <p>Acompanhamento das frentes em execução</p>
+                  <p>Acompanhamento das principais frentes</p>
                 </div>
                 <Link href="/projetos">
                   Ver todas <ArrowUpRight size={14} />
@@ -497,34 +496,6 @@ export default async function PrefeitoDashboard({
               )}
             </section>
 
-            <section className={`${styles.panel} ${styles.mapPanel}`}>
-              <div className={styles.panelHeading}>
-                <div>
-                  <h2>
-                    <MapPinned size={16} /> Mapa das obras
-                  </h2>
-                  <p>Distribuição no município</p>
-                </div>
-                <Link href="/">
-                  Ver mapa <ArrowUpRight size={14} />
-                </Link>
-              </div>
-              <div className={styles.mapFrame}>
-                <DashboardMap />
-              </div>
-              <div className={styles.mapLegend}>
-                {Object.entries(statusInfo).map(([status, info]) => (
-                  <span key={status}>
-                    <i style={{ background: info.color }} />
-                    {info.label}
-                    <b>{statusCounts[status as keyof typeof statusInfo]}</b>
-                  </span>
-                ))}
-              </div>
-            </section>
-          </div>
-
-          <div className={styles.secondaryGrid}>
             <section className={styles.panel}>
               <div className={styles.panelHeading}>
                 <div>
@@ -615,6 +586,35 @@ export default async function PrefeitoDashboard({
               <div className={styles.panelHeading}>
                 <div>
                   <h2>
+                    <Building2 size={16} /> Obras por secretaria
+                  </h2>
+                  <p>Total da carteira e obras em risco</p>
+                </div>
+              </div>
+              <div className={styles.axisList}>
+                {secretarias.length ? (
+                  secretarias.map(([sigla, counts]) => (
+                    <div className={styles.secretariaRow} key={sigla}>
+                      <span className={styles.axisName}>{sigla}</span>
+                      <i>
+                        <i style={{ width: `${(counts.total / maiorSecretaria) * 100}%` }} />
+                      </i>
+                      <b>{counts.total}</b>
+                      <em className={counts.emRisco ? styles.riskBadge : styles.noRisk}>
+                        {counts.emRisco} em risco
+                      </em>
+                    </div>
+                  ))
+                ) : (
+                  <p className={styles.empty}>Nenhuma obra cadastrada.</p>
+                )}
+              </div>
+            </section>
+
+            <section className={styles.panel}>
+              <div className={styles.panelHeading}>
+                <div>
+                  <h2>
                     <TrendingUp size={16} /> Investimento por eixo
                   </h2>
                   <p>Valor contratado da carteira</p>
@@ -639,35 +639,6 @@ export default async function PrefeitoDashboard({
                   ))
                 ) : (
                   <p className={styles.empty}>Sem valores de contrato cadastrados.</p>
-                )}
-              </div>
-            </section>
-
-            <section className={styles.panel}>
-              <div className={styles.panelHeading}>
-                <div>
-                  <h2>
-                    <Building2 size={16} /> Obras por secretaria
-                  </h2>
-                  <p>Total da carteira e obras em risco</p>
-                </div>
-              </div>
-              <div className={styles.axisList}>
-                {secretarias.length ? (
-                  secretarias.map(([sigla, counts]) => (
-                    <div className={styles.secretariaRow} key={sigla}>
-                      <span className={styles.axisName}>{sigla}</span>
-                      <i>
-                        <i style={{ width: `${(counts.total / maiorSecretaria) * 100}%` }} />
-                      </i>
-                      <b>{counts.total}</b>
-                      <em className={counts.emRisco ? styles.riskBadge : styles.noRisk}>
-                        {counts.emRisco} em risco
-                      </em>
-                    </div>
-                  ))
-                ) : (
-                  <p className={styles.empty}>Nenhuma obra cadastrada.</p>
                 )}
               </div>
             </section>
