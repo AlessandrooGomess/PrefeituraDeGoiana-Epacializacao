@@ -70,6 +70,7 @@ model Usuario {
   medicoes          Medicao[]
   registrosCampo    RegistroCampo[] @relation("EngenheiroRegistros")
   fotosEnviadas     Foto[]    @relation("UsuarioFotos")
+  rascunhoObra      RascunhoObra?
 
   @@map("usuarios")
 }
@@ -89,6 +90,7 @@ model Secretaria {
 
   obras    Obra[]
   usuarios Usuario[]
+  rascunhosObra RascunhoObra[]
 
   @@map("secretarias")
 }
@@ -164,6 +166,19 @@ model Obra {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("obras")
+}
+
+model RascunhoObra {
+  id           String     @id @default(uuid())
+  usuarioId    String     @unique @map("usuario_id")
+  usuario      Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  secretariaId String     @map("secretaria_id")
+  secretaria   Secretaria @relation(fields: [secretariaId], references: [id], onDelete: Cascade)
+  dados        Json
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("rascunhos_obras")
 }
 
 model Medicao {

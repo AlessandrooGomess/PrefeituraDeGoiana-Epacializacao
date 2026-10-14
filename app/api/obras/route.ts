@@ -213,6 +213,12 @@ export async function POST(request: Request) {
   if (authorization.response) {
     return authorization.response;
   }
+  if (!authorization.user.secretariaId) {
+    return NextResponse.json(
+      { message: "O usuário não está vinculado a uma secretaria." },
+      { status: 403 },
+    );
+  }
 
   try {
     let body: unknown;
@@ -220,7 +226,10 @@ export async function POST(request: Request) {
     try {
       const parsedBody: unknown = await request.json();
       if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
-        throw new Error("Corpo inválido");
+        return NextResponse.json(
+          { message: "O corpo da requisição deve conter um objeto JSON válido." },
+          { status: 400 },
+        );
       }
       body = { ...parsedBody, secretariaId: authorization.user.secretariaId };
     } catch {
@@ -256,6 +265,7 @@ export async function POST(request: Request) {
       eixoId: data.eixoId ?? null,
       areaTematicaId: data.areaTematicaId ?? null,
       engenheiroId: data.engenheiroId ?? null,
+      tipoObraId: data.tipoObraId ?? null,
     });
 
     if (missingRelations.length > 0) {
@@ -268,69 +278,69 @@ export async function POST(request: Request) {
       );
     }
 
-    const obra = await prisma.obra.create({
-      data: {
-        titulo: data.titulo,
-        descricao: data.descricao ?? null,
-        endereco: data.endereco,
-        bairro: data.bairro,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        valorContrato: data.valorContrato ?? null,
-        empresaContratada: data.empresaContratada ?? null,
-        numeroOrdemServico: data.numeroOrdemServico ?? null,
-        dataOrdemServico: data.dataOrdemServico
-          ? new Date(data.dataOrdemServico)
-          : null,
-        previsaoConclusao: data.previsaoConclusao
-          ? new Date(data.previsaoConclusao)
-          : null,
-        dataConclusaoReal: data.dataConclusaoReal
-          ? new Date(data.dataConclusaoReal)
-          : null,
-        status: data.status,
-        secretariaId: data.secretariaId,
-        eixoId: data.eixoId ?? null,
-        areaTematicaId: data.areaTematicaId ?? null,
-        engenheiroId: data.engenheiroId ?? null,
-        tipoObraId: data.tipoObraId,
-      },
-      select: {
-        id: true,
-        titulo: true,
-        status: true,
-        secretariaId: true,
-        eixoId: true,
-        areaTematicaId: true,
-        engenheiroId: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    if (data.tipoObraId) {
-      const templates = await prisma.etapaTemplate.findMany({
-        where: { tipoObraId: data.tipoObraId, ativa: true },
-        orderBy: { ordem: "asc" },
-        include: {
-          subEtapasTemplate: {
-            where: { ativa: true },
-            orderBy: { ordem: "asc" },
-          },
+    const obra = await prisma.$transaction(async (tx) => {
+      const createdObra = await tx.obra.create({
+        data: {
+          titulo: data.titulo,
+          descricao: data.descricao ?? null,
+          endereco: data.endereco,
+          bairro: data.bairro,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          valorContrato: data.valorContrato ?? null,
+          empresaContratada: data.empresaContratada ?? null,
+          numeroOrdemServico: data.numeroOrdemServico ?? null,
+          dataOrdemServico: data.dataOrdemServico
+            ? new Date(data.dataOrdemServico)
+            : null,
+          previsaoConclusao: data.previsaoConclusao
+            ? new Date(data.previsaoConclusao)
+            : null,
+          dataConclusaoReal: data.dataConclusaoReal
+            ? new Date(data.dataConclusaoReal)
+            : null,
+          status: data.status,
+          secretariaId: data.secretariaId,
+          eixoId: data.eixoId ?? null,
+          areaTematicaId: data.areaTematicaId ?? null,
+          engenheiroId: data.engenheiroId ?? null,
+          tipoObraId: data.tipoObraId,
+        },
+        select: {
+          id: true,
+          titulo: true,
+          status: true,
+          secretariaId: true,
+          eixoId: true,
+          areaTematicaId: true,
+          engenheiroId: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
 
-      if (templates.length > 0) {
-        for (const t of templates) {
-          await prisma.etapaObra.create({
+      if (data.tipoObraId) {
+        const templates = await tx.etapaTemplate.findMany({
+          where: { tipoObraId: data.tipoObraId, ativa: true },
+          orderBy: { ordem: "asc" },
+          include: {
+            subEtapasTemplate: {
+              where: { ativa: true },
+              orderBy: { ordem: "asc" },
+            },
+          },
+        });
+
+        for (const template of templates) {
+          await tx.etapaObra.create({
             data: {
-              obraId: obra.id,
-              etapaTemplateId: t.id,
+              obraId: createdObra.id,
+              etapaTemplateId: template.id,
               status: "PENDENTE",
               percentualConcluido: 0,
               subEtapasObra: {
-                create: t.subEtapasTemplate.map((sub) => ({
-                  subEtapaTemplateId: sub.id,
+                create: template.subEtapasTemplate.map((subEtapa) => ({
+                  subEtapaTemplateId: subEtapa.id,
                   status: "PENDENTE",
                   percentualConcluido: 0,
                 })),
@@ -339,7 +349,13 @@ export async function POST(request: Request) {
           });
         }
       }
-    }
+
+      await tx.rascunhoObra.deleteMany({
+        where: { usuarioId: authorization.user.id },
+      });
+
+      return createdObra;
+    });
 
 return NextResponse.json(
       {

@@ -331,6 +331,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         eixoId: true,
         areaTematicaId: true,
         engenheiroId: true,
+        tipoObraId: true,
         dataOrdemServico: true,
         previsaoConclusao: true,
         dataConclusaoReal: true,
@@ -360,6 +361,16 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
 
+    if (
+      data.secretariaId &&
+      !canAccessSecretaria(authorization.user, data.secretariaId)
+    ) {
+      return NextResponse.json(
+        { message: "Você não tem permissão para esta secretaria." },
+        { status: 403 },
+      );
+    }
+
     const relationErrors = await validateObraRelations({
       secretariaId: data.secretariaId ?? currentObra.secretariaId,
       eixoId: data.eixoId === undefined ? currentObra.eixoId : data.eixoId,
@@ -371,6 +382,10 @@ export async function PATCH(request: Request, context: RouteContext) {
         data.engenheiroId === undefined
           ? currentObra.engenheiroId
           : data.engenheiroId,
+      tipoObraId:
+        data.tipoObraId === undefined
+          ? currentObra.tipoObraId
+          : data.tipoObraId,
     });
 
     if (relationErrors.length > 0) {
