@@ -6,7 +6,9 @@ import PrefeitoDashboard from "@/app/area-do-servidor/PrefeitoDashboard";
 
 export const dynamic = "force-dynamic";
 
-export default async function AreaDoPrefeitoPage() {
+export default async function AreaDoPrefeitoPage(props: {
+  searchParams?: Promise<{ secretaria?: string; eixo?: string }>;
+}) {
   const session = await auth();
 
   if (!session?.user) {
@@ -18,5 +20,14 @@ export default async function AreaDoPrefeitoPage() {
     redirect(getHomeByRole(session.user.role));
   }
 
-  return <PrefeitoDashboard name={session.user.name ?? "Prefeito"} role={session.user.role} />;
+  const searchParams = await props.searchParams;
+
+  return (
+    <PrefeitoDashboard
+      name={session.user.name ?? "Prefeito"}
+      role={session.user.role}
+      filtroSecretaria={searchParams?.secretaria}
+      filtroEixo={searchParams?.eixo}
+    />
+  );
 }
