@@ -143,7 +143,7 @@
 .workTitle { display: grid; min-width: 0; gap: 3px; }
 .workTitle strong,.compactRow strong,.riskRow strong { overflow: hidden; color: #294863; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .workTitle small,.compactRow small,.riskRow small { overflow: hidden; color: #91a0af; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.statusPill { padding: 4px 6px; border: 1px solid #f7dfad; border-radius: 3px; background: #fff8e9; color: #a77412; font-size: 11px; white-space: nowrap; }
+.statusPill { padding: 4px 6px; border: 1px solid #bfe8d4; border-radius: 3px; background: #ecf8f2; color: #1d8a5c; font-size: 11px; white-space: nowrap; }
 .progress { display: flex; align-items: center; gap: 5px; }
 .progress > i { width: 100%; }
 .progress > i > i { background: #2384e4; }

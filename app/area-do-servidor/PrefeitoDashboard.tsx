@@ -105,7 +105,7 @@ function percent(part: number, total: number) {
   return total ? Math.round((part / total) * 100) : 0;
 }
 
-export default async function PrefeitoDashboard({ name }: { name: string }) {
+export default async function PrefeitoDashboard({ name, role }: { name: string; role: string }) {
   const now = new Date();
   const nextMonth = new Date(now);
   nextMonth.setDate(nextMonth.getDate() + 30);
@@ -227,7 +227,7 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
 
   return (
     <div className={styles.shell}>
-      <Sidebar user={{ name, role: "GESTAO" }} />
+      <Sidebar user={{ name, role }} />
       <div className={styles.body}>
         <aside className={styles.sidebar}>
           <div className={styles.profile}>
@@ -315,7 +315,7 @@ export default async function PrefeitoDashboard({ name }: { name: string }) {
                         <span className={styles.workDot} />
                         <span className={styles.workTitle}><strong>{obra.titulo}</strong><small>{obra.secretaria.sigla} · {obra.bairro}</small></span>
                         <span className={styles.statusPill}>Em andamento</span>
-                        <span className={styles.progress}><i><i style={{ width: `${progress}%` }} /></i><b>{progress}%</b></span>
+                        <span className={styles.progress}><i><i style={{ width: `${progress}%` }} /></i><b>{Math.round(progress)}%</b></span>
                         <ArrowUpRight className={styles.rowArrow} size={14} />
                       </Link>
                     );
