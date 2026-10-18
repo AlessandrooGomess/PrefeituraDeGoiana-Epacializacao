@@ -41,6 +41,15 @@ export default function UsuarioEditForm({
         <span>E-mail <b>*</b></span>
         <input type="email" name="email" required defaultValue={usuario.email} />
       </div>
+      <div className={styles.field}>
+        <span>Nova Senha (opcional)</span>
+        <input
+          type="password"
+          name="password"
+          minLength={6}
+          placeholder="Deixe em branco para manter a senha atual (mín. 6 caracteres)"
+        />
+      </div>
       <div className={styles.fieldsGrid}>
         <div className={styles.field}>
           <span>Papel de Acesso <b>*</b></span>
