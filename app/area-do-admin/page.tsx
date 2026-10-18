@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import styles from "@/app/area-do-servidor/area-do-servidor.module.css";
 import Link from "next/link";
+import { Eye, Pencil } from "lucide-react";
+import DeleteObraButton from "@/app/area-do-servidor/DeleteObraButton";
 
 export const dynamic = "force-dynamic";
 
@@ -81,18 +83,40 @@ export default async function AdminDashboard() {
             Ver todas as obras
           </Link>
         </div>
-        
+
         {obrasRecentes.length ? (
           <div className={styles.workList}>
             {obrasRecentes.map((obra) => (
               <article className={styles.workRow} key={obra.id}>
-                <div>
+                <Link
+                  className={styles.workRowLink}
+                  href={`/area-do-servidor/obras/${obra.id}`}
+                >
                   <strong>{obra.titulo}</strong>
                   <span>{obra.secretaria.nome}</span>
+                </Link>
+                <div className={styles.workRowActions}>
+                  <span className={styles.statusTag}>
+                    {STATUS_LABEL[obra.status] ?? obra.status}
+                  </span>
+                  <Link
+                    className={styles.workAction}
+                    href={`/area-do-servidor/obras/${obra.id}`}
+                    title="Ver detalhes da obra"
+                    aria-label={`Ver detalhes de ${obra.titulo}`}
+                  >
+                    <Eye size={16} aria-hidden="true" />
+                  </Link>
+                  <Link
+                    className={styles.workAction}
+                    href={`/area-do-servidor/obras/${obra.id}?modo=editar`}
+                    title="Editar obra"
+                    aria-label={`Editar ${obra.titulo}`}
+                  >
+                    <Pencil size={15} aria-hidden="true" />
+                  </Link>
+                  <DeleteObraButton obraId={obra.id} titulo={obra.titulo} />
                 </div>
-                <span className={styles.statusTag}>
-                  {STATUS_LABEL[obra.status] ?? obra.status}
-                </span>
               </article>
             ))}
           </div>
@@ -105,3 +129,4 @@ export default async function AdminDashboard() {
     </main>
   );
 }
+

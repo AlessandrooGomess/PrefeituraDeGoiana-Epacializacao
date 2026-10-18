@@ -430,12 +430,32 @@ export default function ObraDetalheClient({
             </div>
           </div>
           <nav className={styles.navList} aria-label="Navegação da secretaria">
-            <Link className={styles.navItem} href="/area-do-servidor">
-              Visão geral
-            </Link>
-            <Link className={styles.navItem} href="/area-do-servidor/nova-obra">
-              Cadastrar obra
-            </Link>
+            {user.role === "SUPER_ADMIN" ? (
+              <>
+                <Link className={styles.navItem} href="/area-do-admin">
+                  Visão geral (Admin)
+                </Link>
+                <Link className={styles.navItem} href="/area-do-admin/obras">
+                  Gerenciar Obras
+                </Link>
+                <Link className={styles.navItem} href="/area-do-admin/secretarias">
+                  Secretarias
+                </Link>
+              </>
+            ) : user.role === "GESTAO" ? (
+              <Link className={styles.navItem} href="/area-do-prefeito">
+                Painel do Prefeito
+              </Link>
+            ) : (
+              <>
+                <Link className={styles.navItem} href="/area-do-servidor">
+                  Visão geral
+                </Link>
+                <Link className={styles.navItem} href="/area-do-servidor/nova-obra">
+                  Cadastrar obra
+                </Link>
+              </>
+            )}
           </nav>
         </aside>
 
@@ -443,7 +463,8 @@ export default function ObraDetalheClient({
           <div className={styles.pageHeading}>
             <div>
               <div className={styles.breadcrumb}>
-                Área administrativa <span>/</span> Obras e Projetos <span>/</span> Detalhes
+                {user.role === "SUPER_ADMIN" ? "Administração Geral" : "Área administrativa"}{" "}
+                <span>/</span> Obras e Projetos <span>/</span> Detalhes
               </div>
               <h1 className={styles.pageTitle}>{obra.titulo}</h1>
               <p>Detalhes e acompanhamento da obra na área da secretaria.</p>
