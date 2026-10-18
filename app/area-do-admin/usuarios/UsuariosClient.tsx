@@ -6,6 +6,14 @@ import Link from "next/link";
 import { UserPlus, ChevronRight } from "lucide-react";
 import { Role } from "@prisma/client";
 
+const ROLE_LABELS: Record<Role, string> = {
+  SUPER_ADMIN: "Super Administrador",
+  GESTAO: "Gestão / Gabinete",
+  ADM_SECRETARIA: "Adm. da Secretaria",
+  ENGENHEIRO: "Engenheiro",
+  CIDADAO: "Cidadão",
+};
+
 interface UsuarioItem {
   id: string;
   nome: string;
@@ -32,6 +40,19 @@ export default function UsuariosClient({
   secretarias: SecretariaResumo[];
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [roleFiltro, setRoleFiltro] = useState<string>("TODOS");
+
+  const usuariosFiltrados = usuarios.filter((u) => {
+    const matchBusca =
+      !busca.trim() ||
+      u.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      u.email.toLowerCase().includes(busca.toLowerCase()) ||
+      (u.secretaria?.sigla.toLowerCase().includes(busca.toLowerCase()) ?? false) ||
+      (u.secretaria?.nome.toLowerCase().includes(busca.toLowerCase()) ?? false);
+    const matchRole = roleFiltro === "TODOS" || u.role === roleFiltro;
+    return matchBusca && matchRole;
+  });
 
   return (
     <main className={styles.main}>
@@ -51,16 +72,50 @@ export default function UsuariosClient({
       </div>
 
       <section className={styles.card}>
-        <div className={styles.cardHeading}>
+        <div className={styles.cardHeading} style={{ flexWrap: "wrap", gap: 12 }}>
           <div>
             <h2>Todos os Usuários</h2>
-            <p>{usuarios.length} usuário(s) encontrado(s)</p>
+            <p>{usuariosFiltrados.length} de {usuarios.length} usuário(s) exibido(s)</p>
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <input
+              type="search"
+              placeholder="Buscar por nome, e-mail ou secretaria..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              style={{
+                minHeight: 38,
+                padding: "0 12px",
+                borderRadius: 6,
+                border: "1px solid #cbd5e1",
+                fontSize: 13,
+                minWidth: 240,
+              }}
+            />
+            <select
+              value={roleFiltro}
+              onChange={(e) => setRoleFiltro(e.target.value)}
+              style={{
+                minHeight: 38,
+                padding: "0 12px",
+                borderRadius: 6,
+                border: "1px solid #cbd5e1",
+                fontSize: 13,
+                background: "#fff",
+              }}
+            >
+              <option value="TODOS">Todos os papéis</option>
+              <option value="SUPER_ADMIN">Super Administrador</option>
+              <option value="GESTAO">Gestão / Gabinete</option>
+              <option value="ADM_SECRETARIA">Adm. da Secretaria</option>
+              <option value="ENGENHEIRO">Engenheiro</option>
+            </select>
           </div>
         </div>
 
-        {usuarios.length ? (
+        {usuariosFiltrados.length ? (
           <div className={styles.workList}>
-            {usuarios.map((user) => (
+            {usuariosFiltrados.map((user) => (
               <Link 
                 href={`/area-do-admin/usuarios/${user.id}`} 
                 className={styles.workRow} 
@@ -72,14 +127,16 @@ export default function UsuariosClient({
                 <div>
                   <strong>{user.nome}</strong>
                   <span>{user.email}</span>
-                  {user.secretaria && <span>Secretaria: {user.secretaria.nome}</span>}
+                  {user.secretaria && (
+                    <span>Secretaria: {user.secretaria.sigla} - {user.secretaria.nome}</span>
+                  )}
                 </div>
                 <div style={{ textAlign: "right", display: "flex", gap: 8, alignItems: "center" }}>
                   <div>
                     <span className={styles.statusTag} style={{ display: "block", marginBottom: 4 }}>
-                      {user.role}
+                      {ROLE_LABELS[user.role] ?? user.role}
                     </span>
-                    <span className={styles.statusTag} style={{ display: "block", background: user.ativo ? "#eef0f5" : "#fee2e2", color: user.ativo ? "#7c8799" : "#b91c1c" }}>
+                    <span className={styles.statusTag} style={{ display: "block", background: user.ativo ? "#dcfce7" : "#fee2e2", color: user.ativo ? "#15803d" : "#b91c1c" }}>
                       {user.ativo ? "Ativo" : "Inativo"}
                     </span>
                   </div>
@@ -89,7 +146,7 @@ export default function UsuariosClient({
             ))}
           </div>
         ) : (
-          <p className={styles.emptyState}>Nenhum usuário encontrado.</p>
+          <p className={styles.emptyState}>Nenhum usuário encontrado para os filtros aplicados.</p>
         )}
       </section>
 
@@ -116,8 +173,8 @@ export default function UsuariosClient({
                 <input type="email" name="email" required placeholder="joao@goiana.pe.gov.br" />
               </div>
               <div className={styles.field}>
-                <span>Senha <b>*</b></span>
-                <input type="password" name="password" required placeholder="Senha provisória" />
+                <span>Senha Provisória (mín. 6 caracteres) <b>*</b></span>
+                <input type="password" name="password" minLength={6} required placeholder="Senha provisória" />
               </div>
               <div className={styles.field}>
                 <span>Papel de Acesso <b>*</b></span>
@@ -154,3 +211,4 @@ export default function UsuariosClient({
     </main>
   );
 }
+
