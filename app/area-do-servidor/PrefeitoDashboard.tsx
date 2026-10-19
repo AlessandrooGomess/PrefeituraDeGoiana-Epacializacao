@@ -6,7 +6,7 @@ import {
   Building2,
   CircleDollarSign,
   Clock3,
-  Map as MapIcon,
+  ClipboardList,
   MapPinned,
   PlayCircle,
   TrendingUp,
@@ -352,13 +352,9 @@ export default async function PrefeitoDashboard({
               <TrendingUp size={16} aria-hidden="true" />
               Painel de gestão
             </Link>
-            <Link className={styles.navItem} href="/projetos">
-              <MapPinned size={16} aria-hidden="true" />
-              Obras
-            </Link>
-            <Link className={styles.navItem} href="/">
-              <MapIcon size={16} aria-hidden="true" />
-              Mapa
+            <Link className={styles.navItem} href="/area-do-prefeito/status-obras">
+              <ClipboardList size={16} aria-hidden="true" />
+              Status de Obras
             </Link>
           </nav>
         </aside>
@@ -455,7 +451,7 @@ export default async function PrefeitoDashboard({
                   <h2>Obras em destaque</h2>
                   <p>Acompanhamento das principais frentes</p>
                 </div>
-                <Link href="/projetos">
+                <Link href="/area-do-prefeito/status-obras">
                   Ver todas <ArrowUpRight size={14} />
                 </Link>
               </div>
@@ -545,7 +541,7 @@ export default async function PrefeitoDashboard({
               <div className={styles.panelHeading}>
                 <div>
                   <h2>
-                    <AlertTriangle size={16} /> Obras em risco
+                    <AlertTriangle size={16} /> Obras em Alerta
                   </h2>
                   <p>Atrasadas ou paralisadas</p>
                 </div>
