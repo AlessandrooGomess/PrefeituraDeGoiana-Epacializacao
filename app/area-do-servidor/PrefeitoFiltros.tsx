@@ -7,7 +7,12 @@ import { Filter, MapPinned, X } from "lucide-react";
 import styles from "./prefeito-dashboard.module.css";
 
 interface PrefeitoFiltrosProps {
-  secretarias: Array<{ id: string; nome: string; sigla: string }>;
+  secretarias: Array<{
+    id: string;
+    nome: string;
+    sigla: string;
+    eixoId: string | null;
+  }>;
   eixos: Array<{ id: string; nome: string }>;
   filtroSecretaria?: string;
   filtroEixo?: string;
@@ -24,12 +29,36 @@ export default function PrefeitoFiltros({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const handleFilterChange = (key: "secretaria" | "eixo", value: string) => {
+  const secretariasDisponiveis = filtroEixo
+    ? secretarias.filter((sec) => sec.eixoId === filtroEixo)
+    : secretarias;
+
+  const handleEixoChange = (novoEixoId: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
+    if (novoEixoId) {
+      params.set("eixo", novoEixoId);
     } else {
-      params.delete(key);
+      params.delete("eixo");
+    }
+    // Ao trocar de eixo, limpa a secretaria para evitar combinação incompatível
+    params.delete("secretaria");
+
+    startTransition(() => {
+      const queryString = params.toString();
+      router.push(queryString ? `${pathname}?${queryString}` : pathname);
+    });
+  };
+
+  const handleSecretariaChange = (novaSecretariaId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (novaSecretariaId) {
+      params.set("secretaria", novaSecretariaId);
+      const secObj = secretarias.find((s) => s.id === novaSecretariaId);
+      if (secObj?.eixoId && !params.get("eixo")) {
+        params.set("eixo", secObj.eixoId);
+      }
+    } else {
+      params.delete("secretaria");
     }
 
     startTransition(() => {
@@ -53,26 +82,6 @@ export default function PrefeitoFiltros({
           <span className={styles.filterIcon}>
             <Filter size={15} aria-hidden="true" />
           </span>
-          <label htmlFor="filtro-secretaria" className="sr-only">
-            Filtrar por Secretaria
-          </label>
-          <select
-            id="filtro-secretaria"
-            className={styles.filterSelect}
-            value={filtroSecretaria || ""}
-            disabled={isPending}
-            onChange={(e) => handleFilterChange("secretaria", e.target.value)}
-          >
-            <option value="">Todas as Secretarias</option>
-            {secretarias.map((sec) => (
-              <option key={sec.id} value={sec.id}>
-                {sec.sigla} - {sec.nome}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className={styles.filterGroup}>
           <label htmlFor="filtro-eixo" className="sr-only">
             Filtrar por Eixo Estratégico
           </label>
@@ -81,12 +90,36 @@ export default function PrefeitoFiltros({
             className={styles.filterSelect}
             value={filtroEixo || ""}
             disabled={isPending}
-            onChange={(e) => handleFilterChange("eixo", e.target.value)}
+            onChange={(e) => handleEixoChange(e.target.value)}
           >
-            <option value="">Todos os Eixos</option>
+            <option value="">Todos os Eixos Temáticos</option>
             {eixos.map((eixo) => (
               <option key={eixo.id} value={eixo.id}>
                 {eixo.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className={styles.filterGroup}>
+          <label htmlFor="filtro-secretaria" className="sr-only">
+            Filtrar por Secretaria
+          </label>
+          <select
+            id="filtro-secretaria"
+            className={styles.filterSelect}
+            value={filtroSecretaria || ""}
+            disabled={isPending}
+            onChange={(e) => handleSecretariaChange(e.target.value)}
+          >
+            <option value="">
+              {filtroEixo
+                ? "Todas as Secretarias do Eixo"
+                : "Todas as Secretarias"}
+            </option>
+            {secretariasDisponiveis.map((sec) => (
+              <option key={sec.id} value={sec.id}>
+                {sec.sigla} - {sec.nome}
               </option>
             ))}
           </select>
@@ -116,3 +149,4 @@ export default function PrefeitoFiltros({
     </div>
   );
 }
+

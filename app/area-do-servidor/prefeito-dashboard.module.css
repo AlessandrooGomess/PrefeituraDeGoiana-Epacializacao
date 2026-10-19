@@ -370,6 +370,18 @@
 }
 
 .riskPanel .panelHeading h2 svg { color: #e7655b; }
+.alertPanel .panelHeading h2 svg { color: #d97706; }
+.alertCount {
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 800;
+}
 .riskRow {
   display: grid;
   min-height: 52px;
@@ -381,12 +393,22 @@
   text-decoration: none;
 }
 .riskMark { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 50%; background: #fff1ef; color: #e1685d; }
+.alertMark { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 50%; background: #fef3c7; color: #d97706; }
 .riskRow > span:nth-child(2) { display: grid; min-width: 0; gap: 3px; }
 .riskBadgeNegative {
   padding: 3px 6px;
   border-radius: 4px;
   background: #fee2e2;
   color: #dc2626;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.alertBadgeWarning {
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #b45309;
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;

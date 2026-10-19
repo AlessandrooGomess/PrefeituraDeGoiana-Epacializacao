@@ -15,6 +15,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import Sidebar from "@/components/sidebar/Sidebar";
 import PrefeitoFiltros from "./PrefeitoFiltros";
+import InvestimentoPainel, { type ObraInvestimentoItem } from "./InvestimentoPainel";
 import styles from "./prefeito-dashboard.module.css";
 
 const currency = new Intl.NumberFormat("pt-BR", {
@@ -22,12 +23,6 @@ const currency = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
   maximumFractionDigits: 1,
   notation: "compact",
-});
-
-const fullCurrency = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  maximumFractionDigits: 0,
 });
 
 const dateFormat = new Intl.DateTimeFormat("pt-BR", {
@@ -62,6 +57,7 @@ const hourFormat = new Intl.DateTimeFormat("pt-BR", {
 });
 
 const DAY_MS = 86_400_000;
+const ALERTA_PRAZO_DIAS = 60;
 
 const statusInfo = {
   PLANEJADA: { label: "Planejadas", color: "#f5b83d" },
@@ -86,11 +82,32 @@ function greetingFor(date: Date) {
 }
 
 function isLate(obra: { status: string; previsaoConclusao: Date | null }, now: Date) {
-  return obra.status !== "CONCLUIDA" && obra.previsaoConclusao !== null && obra.previsaoConclusao < now;
+  return (
+    obra.status !== "CONCLUIDA" &&
+    obra.previsaoConclusao !== null &&
+    obra.previsaoConclusao < now
+  );
 }
 
-function isAtRisk(obra: { status: string; previsaoConclusao: Date | null }, now: Date) {
+function isOverdueOrPaused(
+  obra: { status: string; previsaoConclusao: Date | null },
+  now: Date,
+) {
   return obra.status === "PARALISADA" || isLate(obra, now);
+}
+
+function daysUntilDeadline(previsaoConclusao: Date | null, now: Date) {
+  if (!previsaoConclusao) return null;
+  return Math.ceil((previsaoConclusao.getTime() - now.getTime()) / DAY_MS);
+}
+
+function isNearDeadline(
+  obra: { status: string; previsaoConclusao: Date | null },
+  now: Date,
+) {
+  if (obra.status === "CONCLUIDA" || obra.status === "PARALISADA") return false;
+  const daysLeft = daysUntilDeadline(obra.previsaoConclusao, now);
+  return daysLeft !== null && daysLeft >= 0 && daysLeft <= ALERTA_PRAZO_DIAS;
 }
 
 function delayDays(previsaoConclusao: Date | null, now: Date) {
@@ -105,7 +122,7 @@ function percent(part: number, total: number) {
 function workHealth(
   obra: { status: string; previsaoConclusao: Date | null },
   progress: number,
-  now: Date
+  now: Date,
 ) {
   if (obra.status === "PARALISADA") {
     return {
@@ -123,15 +140,12 @@ function workHealth(
     };
   }
 
-  if (obra.previsaoConclusao) {
-    const daysLeft = Math.ceil((obra.previsaoConclusao.getTime() - now.getTime()) / DAY_MS);
-    if (daysLeft <= 30 && progress < 80) {
-      return {
-        label: "Atenção",
-        dotClass: styles.dotWarning,
-        pillClass: styles.pillWarning,
-      };
-    }
+  if (isNearDeadline(obra, now)) {
+    return {
+      label: "Em alerta",
+      dotClass: styles.dotWarning,
+      pillClass: styles.pillWarning,
+    };
   }
 
   if (progress >= 90) {
@@ -163,106 +177,149 @@ export default async function PrefeitoDashboard({
   filtroEixo,
 }: PrefeitoDashboardProps) {
   const now = new Date();
-  const next90Days = new Date(now);
-  next90Days.setDate(next90Days.getDate() + 90);
+  const nextAlertLimit = new Date(now.getTime() + ALERTA_PRAZO_DIAS * DAY_MS);
   const firstName = name.trim().split(/\s+/)[0] || "Prefeito";
 
-  const [todasSecretarias, todosEixos] = await Promise.all([
+  const [todasSecretarias, todosEixos, todasObrasInvestimento] = await Promise.all([
     prisma.secretaria.findMany({
-      select: { id: true, nome: true, sigla: true },
+      select: { id: true, nome: true, sigla: true, eixoId: true },
       orderBy: { nome: "asc" },
     }),
     prisma.eixoEstrategico.findMany({
       select: { id: true, nome: true },
       orderBy: { nome: "asc" },
     }),
+    prisma.obra.findMany({
+      where: { deletedAt: null },
+      select: {
+        id: true,
+        titulo: true,
+        status: true,
+        valorContrato: true,
+        eixoId: true,
+        eixo: { select: { id: true, nome: true } },
+        secretaria: {
+          select: {
+            id: true,
+            nome: true,
+            sigla: true,
+            eixoId: true,
+            eixo: { select: { id: true, nome: true } },
+          },
+        },
+        medicoes: {
+          orderBy: { dataVistoria: "desc" },
+          take: 1,
+          select: { percentualExecutado: true },
+        },
+      },
+    }),
   ]);
+
+  // Garante que uma secretaria de outro eixo nunca seja combinada indevidamente
+  const secretariaValida =
+    filtroSecretaria &&
+    (!filtroEixo ||
+      todasSecretarias.some(
+        (sec) => sec.id === filtroSecretaria && sec.eixoId === filtroEixo,
+      ))
+      ? filtroSecretaria
+      : undefined;
 
   const whereCarteira = {
     deletedAt: null,
-    ...(filtroSecretaria ? { secretariaId: filtroSecretaria } : {}),
-    ...(filtroEixo ? { eixoId: filtroEixo } : {}),
+    ...(secretariaValida ? { secretariaId: secretariaValida } : {}),
+    ...(filtroEixo
+      ? {
+          OR: [
+            { eixoId: filtroEixo },
+            { secretaria: { eixoId: filtroEixo } },
+          ],
+        }
+      : {}),
   };
 
-  const [obrasDestaque, entregas, riscos, carteira] = await Promise.all([
-    prisma.obra.findMany({
-      where: { ...whereCarteira, status: "EM_ANDAMENTO" },
-      orderBy: { updatedAt: "desc" },
-      take: 6,
-      select: {
-        id: true,
-        titulo: true,
-        bairro: true,
-        status: true,
-        previsaoConclusao: true,
-        secretaria: { select: { sigla: true } },
-        medicoes: {
-          orderBy: { dataVistoria: "desc" },
-          take: 1,
-          select: { percentualExecutado: true },
+  const [obrasDestaque, obrasEmAlerta, obrasAtrasadasLista, carteira] =
+    await Promise.all([
+      prisma.obra.findMany({
+        where: { ...whereCarteira, status: "EM_ANDAMENTO" },
+        orderBy: { updatedAt: "desc" },
+        take: 6,
+        select: {
+          id: true,
+          titulo: true,
+          bairro: true,
+          status: true,
+          previsaoConclusao: true,
+          secretaria: { select: { sigla: true } },
+          medicoes: {
+            orderBy: { dataVistoria: "desc" },
+            take: 1,
+            select: { percentualExecutado: true },
+          },
         },
-      },
-    }),
-    prisma.obra.findMany({
-      where: {
-        ...whereCarteira,
-        status: { not: "CONCLUIDA" },
-        previsaoConclusao: { gte: now },
-      },
-      orderBy: { previsaoConclusao: "asc" },
-      take: 5,
-      select: {
-        id: true,
-        titulo: true,
-        status: true,
-        previsaoConclusao: true,
-        secretaria: { select: { sigla: true } },
-        medicoes: {
-          orderBy: { dataVistoria: "desc" },
-          take: 1,
-          select: { percentualExecutado: true },
+      }),
+      prisma.obra.findMany({
+        where: {
+          ...whereCarteira,
+          status: { notIn: ["CONCLUIDA", "PARALISADA"] },
+          previsaoConclusao: { gte: now, lte: nextAlertLimit },
         },
-      },
-    }),
-    prisma.obra.findMany({
-      where: {
-        ...whereCarteira,
-        OR: [
-          { status: "PARALISADA" },
-          { status: { not: "CONCLUIDA" }, previsaoConclusao: { lt: now } },
-        ],
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        titulo: true,
-        status: true,
-        previsaoConclusao: true,
-        bairro: true,
-        secretaria: { select: { sigla: true } },
-      },
-    }),
-    prisma.obra.findMany({
-      where: whereCarteira,
-      select: {
-        id: true,
-        titulo: true,
-        bairro: true,
-        status: true,
-        valorContrato: true,
-        previsaoConclusao: true,
-        updatedAt: true,
-        eixo: { select: { nome: true } },
-        secretaria: { select: { sigla: true } },
-        medicoes: {
-          orderBy: { dataVistoria: "desc" },
-          take: 1,
-          select: { percentualExecutado: true },
+        orderBy: { previsaoConclusao: "asc" },
+        take: 5,
+        select: {
+          id: true,
+          titulo: true,
+          bairro: true,
+          status: true,
+          previsaoConclusao: true,
+          secretaria: { select: { sigla: true } },
+          medicoes: {
+            orderBy: { dataVistoria: "desc" },
+            take: 1,
+            select: { percentualExecutado: true },
+          },
         },
-      },
-    }),
-  ]);
+      }),
+      prisma.obra.findMany({
+        where: {
+          ...whereCarteira,
+          OR: [
+            { status: "PARALISADA" },
+            { status: { not: "CONCLUIDA" }, previsaoConclusao: { lt: now } },
+          ],
+        },
+        orderBy: { previsaoConclusao: "asc" },
+        take: 5,
+        select: {
+          id: true,
+          titulo: true,
+          status: true,
+          previsaoConclusao: true,
+          bairro: true,
+          secretaria: { select: { sigla: true } },
+        },
+      }),
+      prisma.obra.findMany({
+        where: whereCarteira,
+        select: {
+          id: true,
+          titulo: true,
+          bairro: true,
+          status: true,
+          valorContrato: true,
+          previsaoConclusao: true,
+          updatedAt: true,
+          eixo: { select: { nome: true } },
+          secretaria: { select: { sigla: true } },
+          medicoes: {
+            orderBy: { dataVistoria: "desc" },
+            take: 1,
+            select: { percentualExecutado: true },
+          },
+        },
+      }),
+    ]);
 
   const totalObras = carteira.length;
   const statusCounts = Object.fromEntries(
@@ -276,17 +333,16 @@ export default async function PrefeitoDashboard({
   const concluidas = statusCounts.CONCLUIDA;
   const paralisadas = statusCounts.PARALISADA;
   const atrasadas = carteira.filter((obra) => isLate(obra, now)).length;
-  const proximasEntregas90 = carteira.filter(
-    (obra) =>
-      obra.status !== "CONCLUIDA" &&
-      obra.previsaoConclusao !== null &&
-      obra.previsaoConclusao >= now &&
-      obra.previsaoConclusao <= next90Days,
+  const totalAtrasadasOuParalisadas = carteira.filter((obra) =>
+    isOverdueOrPaused(obra, now),
+  ).length;
+  const totalEmAlerta60 = carteira.filter((obra) =>
+    isNearDeadline(obra, now),
   ).length;
 
-  const totalEmRisco = carteira.filter((obra) => isAtRisk(obra, now)).length;
   const ultimaAtualizacao = carteira.reduce<Date | null>(
-    (latest, obra) => (!latest || obra.updatedAt > latest ? obra.updatedAt : latest),
+    (latest, obra) =>
+      !latest || obra.updatedAt > latest ? obra.updatedAt : latest,
     null,
   );
 
@@ -294,42 +350,54 @@ export default async function PrefeitoDashboard({
     (total, obra) => total + Number(obra.valorContrato ?? 0),
     0,
   );
-  const investimentoExecutado = carteira.reduce(
-    (total, obra) =>
-      total + Number(obra.valorContrato ?? 0) * (progressFor(obra.status, obra.medicoes[0]) / 100),
-    0,
-  );
 
-  const eixoInvestimento = carteira.reduce<Record<string, number>>((totals, obra) => {
-    const eixo = obra.eixo?.nome ?? "Sem eixo definido";
-    totals[eixo] = (totals[eixo] ?? 0) + Number(obra.valorContrato ?? 0);
-    return totals;
-  }, {});
-  const eixosOrdenados = Object.entries(eixoInvestimento)
-    .sort((first, second) => second[1] - first[1])
-    .slice(0, 4);
-  const maiorEixo = Math.max(1, ...eixosOrdenados.map(([, value]) => value));
+  const obrasInvestimentoSerializadas: ObraInvestimentoItem[] =
+    todasObrasInvestimento.map((o) => ({
+      id: o.id,
+      titulo: o.titulo,
+      valorContrato: Number(o.valorContrato ?? 0),
+      percentualFisico: progressFor(o.status, o.medicoes[0]),
+      eixoId: o.eixo?.id ?? o.secretaria.eixo?.id ?? o.eixoId ?? o.secretaria.eixoId ?? null,
+      eixoNome:
+        o.eixo?.nome ?? o.secretaria.eixo?.nome ?? "Sem eixo definido",
+      secretariaId: o.secretaria.id,
+      secretariaSigla: o.secretaria.sigla,
+      secretariaNome: o.secretaria.nome,
+    }));
 
   const secretarias = Object.entries(
-    carteira.reduce<Record<string, { total: number; emRisco: number }>>((totals, obra) => {
-      const sigla = obra.secretaria.sigla;
-      totals[sigla] ??= { total: 0, emRisco: 0 };
-      totals[sigla].total += 1;
-      if (isAtRisk(obra, now)) totals[sigla].emRisco += 1;
-      return totals;
-    }, {}),
-  ).sort((first, second) => second[1].emRisco - first[1].emRisco || second[1].total - first[1].total);
-  const maiorSecretaria = Math.max(1, ...secretarias.map(([, counts]) => counts.total));
+    carteira.reduce<Record<string, { total: number; atrasadas: number }>>(
+      (totals, obra) => {
+        const sigla = obra.secretaria.sigla;
+        totals[sigla] ??= { total: 0, atrasadas: 0 };
+        totals[sigla].total += 1;
+        if (isOverdueOrPaused(obra, now)) totals[sigla].atrasadas += 1;
+        return totals;
+      },
+      {},
+    ),
+  ).sort(
+    (first, second) =>
+      second[1].atrasadas - first[1].atrasadas ||
+      second[1].total - first[1].total,
+  );
+  const maiorSecretaria = Math.max(
+    1,
+    ...secretarias.map(([, counts]) => counts.total),
+  );
 
   // Distribuição territorial por Bairro / Distrito
   const bairros = Object.entries(
-    carteira.reduce<Record<string, { total: number; valor: number }>>((totals, obra) => {
-      const nomeBairro = obra.bairro?.trim() || "Não informado";
-      totals[nomeBairro] ??= { total: 0, valor: 0 };
-      totals[nomeBairro].total += 1;
-      totals[nomeBairro].valor += Number(obra.valorContrato ?? 0);
-      return totals;
-    }, {}),
+    carteira.reduce<Record<string, { total: number; valor: number }>>(
+      (totals, obra) => {
+        const nomeBairro = obra.bairro?.trim() || "Não informado";
+        totals[nomeBairro] ??= { total: 0, valor: 0 };
+        totals[nomeBairro].total += 1;
+        totals[nomeBairro].valor += Number(obra.valorContrato ?? 0);
+        return totals;
+      },
+      {},
+    ),
   )
     .sort((a, b) => b[1].total - a[1].total || b[1].valor - a[1].valor)
     .slice(0, 5);
@@ -348,11 +416,17 @@ export default async function PrefeitoDashboard({
             </div>
           </div>
           <nav className={styles.navList} aria-label="Navegação da gestão">
-            <Link className={`${styles.navItem} ${styles.navItemActive}`} href="/area-do-prefeito">
+            <Link
+              className={`${styles.navItem} ${styles.navItemActive}`}
+              href="/area-do-prefeito"
+            >
               <TrendingUp size={16} aria-hidden="true" />
               Painel de gestão
             </Link>
-            <Link className={styles.navItem} href="/area-do-prefeito/status-obras">
+            <Link
+              className={styles.navItem}
+              href="/area-do-prefeito/status-obras"
+            >
               <ClipboardList size={16} aria-hidden="true" />
               Status de Obras
             </Link>
@@ -362,8 +436,12 @@ export default async function PrefeitoDashboard({
         <main className={styles.dashboard}>
           <header className={styles.heading}>
             <div>
-              <p className={styles.eyebrow}>{dashboardDateFormat.format(now).toLocaleUpperCase("pt-BR")}</p>
-              <h1>{greetingFor(now)}, {firstName}</h1>
+              <p className={styles.eyebrow}>
+                {dashboardDateFormat.format(now).toLocaleUpperCase("pt-BR")}
+              </p>
+              <h1>
+                {greetingFor(now)}, {firstName}
+              </h1>
               <p className={styles.updated}>
                 <span />
                 {ultimaAtualizacao
@@ -372,14 +450,16 @@ export default async function PrefeitoDashboard({
               </p>
             </div>
             <p className={styles.slogan}>
-              Mais infraestrutura.<br />Uma Goiana melhor.
+              Mais infraestrutura.
+              <br />
+              Uma Goiana melhor.
             </p>
           </header>
 
           <PrefeitoFiltros
             secretarias={todasSecretarias}
             eixos={todosEixos}
-            filtroSecretaria={filtroSecretaria}
+            filtroSecretaria={secretariaValida}
             filtroEixo={filtroEixo}
           />
 
@@ -419,27 +499,27 @@ export default async function PrefeitoDashboard({
 
             <article className={styles.metric}>
               <span className={`${styles.metricIcon} ${styles.red}`}>
-                <AlertTriangle size={19} />
+                <Clock3 size={19} />
               </span>
               <div>
-                <small>Atrasadas / Alertas</small>
+                <small>Obras Atrasadas</small>
                 <strong>{atrasadas}</strong>
                 <span>
                   {paralisadas > 0
-                    ? `${paralisadas} paralisada(s)`
-                    : `${percent(atrasadas, totalObras)}% da carteira`}
+                    ? `${paralisadas} paralisada(s) na carteira`
+                    : `${percent(atrasadas, totalObras)}% com prazo vencido`}
                 </span>
               </div>
             </article>
 
             <article className={styles.metric}>
               <span className={`${styles.metricIcon} ${styles.amber}`}>
-                <CalendarDays size={19} />
+                <AlertTriangle size={19} />
               </span>
               <div>
-                <small>Entregas em 90 dias</small>
-                <strong>{proximasEntregas90}</strong>
-                <span>Previsões cadastradas</span>
+                <small>Obras em Alerta</small>
+                <strong>{totalEmAlerta60}</strong>
+                <span>Prazo final em até {ALERTA_PRAZO_DIAS} dias</span>
               </div>
             </article>
           </section>
@@ -449,7 +529,7 @@ export default async function PrefeitoDashboard({
               <div className={styles.panelHeading}>
                 <div>
                   <h2>Obras em destaque</h2>
-                  <p>Acompanhamento das principais frentes</p>
+                  <p>Acompanhamento das principais frentes em andamento</p>
                 </div>
                 <Link href="/area-do-prefeito/status-obras">
                   Ver todas <ArrowUpRight size={14} />
@@ -466,14 +546,18 @@ export default async function PrefeitoDashboard({
                         href={`/area-do-servidor/obras/${obra.id}`}
                         key={obra.id}
                       >
-                        <span className={`${styles.workDot} ${health.dotClass}`} />
+                        <span
+                          className={`${styles.workDot} ${health.dotClass}`}
+                        />
                         <span className={styles.workTitle}>
                           <strong>{obra.titulo}</strong>
                           <small>
                             {obra.secretaria.sigla} · {obra.bairro}
                           </small>
                         </span>
-                        <span className={`${styles.statusPill} ${health.pillClass}`}>
+                        <span
+                          className={`${styles.statusPill} ${health.pillClass}`}
+                        >
                           {health.label}
                         </span>
                         <span className={styles.progress}>
@@ -488,52 +572,9 @@ export default async function PrefeitoDashboard({
                   })}
                 </div>
               ) : (
-                <p className={styles.empty}>Ainda não há obras em andamento com os filtros selecionados.</p>
-              )}
-            </section>
-
-            <section className={styles.panel}>
-              <div className={styles.panelHeading}>
-                <div>
-                  <h2>
-                    <CalendarDays size={16} /> Próximas entregas
-                  </h2>
-                  <p>Previsão de conclusão cadastrada</p>
-                </div>
-                <span className={styles.headingCount}>{entregas.length}</span>
-              </div>
-              {entregas.length ? (
-                <div className={styles.compactList}>
-                  {entregas.map((obra) => {
-                    const progress = progressFor(obra.status, obra.medicoes[0]);
-                    return (
-                      <Link
-                        href={`/area-do-servidor/obras/${obra.id}`}
-                        className={styles.compactRow}
-                        key={obra.id}
-                      >
-                        <time>
-                          {obra.previsaoConclusao
-                            ? dateFormat.format(obra.previsaoConclusao)
-                            : "Sem data"}
-                        </time>
-                        <span>
-                          <strong>{obra.titulo}</strong>
-                          <small>{obra.secretaria.sigla}</small>
-                        </span>
-                        <span className={styles.compactProgressWrapper}>
-                          <span className={styles.compactProgressBar}>
-                            <i style={{ width: `${progress}%` }} />
-                          </span>
-                          <b>{Math.round(progress)}%</b>
-                        </span>
-                        <ArrowUpRight size={14} />
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className={styles.empty}>Nenhuma entrega prevista.</p>
+                <p className={styles.empty}>
+                  Ainda não há obras em andamento com os filtros selecionados.
+                </p>
               )}
             </section>
 
@@ -541,15 +582,17 @@ export default async function PrefeitoDashboard({
               <div className={styles.panelHeading}>
                 <div>
                   <h2>
-                    <AlertTriangle size={16} /> Obras em Alerta
+                    <Clock3 size={16} /> Obras Atrasadas
                   </h2>
-                  <p>Atrasadas ou paralisadas</p>
+                  <p>Obras que já estouraram o prazo final ou estão paralisadas</p>
                 </div>
-                <span className={styles.riskCount}>{totalEmRisco}</span>
+                <span className={styles.riskCount}>
+                  {totalAtrasadasOuParalisadas}
+                </span>
               </div>
-              {riscos.length ? (
+              {obrasAtrasadasLista.length ? (
                 <div className={styles.compactList}>
-                  {riscos.map((obra) => {
+                  {obrasAtrasadasLista.map((obra) => {
                     const days = delayDays(obra.previsaoConclusao, now);
                     return (
                       <Link
@@ -564,17 +607,77 @@ export default async function PrefeitoDashboard({
                           <strong>{obra.titulo}</strong>
                           <small>
                             {obra.secretaria.sigla} · {obra.bairro}
+                            {obra.previsaoConclusao
+                              ? ` · Prazo era ${dateFormat.format(obra.previsaoConclusao)}`
+                              : ""}
                           </small>
                         </span>
                         <b className={styles.riskBadgeNegative}>
-                          {obra.status === "PARALISADA" ? "Paralisada" : `-${days}d`}
+                          {obra.status === "PARALISADA"
+                            ? "Paralisada"
+                            : `-${days}d`}
                         </b>
                       </Link>
                     );
                   })}
                 </div>
               ) : (
-                <p className={styles.empty}>Nenhuma obra com prazo vencido.</p>
+                <p className={styles.empty}>
+                  Nenhuma obra com prazo estourado ou paralisada.
+                </p>
+              )}
+            </section>
+
+            <section className={`${styles.panel} ${styles.alertPanel}`}>
+              <div className={styles.panelHeading}>
+                <div>
+                  <h2>
+                    <AlertTriangle size={16} /> Obras em Alerta
+                  </h2>
+                  <p>
+                    Próximas do prazo final de entrega (vencimento em até{" "}
+                    {ALERTA_PRAZO_DIAS} dias)
+                  </p>
+                </div>
+                <span className={styles.alertCount}>{totalEmAlerta60}</span>
+              </div>
+              {obrasEmAlerta.length ? (
+                <div className={styles.compactList}>
+                  {obrasEmAlerta.map((obra) => {
+                    const daysLeft =
+                      daysUntilDeadline(obra.previsaoConclusao, now) ?? 0;
+                    const progress = progressFor(obra.status, obra.medicoes[0]);
+                    return (
+                      <Link
+                        href={`/area-do-servidor/obras/${obra.id}`}
+                        className={styles.riskRow}
+                        key={obra.id}
+                      >
+                        <span className={styles.alertMark}>
+                          <CalendarDays size={14} />
+                        </span>
+                        <span>
+                          <strong>{obra.titulo}</strong>
+                          <small>
+                            {obra.secretaria.sigla} · {obra.bairro} · Entrega:{" "}
+                            {obra.previsaoConclusao
+                              ? dateFormat.format(obra.previsaoConclusao)
+                              : "Sem data"}{" "}
+                            ({Math.round(progress)}% concluído)
+                          </small>
+                        </span>
+                        <b className={styles.alertBadgeWarning}>
+                          {daysLeft === 0 ? "Vence hoje" : `Faltam ${daysLeft}d`}
+                        </b>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className={styles.empty}>
+                  Nenhuma obra com prazo vencendo nos próximos{" "}
+                  {ALERTA_PRAZO_DIAS} dias.
+                </p>
               )}
             </section>
 
@@ -584,7 +687,7 @@ export default async function PrefeitoDashboard({
                   <h2>
                     <Building2 size={16} /> Obras por secretaria
                   </h2>
-                  <p>Total da carteira e obras em risco</p>
+                  <p>Total da carteira e obras atrasadas</p>
                 </div>
               </div>
               <div className={styles.axisList}>
@@ -593,11 +696,19 @@ export default async function PrefeitoDashboard({
                     <div className={styles.secretariaRow} key={sigla}>
                       <span className={styles.axisName}>{sigla}</span>
                       <i>
-                        <i style={{ width: `${(counts.total / maiorSecretaria) * 100}%` }} />
+                        <i
+                          style={{
+                            width: `${(counts.total / maiorSecretaria) * 100}%`,
+                          }}
+                        />
                       </i>
                       <b>{counts.total}</b>
-                      <em className={counts.emRisco ? styles.riskBadge : styles.noRisk}>
-                        {counts.emRisco} em risco
+                      <em
+                        className={
+                          counts.atrasadas ? styles.riskBadge : styles.noRisk
+                        }
+                      >
+                        {counts.atrasadas} atrasada(s)
                       </em>
                     </div>
                   ))
@@ -607,37 +718,13 @@ export default async function PrefeitoDashboard({
               </div>
             </section>
 
-            <section className={styles.panel}>
-              <div className={styles.panelHeading}>
-                <div>
-                  <h2>
-                    <TrendingUp size={16} /> Investimento por eixo
-                  </h2>
-                  <p>Valor contratado da carteira</p>
-                </div>
-              </div>
-              <div className={styles.investmentTotal}>{fullCurrency.format(investimentoTotal)}</div>
-              <p className={styles.executed}>
-                {fullCurrency.format(investimentoExecutado)} executados (
-                {percent(investimentoExecutado, investimentoTotal)}%, conforme a última medição)
-              </p>
-              <div className={styles.axisList}>
-                {eixosOrdenados.length ? (
-                  eixosOrdenados.map(([axis, value], index) => (
-                    <div className={styles.axisRow} key={axis}>
-                      <span className={`${styles.axisDot} ${styles[`axis${index}`]}`} />
-                      <span className={styles.axisName}>{axis}</span>
-                      <i>
-                        <i style={{ width: `${(value / maiorEixo) * 100}%` }} />
-                      </i>
-                      <b>{currency.format(value)}</b>
-                    </div>
-                  ))
-                ) : (
-                  <p className={styles.empty}>Sem valores de contrato cadastrados.</p>
-                )}
-              </div>
-            </section>
+            <InvestimentoPainel
+              obras={obrasInvestimentoSerializadas}
+              eixos={todosEixos}
+              secretarias={todasSecretarias}
+              initialEixoId={filtroEixo}
+              initialSecretariaId={secretariaValida}
+            />
 
             <section className={styles.panel}>
               <div className={styles.panelHeading}>
@@ -654,10 +741,16 @@ export default async function PrefeitoDashboard({
                     <div className={styles.secretariaRow} key={bairroNome}>
                       <span className={styles.axisName}>{bairroNome}</span>
                       <i>
-                        <i style={{ width: `${(data.total / maiorBairro) * 100}%` }} />
+                        <i
+                          style={{
+                            width: `${(data.total / maiorBairro) * 100}%`,
+                          }}
+                        />
                       </i>
                       <b>{data.total}</b>
-                      <em className={styles.noRisk}>{currency.format(data.valor)}</em>
+                      <em className={styles.noRisk}>
+                        {currency.format(data.valor)}
+                      </em>
                     </div>
                   ))
                 ) : (
