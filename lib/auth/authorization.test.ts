@@ -137,29 +137,39 @@ describe("requireUser", () => {
 });
 
 describe("canAccessSecretaria", () => {
-  it("permite gestão e super administrador em qualquer secretaria", () => {
-    expect(
-      canAccessSecretaria(
-        { id: "1", role: Role.GESTAO, secretariaId: null },
-        "secretaria-2",
-      ),
-    ).toBe(true);
+  it("permite super administrador em qualquer secretaria e bloqueia gestão (prefeito)", () => {
     expect(
       canAccessSecretaria(
         { id: "1", role: Role.SUPER_ADMIN, secretariaId: null },
         "secretaria-2",
       ),
     ).toBe(true);
+    expect(
+      canAccessSecretaria(
+        { id: "1", role: Role.GESTAO, secretariaId: null },
+        "secretaria-2",
+      ),
+    ).toBe(false);
   });
 
-  it("limita administrador e engenheiro à própria secretaria", () => {
-    const user = {
+  it("impede uma secretaria de alterar outra, mesmo sendo do mesmo eixo", () => {
+    const educacao = {
       id: "1",
       role: Role.ADM_SECRETARIA,
-      secretariaId: "secretaria-1",
+      secretariaId: "secretaria-educacao",
     };
 
-    expect(canAccessSecretaria(user, "secretaria-1")).toBe(true);
-    expect(canAccessSecretaria(user, "secretaria-2")).toBe(false);
+    expect(canAccessSecretaria(educacao, "secretaria-educacao")).toBe(true);
+    expect(canAccessSecretaria(educacao, "secretaria-saude")).toBe(false);
+  });
+
+  it("bloqueia administrador de secretaria sem secretaria vinculada", () => {
+    expect(
+      canAccessSecretaria(
+        { id: "1", role: Role.ADM_SECRETARIA, secretariaId: null },
+        "secretaria-saude",
+      ),
+    ).toBe(false);
   });
 });
+

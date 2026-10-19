@@ -195,9 +195,10 @@ export default function ObraDetalheClient({
   initialEditMode: boolean;
 }) {
   const router = useRouter();
+  const canEdit = user.role === "SUPER_ADMIN" || user.role === "ADM_SECRETARIA";
   const [obra, setObra] = useState<ObraDetail>(initialObra);
   const [carregandoObra, setCarregandoObra] = useState(false);
-  const [editing, setEditing] = useState(initialEditMode);
+  const [editing, setEditing] = useState(canEdit && initialEditMode);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -443,9 +444,14 @@ export default function ObraDetalheClient({
                 </Link>
               </>
             ) : user.role === "GESTAO" ? (
-              <Link className={styles.navItem} href="/area-do-prefeito">
-                Painel do Prefeito
-              </Link>
+              <>
+                <Link className={styles.navItem} href="/area-do-prefeito">
+                  Painel de gestão
+                </Link>
+                <Link className={styles.navItem} href="/area-do-prefeito/status-obras">
+                  Status de Obras
+                </Link>
+              </>
             ) : (
               <>
                 <Link className={styles.navItem} href="/area-do-servidor">
@@ -463,11 +469,19 @@ export default function ObraDetalheClient({
           <div className={styles.pageHeading}>
             <div>
               <div className={styles.breadcrumb}>
-                {user.role === "SUPER_ADMIN" ? "Administração Geral" : "Área administrativa"}{" "}
+                {user.role === "SUPER_ADMIN"
+                  ? "Administração Geral"
+                  : user.role === "GESTAO"
+                    ? "Área do Prefeito"
+                    : "Área administrativa"}{" "}
                 <span>/</span> Obras e Projetos <span>/</span> Detalhes
               </div>
               <h1 className={styles.pageTitle}>{obra.titulo}</h1>
-              <p>Detalhes e acompanhamento da obra na área da secretaria.</p>
+              <p>
+                {user.role === "GESTAO"
+                  ? "Visualização executiva dos dados, medições e histórico da obra."
+                  : "Detalhes e acompanhamento da obra na área da secretaria."}
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-6">
               <button
@@ -481,27 +495,28 @@ export default function ObraDetalheClient({
                 {carregandoObra ? "Sincronizando..." : "Sincronizar"}
               </button>
 
-              {editing ? (
-                <button
-                  className={styles.secondaryButton}
-                  type="button"
-                  disabled={saving}
-                  onClick={() => {
-                    setEditing(false);
-                    setError("");
-                  }}
-                >
-                  <X size={16} aria-hidden="true" /> Cancelar edição
-                </button>
-              ) : (
-                <button
-                  className={styles.primaryButton}
-                  type="button"
-                  onClick={() => setEditing(true)}
-                >
-                  <Pencil size={16} aria-hidden="true" /> Editar obra
-                </button>
-              )}
+              {canEdit &&
+                (editing ? (
+                  <button
+                    className={styles.secondaryButton}
+                    type="button"
+                    disabled={saving}
+                    onClick={() => {
+                      setEditing(false);
+                      setError("");
+                    }}
+                  >
+                    <X size={16} aria-hidden="true" /> Cancelar edição
+                  </button>
+                ) : (
+                  <button
+                    className={styles.primaryButton}
+                    type="button"
+                    onClick={() => setEditing(true)}
+                  >
+                    <Pencil size={16} aria-hidden="true" /> Editar obra
+                  </button>
+                ))}
             </div>
           </div>
 
@@ -514,7 +529,7 @@ export default function ObraDetalheClient({
           </div>
 
           {/* DADOS PRINCIPAIS: MODO EDIÇÃO OU MODO VISUALIZAÇÃO */}
-          {editing ? (
+          {canEdit && editing ? (
             <form className={styles.form} onSubmit={saveChanges}>
               {error && <p className={styles.errorBanner} role="alert">{error}</p>}
               <section className={styles.card}>
@@ -709,24 +724,27 @@ export default function ObraDetalheClient({
                 </div>
               ) : (
                 <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-center">
-                  <p className="mb-3 text-xs text-slate-500">
+                  <p className="mb-0 text-xs text-slate-500">
                     Ainda não há etapas cadastradas para esta obra.
                   </p>
-                  {obra.tipoObra ? (
-                    <button
-                      type="button"
-                      disabled={etapasLoading}
-                      onClick={handleInicializarEtapas}
-                      className={styles.secondaryButton}
-                    >
-                      <Plus size={15} aria-hidden="true" />
-                      {etapasLoading ? "Inicializando etapas..." : `Inicializar etapas padrão de "${obra.tipoObra.nome}"`}
-                    </button>
-                  ) : (
-                    <p className="text-xs text-amber-700 font-medium">
-                      Dica: Selecione um Tipo de Obra ao editar os dados para vincular as etapas padronizadas.
-                    </p>
-                  )}
+                  {canEdit &&
+                    (obra.tipoObra ? (
+                      <button
+                        type="button"
+                        disabled={etapasLoading}
+                        onClick={handleInicializarEtapas}
+                        className={`${styles.secondaryButton} mt-3`}
+                      >
+                        <Plus size={15} aria-hidden="true" />
+                        {etapasLoading
+                          ? "Inicializando etapas..."
+                          : `Inicializar etapas padrão de "${obra.tipoObra.nome}"`}
+                      </button>
+                    ) : (
+                      <p className="mt-2 mb-0 text-xs text-amber-700 font-medium">
+                        Dica: Selecione um Tipo de Obra ao editar os dados para vincular as etapas padronizadas.
+                      </p>
+                    ))}
                 </div>
               )}
             </section>
@@ -803,14 +821,16 @@ export default function ObraDetalheClient({
                     <p>Galeria de arquivos e comprovações visuais</p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className={styles.secondaryButton}
-                  onClick={() => setMostrandoFormFoto(!mostrandoFormFoto)}
-                >
-                  <ImagePlus size={15} aria-hidden="true" />
-                  {mostrandoFormFoto ? "Fechar" : "Adicionar foto"}
-                </button>
+                {canEdit && (
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => setMostrandoFormFoto(!mostrandoFormFoto)}
+                  >
+                    <ImagePlus size={15} aria-hidden="true" />
+                    {mostrandoFormFoto ? "Fechar" : "Adicionar foto"}
+                  </button>
+                )}
               </div>
 
               {fotoMensagem && (
@@ -820,7 +840,7 @@ export default function ObraDetalheClient({
               )}
 
               {/* Formulário para adicionar foto via POST /api/obras/[id]/fotos */}
-              {mostrandoFormFoto && (
+              {canEdit && mostrandoFormFoto && (
                 <form onSubmit={handleSalvarFoto} className="mb-4 rounded border border-blue-200 bg-blue-50/50 p-3">
                   <h4 className="m-0 mb-2 text-xs font-bold text-slate-800">Cadastrar nova foto da obra</h4>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

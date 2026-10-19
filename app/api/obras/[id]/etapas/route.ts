@@ -78,8 +78,8 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ message: "O identificador da obra é inválido." }, { status: 400 });
   }
 
-  // Cadastro de etapas é atribuição da secretaria; o engenheiro não pode cadastrar
-  const auth = await requireUser([Role.SUPER_ADMIN, Role.GESTAO, Role.ADM_SECRETARIA]);
+  // Cadastro de etapas é atribuição da secretaria ou super admin; o engenheiro e o prefeito não podem cadastrar
+  const auth = await requireUser([Role.SUPER_ADMIN, Role.ADM_SECRETARIA]);
   if (auth.response) return auth.response;
 
   try {

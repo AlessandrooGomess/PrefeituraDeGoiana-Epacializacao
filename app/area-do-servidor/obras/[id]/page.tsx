@@ -142,13 +142,17 @@ export default async function ObraDetalhePage({
     }),
   ]);
 
+  const canEdit =
+    session.user.role === Role.SUPER_ADMIN ||
+    session.user.role === Role.ADM_SECRETARIA;
+
   return (
     <ObraDetalheClient
       user={{
         name: session.user.name ?? session.user.email ?? "Usuário",
         role: session.user.role,
       }}
-      initialEditMode={query.modo === "editar"}
+      initialEditMode={canEdit && query.modo === "editar"}
       tiposObra={tiposObra}
       engenheiros={engenheiros}
       obra={{

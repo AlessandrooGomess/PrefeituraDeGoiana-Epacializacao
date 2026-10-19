@@ -292,7 +292,6 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   const authorization = await requireUser([
     Role.SUPER_ADMIN,
-    Role.GESTAO,
     Role.ADM_SECRETARIA,
   ]);
 
@@ -353,7 +352,11 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
 
-    if (!canAccessSecretaria(authorization.user, currentObra.secretariaId)) {
+    if (
+      !canAccessSecretaria(authorization.user, currentObra.secretariaId) ||
+      (data.secretariaId !== undefined &&
+        !canAccessSecretaria(authorization.user, data.secretariaId))
+    ) {
       return NextResponse.json(
         { message: "Você não tem permissão para esta secretaria." },
         { status: 403 },

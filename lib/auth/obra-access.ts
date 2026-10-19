@@ -12,7 +12,8 @@ export interface ObraOwnership {
 /**
  * Define quem pode registrar informações em uma obra.
  * O engenheiro só atua nas obras sob sua responsabilidade;
- * os demais perfis seguem o acesso por secretaria.
+ * a secretaria só atua nas obras da própria pasta;
+ * a Gestão (prefeito) apenas visualiza e nunca registra informações.
  */
 export function canManageObra(
   user: AuthenticatedUser,

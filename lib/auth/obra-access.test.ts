@@ -55,9 +55,21 @@ describe("canManageObra", () => {
     ).toBe(false);
   });
 
-  it("permite gestão em qualquer obra", () => {
+  it("bloqueia a gestão (prefeito), que apenas visualiza", () => {
     expect(
       canManageObra({ id: "gestor", role: Role.GESTAO, secretariaId: null }, obra),
+    ).toBe(false);
+  });
+
+  it("permite o super admin em qualquer obra", () => {
+    expect(
+      canManageObra({ id: "admin", role: Role.SUPER_ADMIN, secretariaId: null }, obra),
     ).toBe(true);
+  });
+
+  it("bloqueia o cidadão", () => {
+    expect(
+      canManageObra({ id: "cidadao", role: Role.CIDADAO, secretariaId: null }, obra),
+    ).toBe(false);
   });
 });
