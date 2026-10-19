@@ -195,12 +195,40 @@ describe("PATCH /api/obras/[id]", () => {
     mocks.requireUser.mockResolvedValue({
       user: {
         id: "usuario-1",
-        role: "GESTAO",
+        role: "SUPER_ADMIN",
         secretariaId: null,
       },
     });
     mocks.canAccessSecretaria.mockReturnValue(true);
     mocks.validateObraRelations.mockResolvedValue([]);
+  });
+
+  it("bloqueia a gestão (prefeito) de editar obras", async () => {
+    mocks.requireUser.mockImplementation(async (roles: string[]) =>
+      roles.includes("GESTAO")
+        ? { user: { id: "prefeito", role: "GESTAO", secretariaId: null } }
+        : {
+            response: new Response(
+              JSON.stringify({ message: "Você não tem permissão para executar esta ação." }),
+              { status: 403 },
+            ),
+          },
+    );
+
+    const response = await PATCH(
+      new Request("http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000", {
+        method: "PATCH",
+        body: JSON.stringify({ titulo: "Tentativa de edição pelo prefeito" }),
+      }),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
   });
 
   it("retorna 400 quando o identificador é inválido", async () => {
@@ -504,7 +532,7 @@ describe("DELETE /api/obras/[id]", () => {
     mocks.requireUser.mockResolvedValue({
       user: {
         id: "usuario-1",
-        role: "GESTAO",
+        role: "SUPER_ADMIN",
         secretariaId: null,
       },
     });

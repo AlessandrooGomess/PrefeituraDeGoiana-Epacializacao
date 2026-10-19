@@ -73,16 +73,25 @@ export async function requireUser(
   };
 }
 
+/**
+ * Verifica se o usuário tem permissão de gestão/escrita sobre uma secretaria.
+ * Somente o Super Admin pode atuar em qualquer secretaria;
+ * ADM_SECRETARIA e ENGENHEIRO estão restritos exclusivamente à própria secretaria
+ * (mesmo que outra secretaria pertença ao mesmo Eixo Estratégico).
+ * A Gestão (Prefeito) possui acesso apenas de leitura no painel e não altera obras.
+ */
 export function canAccessSecretaria(
   user: AuthenticatedUser,
   secretariaId: string,
 ): boolean {
-  if (user.role === Role.SUPER_ADMIN || user.role === Role.GESTAO) {
+  if (user.role === Role.SUPER_ADMIN) {
     return true;
   }
 
   return (
     (user.role === Role.ADM_SECRETARIA || user.role === Role.ENGENHEIRO) &&
+    user.secretariaId !== null &&
     user.secretariaId === secretariaId
   );
 }
+

@@ -78,7 +78,6 @@ export async function POST(request: Request, context: RouteContext) {
 
   const authorization = await requireUser([
     Role.SUPER_ADMIN,
-    Role.GESTAO,
     Role.ADM_SECRETARIA,
     Role.ENGENHEIRO,
   ]);
