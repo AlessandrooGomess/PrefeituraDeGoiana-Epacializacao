@@ -20,10 +20,12 @@
 .summary span { color: #71849a; font-size: 12px; }
 .alertSummary { border-color: #f5d2cf !important; }
 .alertSummary svg,.alertSummary strong { color: #d45248; }
+.warningSummary { border-color: #f3dfb0 !important; }
+.warningSummary svg,.warningSummary strong { color: #b7791f; }
 
 .filters {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(170px, 0.7fr) minmax(170px, 0.7fr) auto;
+  grid-template-columns: minmax(190px, 1fr) minmax(150px, 0.7fr) minmax(150px, 0.7fr) minmax(150px, 0.7fr) auto;
   align-items: end;
   gap: 10px;
   padding: 13px;
@@ -69,6 +71,7 @@
 .workTitle p { margin: 0; color: #8092a5; font-size: 12px; }
 .healthBadge,.statusBadge { display: inline-flex; width: fit-content; align-items: center; gap: 4px; padding: 4px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; }
 .healthAlert { background: #fff0ee; color: #c9473e; }
+.healthWarning { background: #fff8e6; color: #b7791f; }
 .healthNormal { background: #edf7f1; color: #248353; }
 .statusBadge { flex: 0 0 auto; border: 1px solid #dce6f0; background: #f7f9fc; color: #536c84; }
 
@@ -88,6 +91,7 @@
 .progressTrack { display: block; width: min(80px, 45%); height: 5px; overflow: hidden; border-radius: 5px; background: #eaf0f6; }
 .progressTrack span { display: block; height: 100%; border-radius: inherit; background: #2384e4; }
 .daysLate { color: #c9473e; font-size: 10px; }
+.daysWarning { color: #b7791f; font-size: 10px; }
 .workFooter { display: flex; min-height: 40px; align-items: center; justify-content: space-between; gap: 10px; }
 .workFooter > span { color: #899aab; font-size: 10px; }
 .workFooter a { display: inline-flex; align-items: center; gap: 4px; color: #2377d4; font-size: 11px; font-weight: 700; text-decoration: none; }

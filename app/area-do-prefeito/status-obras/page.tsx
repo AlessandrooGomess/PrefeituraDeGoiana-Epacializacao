@@ -1,5 +1,5 @@
 import { Role, StatusObra } from "@prisma/client";
-import { AlertTriangle, ArrowLeft, ArrowUpRight, ClipboardList } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowUpRight, ClipboardList, Clock3 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -19,6 +19,7 @@ const statusLabels: Record<StatusObra, string> = {
 
 const statusOptions = Object.values(StatusObra);
 const dayMs = 86_400_000;
+const ALERTA_PRAZO_DIAS = 60;
 const dateFormat = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
   month: "long",
@@ -36,30 +37,37 @@ function progressFor(status: StatusObra, measurement?: { percentualExecutado: un
   return status === StatusObra.CONCLUIDA ? 100 : 0;
 }
 
+type HealthLevel = "late" | "warning" | "normal";
+
 function healthFor(
   obra: { status: StatusObra; previsaoConclusao: Date | null },
-  progress: number,
   now: Date,
-) {
-  if (obra.status === StatusObra.PARALISADA) return { label: "Paralisada", alert: true };
+): { label: string; level: HealthLevel } {
+  if (obra.status === StatusObra.PARALISADA) {
+    return { label: "Paralisada", level: "late" };
+  }
   if (
     obra.status !== StatusObra.CONCLUIDA &&
     obra.previsaoConclusao !== null &&
     obra.previsaoConclusao < now
-  ) return { label: "Atrasada", alert: true };
+  ) {
+    return { label: "Atrasada", level: "late" };
+  }
 
   if (obra.status !== StatusObra.CONCLUIDA && obra.previsaoConclusao) {
     const daysLeft = Math.ceil((obra.previsaoConclusao.getTime() - now.getTime()) / dayMs);
-    if (daysLeft <= 30 && progress < 80) return { label: "Atenção", alert: true };
+    if (daysLeft >= 0 && daysLeft <= ALERTA_PRAZO_DIAS) {
+      return { label: "Em alerta (até 60 dias)", level: "warning" };
+    }
   }
 
-  return { label: statusLabels[obra.status], alert: false };
+  return { label: statusLabels[obra.status], level: "normal" };
 }
 
 export default async function StatusObrasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; secretaria?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; eixo?: string; secretaria?: string; status?: string }>;
 }) {
   const [session, query] = await Promise.all([auth(), searchParams]);
   if (!session?.user) redirect("/login");
@@ -69,7 +77,7 @@ export default async function StatusObrasPage({
     redirect(getHomeByRole(session.user.role));
   }
 
-  const [obras, secretarias] = await Promise.all([
+  const [obras, secretarias, eixos] = await Promise.all([
     prisma.obra.findMany({
       where: { deletedAt: null },
       select: {
@@ -82,8 +90,8 @@ export default async function StatusObrasPage({
         valorContrato: true,
         previsaoConclusao: true,
         updatedAt: true,
-        secretaria: { select: { id: true, nome: true, sigla: true } },
-        eixo: { select: { nome: true } },
+        secretaria: { select: { id: true, nome: true, sigla: true, eixoId: true } },
+        eixo: { select: { id: true, nome: true } },
         engenheiro: { select: { nome: true } },
         medicoes: {
           orderBy: { dataVistoria: "desc" },
@@ -94,34 +102,59 @@ export default async function StatusObrasPage({
     }),
     prisma.secretaria.findMany({
       orderBy: { nome: "asc" },
-      select: { id: true, nome: true, sigla: true },
+      select: { id: true, nome: true, sigla: true, eixoId: true },
+    }),
+    prisma.eixoEstrategico.findMany({
+      orderBy: { nome: "asc" },
+      select: { id: true, nome: true },
     }),
   ]);
 
   const now = new Date();
   const search = query.q?.trim().toLocaleLowerCase("pt-BR") ?? "";
-  const selectedStatus = query.status === "ALERTA" || statusOptions.includes(query.status as StatusObra)
-    ? query.status
-    : "TODOS";
+  const selectedEixo = query.eixo && eixos.some((eixo) => eixo.id === query.eixo) ? query.eixo : "";
+  const secretariasDoEixo = selectedEixo
+    ? secretarias.filter((sec) => sec.eixoId === selectedEixo)
+    : secretarias;
+  const selectedSecretaria =
+    query.secretaria && secretariasDoEixo.some((sec) => sec.id === query.secretaria)
+      ? query.secretaria
+      : "";
+
+  const selectedStatus =
+    query.status === "ATRASADA" ||
+    query.status === "ALERTA" ||
+    statusOptions.includes(query.status as StatusObra)
+      ? query.status
+      : "TODOS";
+
   const obrasFiltradas = obras
     .filter((obra) => {
-      const progress = progressFor(obra.status, obra.medicoes[0]);
-      const health = healthFor(obra, progress, now);
+      const health = healthFor(obra, now);
+      const obraEixoId = obra.eixo?.id ?? obra.secretaria.eixoId;
       const matchesSearch =
         !search ||
         [obra.titulo, obra.descricao, obra.endereco, obra.bairro, obra.secretaria.nome, obra.secretaria.sigla]
           .some((value) => value?.toLocaleLowerCase("pt-BR").includes(search));
-      const matchesSecretary = !query.secretaria || obra.secretaria.id === query.secretaria;
+      const matchesEixo = !selectedEixo || obraEixoId === selectedEixo;
+      const matchesSecretary = !selectedSecretaria || obra.secretaria.id === selectedSecretaria;
       const matchesStatus =
         selectedStatus === "TODOS" ||
-        (selectedStatus === "ALERTA" ? health.alert : obra.status === selectedStatus);
-      return matchesSearch && matchesSecretary && matchesStatus;
+        (selectedStatus === "ATRASADA"
+          ? health.level === "late"
+          : selectedStatus === "ALERTA"
+            ? health.level === "warning"
+            : obra.status === selectedStatus);
+      return matchesSearch && matchesEixo && matchesSecretary && matchesStatus;
     })
     .sort((first, second) => {
-      const firstHealth = healthFor(first, progressFor(first.status, first.medicoes[0]), now);
-      const secondHealth = healthFor(second, progressFor(second.status, second.medicoes[0]), now);
-      if (firstHealth.alert !== secondHealth.alert) return firstHealth.alert ? -1 : 1;
-      if (firstHealth.alert && secondHealth.alert) {
+      const priority: Record<HealthLevel, number> = { late: 0, warning: 1, normal: 2 };
+      const firstHealth = healthFor(first, now);
+      const secondHealth = healthFor(second, now);
+      if (priority[firstHealth.level] !== priority[secondHealth.level]) {
+        return priority[firstHealth.level] - priority[secondHealth.level];
+      }
+      if (firstHealth.level !== "normal" && secondHealth.level !== "normal") {
         const firstDeadline = first.previsaoConclusao?.getTime() ?? 0;
         const secondDeadline = second.previsaoConclusao?.getTime() ?? 0;
         return firstDeadline - secondDeadline;
@@ -129,9 +162,8 @@ export default async function StatusObrasPage({
       return second.updatedAt.getTime() - first.updatedAt.getTime();
     });
 
-  const alertCount = obrasFiltradas.filter((obra) =>
-    healthFor(obra, progressFor(obra.status, obra.medicoes[0]), now).alert,
-  ).length;
+  const lateCount = obrasFiltradas.filter((obra) => healthFor(obra, now).level === "late").length;
+  const warningCount = obrasFiltradas.filter((obra) => healthFor(obra, now).level === "warning").length;
 
   return (
     <div className={styles.shell}>
@@ -173,9 +205,14 @@ export default async function StatusObrasPage({
               <span>obras encontradas</span>
             </div>
             <div className={pageStyles.alertSummary}>
+              <Clock3 size={18} aria-hidden="true" />
+              <strong>{lateCount}</strong>
+              <span>atrasadas / paralisadas</span>
+            </div>
+            <div className={pageStyles.warningSummary}>
               <AlertTriangle size={18} aria-hidden="true" />
-              <strong>{alertCount}</strong>
-              <span>em alerta</span>
+              <strong>{warningCount}</strong>
+              <span>em alerta (até {ALERTA_PRAZO_DIAS} dias)</span>
             </div>
           </section>
 
@@ -190,10 +227,23 @@ export default async function StatusObrasPage({
               />
             </label>
             <label className={pageStyles.filterField}>
+              <span>Eixo temático</span>
+              <select name="eixo" defaultValue={selectedEixo}>
+                <option value="">Todos os eixos</option>
+                {eixos.map((eixo) => (
+                  <option key={eixo.id} value={eixo.id}>
+                    {eixo.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={pageStyles.filterField}>
               <span>Secretaria</span>
-              <select name="secretaria" defaultValue={query.secretaria ?? ""}>
-                <option value="">Todas as secretarias</option>
-                {secretarias.map((secretaria) => (
+              <select name="secretaria" defaultValue={selectedSecretaria}>
+                <option value="">
+                  {selectedEixo ? "Secretarias deste eixo" : "Todas as secretarias"}
+                </option>
+                {secretariasDoEixo.map((secretaria) => (
                   <option key={secretaria.id} value={secretaria.id}>
                     {secretaria.sigla} - {secretaria.nome}
                   </option>
@@ -204,7 +254,8 @@ export default async function StatusObrasPage({
               <span>Status</span>
               <select name="status" defaultValue={selectedStatus}>
                 <option value="TODOS">Todos os status</option>
-                <option value="ALERTA">Em alerta</option>
+                <option value="ATRASADA">Atrasadas / Paralisadas</option>
+                <option value="ALERTA">Em alerta (até {ALERTA_PRAZO_DIAS} dias)</option>
                 {statusOptions.map((status) => (
                   <option key={status} value={status}>{statusLabels[status]}</option>
                 ))}
@@ -216,17 +267,31 @@ export default async function StatusObrasPage({
           <section className={pageStyles.workList} aria-label="Obras cadastradas">
             {obrasFiltradas.map((obra) => {
               const progress = progressFor(obra.status, obra.medicoes[0]);
-              const health = healthFor(obra, progress, now);
-              const daysLate = obra.previsaoConclusao && obra.previsaoConclusao < now
-                ? Math.ceil((now.getTime() - obra.previsaoConclusao.getTime()) / dayMs)
-                : 0;
+              const health = healthFor(obra, now);
+              const daysLate =
+                obra.status !== StatusObra.CONCLUIDA && obra.previsaoConclusao && obra.previsaoConclusao < now
+                  ? Math.ceil((now.getTime() - obra.previsaoConclusao.getTime()) / dayMs)
+                  : 0;
+              const daysLeft =
+                obra.status !== StatusObra.CONCLUIDA &&
+                obra.previsaoConclusao &&
+                obra.previsaoConclusao >= now
+                  ? Math.ceil((obra.previsaoConclusao.getTime() - now.getTime()) / dayMs)
+                  : null;
+              const badgeClass =
+                health.level === "late"
+                  ? pageStyles.healthAlert
+                  : health.level === "warning"
+                    ? pageStyles.healthWarning
+                    : pageStyles.healthNormal;
 
               return (
                 <article className={pageStyles.workCard} key={obra.id}>
                   <div className={pageStyles.workTop}>
                     <div className={pageStyles.workTitle}>
-                      <span className={`${pageStyles.healthBadge} ${health.alert ? pageStyles.healthAlert : pageStyles.healthNormal}`}>
-                        {health.alert && <AlertTriangle size={13} aria-hidden="true" />}
+                      <span className={`${pageStyles.healthBadge} ${badgeClass}`}>
+                        {health.level === "late" && <Clock3 size={13} aria-hidden="true" />}
+                        {health.level === "warning" && <AlertTriangle size={13} aria-hidden="true" />}
                         {health.label}
                       </span>
                       <h2>{obra.titulo}</h2>
@@ -250,6 +315,11 @@ export default async function StatusObrasPage({
                       <dd>
                         {obra.previsaoConclusao ? dateFormat.format(obra.previsaoConclusao) : "Não informada"}
                         {daysLate > 0 && <span className={pageStyles.daysLate}>{daysLate} dias em atraso</span>}
+                        {daysLate === 0 && daysLeft !== null && daysLeft <= ALERTA_PRAZO_DIAS && (
+                          <span className={pageStyles.daysWarning}>
+                            {daysLeft === 0 ? "Vence hoje" : `Restam ${daysLeft} dias`}
+                          </span>
+                        )}
                       </dd>
                     </div>
                     <div>
