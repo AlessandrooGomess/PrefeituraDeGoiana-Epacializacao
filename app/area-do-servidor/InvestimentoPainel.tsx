@@ -4,11 +4,24 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, TrendingUp } from "lucide-react";
 import styles from "./prefeito-dashboard.module.css";
 
+const currency = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  maximumFractionDigits: 1,
+  notation: "compact",
+});
+
+const fullCurrency = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  maximumFractionDigits: 0,
+});
+
 export interface ObraInvestimentoItem {
   id: string;
   titulo: string;
-  valorOrcado: number;
-  valorExecutado: number;
+  valorContrato: number;
+  percentualFisico: number;
   eixoId: string | null;
   eixoNome: string;
   secretariaId: string;
@@ -29,36 +42,40 @@ interface InvestimentoPainelProps {
   initialSecretariaId?: string;
 }
 
-const currency = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  maximumFractionDigits: 1,
-  notation: "compact",
-});
-
-const fullCurrency = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  maximumFractionDigits: 0,
-});
-
 function percent(part: number, total: number) {
-  if (!total) return 0;
-  return Math.round((part / total) * 100);
+  return total ? Math.round((part / total) * 100) : 0;
 }
 
 export default function InvestimentoPainel({
   obras,
   eixos,
   secretarias,
-  initialEixoId = "",
-  initialSecretariaId = "",
+  initialEixoId,
+  initialSecretariaId,
 }: InvestimentoPainelProps) {
-  const [eixoSelecionado, setEixoSelecionado] = useState(initialEixoId);
-  const [secretariaSelecionada, setSecretariaSelecionada] =
-    useState(initialSecretariaId);
+  const [eixoSelecionado, setEixoSelecionado] = useState(initialEixoId ?? "");
+  const [secretariaSelecionada, setSecretariaSelecionada] = useState(
+    initialSecretariaId ?? "",
+  );
   const [openMenu, setOpenMenu] = useState<"eixo" | "secretaria" | null>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
+
+  // Sincroniza caso o filtro global do topo mude via navegação
+  const [prevInitial, setPrevInitial] = useState({
+    eixo: initialEixoId ?? "",
+    sec: initialSecretariaId ?? "",
+  });
+  if (
+    prevInitial.eixo !== (initialEixoId ?? "") ||
+    prevInitial.sec !== (initialSecretariaId ?? "")
+  ) {
+    setPrevInitial({
+      eixo: initialEixoId ?? "",
+      sec: initialSecretariaId ?? "",
+    });
+    setEixoSelecionado(initialEixoId ?? "");
+    setSecretariaSelecionada(initialSecretariaId ?? "");
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -77,76 +94,79 @@ export default function InvestimentoPainel({
     ? secretarias.filter((s) => s.eixoId === eixoSelecionado)
     : secretarias;
 
-  // Filtra obras conforme seleção local do painel
   const obrasRecorte = obras.filter((obra) => {
-    if (eixoSelecionado && obra.eixoId !== eixoSelecionado) return false;
-    if (secretariaSelecionada && obra.secretariaId !== secretariaSelecionada)
-      return false;
+    if (secretariaSelecionada) {
+      return obra.secretariaId === secretariaSelecionada;
+    }
+    if (eixoSelecionado) {
+      return obra.eixoId === eixoSelecionado;
+    }
     return true;
   });
 
   const investimentoTotal = obrasRecorte.reduce(
-    (sum, o) => sum + o.valorOrcado,
+    (acc, o) => acc + o.valorContrato,
     0,
   );
   const investimentoExecutado = obrasRecorte.reduce(
-    (sum, o) => sum + o.valorExecutado,
+    (acc, o) => acc + o.valorContrato * (o.percentualFisico / 100),
     0,
   );
 
-  // Define o agrupamento de acordo com o nível de drill-down:
-  // 1) Sem eixo selecionado -> Agrupa por Eixo Temático
-  // 2) Com eixo selecionado e sem secretaria -> Agrupa por Secretaria daquele Eixo
-  // 3) Com secretaria selecionada -> Lista as principais obras daquela Secretaria
-  type LinhaAgrupada = { key: string; label: string; valor: number };
-  let linhas: LinhaAgrupada[] = [];
-  let subtitulo = "Valores contratados por eixo temático";
+  // Define o agrupamento de acordo com o nível selecionado:
+  // 1) Sem eixo -> Agrupa por Eixo Estratégico
+  // 2) Com eixo e sem secretaria -> Agrupa pelas Secretarias daquele Eixo
+  // 3) Com secretaria -> Lista as Obras daquela Secretaria
+  type LinhaInvestimento = {
+    key: string;
+    label: string;
+    valor: number;
+  };
+
+  let linhas: LinhaInvestimento[] = [];
+  let subtitulo = "Visão completa por eixo estratégico";
 
   if (secretariaSelecionada) {
-    const secObj = secretarias.find((s) => s.id === secretariaSelecionada);
-    subtitulo = secObj
-      ? `Principais contratos · ${secObj.sigla} (${secObj.nome})`
-      : "Principais contratos da secretaria";
-
+    const secAtual = secretarias.find((s) => s.id === secretariaSelecionada);
+    subtitulo = secAtual
+      ? `Obras de ${secAtual.sigla} - ${secAtual.nome}`
+      : "Investimento por obra da secretaria";
     linhas = obrasRecorte
-      .filter((o) => o.valorOrcado > 0)
-      .sort((a, b) => b.valorOrcado - a.valorOrcado)
-      .slice(0, 5)
       .map((o) => ({
         key: o.id,
         label: o.titulo,
-        valor: o.valorOrcado,
-      }));
-  } else if (eixoSelecionado) {
-    const eixoObj = eixos.find((e) => e.id === eixoSelecionado);
-    subtitulo = eixoObj
-      ? `Distribuição por secretaria · ${eixoObj.nome}`
-      : "Distribuição por secretaria do eixo";
-
-    const porSecretaria = new Map<string, { label: string; valor: number }>();
-    for (const obra of obrasRecorte) {
-      const key = obra.secretariaId;
-      const atual = porSecretaria.get(key) ?? {
-        label: `${obra.secretariaSigla} - ${obra.secretariaNome}`,
-        valor: 0,
-      };
-      atual.valor += obra.valorOrcado;
-      porSecretaria.set(key, atual);
-    }
-    linhas = Array.from(porSecretaria.entries())
-      .map(([key, item]) => ({ key, label: item.label, valor: item.valor }))
+        valor: o.valorContrato,
+      }))
       .sort((a, b) => b.valor - a.valor)
-      .slice(0, 5);
-  } else {
-    subtitulo = "Valores contratados por eixo temático";
-    const porEixo = new Map<string, { label: string; valor: number }>();
-    for (const obra of obrasRecorte) {
-      const key = obra.eixoId ?? "sem-eixo";
-      const atual = porEixo.get(key) ?? {
-        label: obra.eixoNome,
+      .slice(0, 6);
+  } else if (eixoSelecionado) {
+    const eixoAtual = eixos.find((e) => e.id === eixoSelecionado);
+    subtitulo = eixoAtual
+      ? `Secretarias do eixo ${eixoAtual.nome}`
+      : "Investimento por secretaria do eixo";
+    const porSec = new Map<string, { label: string; valor: number }>();
+    for (const sec of secretariasDoEixo) {
+      porSec.set(sec.id, { label: `${sec.sigla} - ${sec.nome}`, valor: 0 });
+    }
+    for (const o of obrasRecorte) {
+      const atual = porSec.get(o.secretariaId) ?? {
+        label: `${o.secretariaSigla} - ${o.secretariaNome}`,
         valor: 0,
       };
-      atual.valor += obra.valorOrcado;
+      atual.valor += o.valorContrato;
+      porSec.set(o.secretariaId, atual);
+    }
+    linhas = Array.from(porSec.entries())
+      .map(([key, item]) => ({ key, label: item.label, valor: item.valor }))
+      .filter((item) => item.valor > 0 || secretariasDoEixo.length <= 6)
+      .sort((a, b) => b.valor - a.valor)
+      .slice(0, 6);
+  } else {
+    const porEixo = new Map<string, { label: string; valor: number }>();
+    for (const o of obrasRecorte) {
+      const key = o.eixoId ?? "sem-eixo";
+      const atual = porEixo.get(key) ?? { label: o.eixoNome, valor: 0 };
+      atual.valor += o.valorContrato;
       porEixo.set(key, atual);
     }
     linhas = Array.from(porEixo.entries())

@@ -719,7 +719,6 @@ export default async function PrefeitoDashboard({
             </section>
 
             <InvestimentoPainel
-              key={`${filtroEixo ?? ""}-${secretariaValida ?? ""}`}
               obras={obrasInvestimentoSerializadas}
               eixos={todosEixos}
               secretarias={todasSecretarias}
