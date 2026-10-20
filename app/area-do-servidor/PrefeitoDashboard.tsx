@@ -16,6 +16,7 @@ import { prisma } from "@/lib/prisma";
 import Sidebar from "@/components/sidebar/Sidebar";
 import PrefeitoFiltros from "./PrefeitoFiltros";
 import InvestimentoPainel, { type ObraInvestimentoItem } from "./InvestimentoPainel";
+import PainelAccordion from "./PainelAccordion";
 import styles from "./prefeito-dashboard.module.css";
 
 const currency = new Intl.NumberFormat("pt-BR", {
@@ -512,16 +513,6 @@ export default async function PrefeitoDashboard({
               </div>
             </article>
 
-            <article className={styles.metric}>
-              <span className={`${styles.metricIcon} ${styles.amber}`}>
-                <AlertTriangle size={19} />
-              </span>
-              <div>
-                <small>Obras em Alerta</small>
-                <strong>{totalEmAlerta60}</strong>
-                <span>Prazo final em até {ALERTA_PRAZO_DIAS} dias</span>
-              </div>
-            </article>
           </section>
 
           <div className={styles.dashboardGrid}>
@@ -537,7 +528,7 @@ export default async function PrefeitoDashboard({
               </div>
               {obrasDestaque.length ? (
                 <div className={styles.featuredList}>
-                  {obrasDestaque.map((obra) => {
+                  {obrasDestaque.slice(0, 3).map((obra) => {
                     const progress = progressFor(obra.status, obra.medicoes[0]);
                     const health = workHealth(obra, progress, now);
                     return (
@@ -578,7 +569,8 @@ export default async function PrefeitoDashboard({
               )}
             </section>
 
-            <section className={`${styles.panel} ${styles.riskPanel}`}>
+            <PainelAccordion title="Obras atrasadas" count={totalAtrasadasOuParalisadas}>
+              <section className={`${styles.panel} ${styles.riskPanel}`}>
               <div className={styles.panelHeading}>
                 <div>
                   <h2>
@@ -626,9 +618,11 @@ export default async function PrefeitoDashboard({
                   Nenhuma obra com prazo estourado ou paralisada.
                 </p>
               )}
-            </section>
+              </section>
+            </PainelAccordion>
 
-            <section className={`${styles.panel} ${styles.alertPanel}`}>
+            <PainelAccordion title="Obras em alerta" count={totalEmAlerta60}>
+              <section className={`${styles.panel} ${styles.alertPanel}`}>
               <div className={styles.panelHeading}>
                 <div>
                   <h2>
@@ -679,9 +673,11 @@ export default async function PrefeitoDashboard({
                   {ALERTA_PRAZO_DIAS} dias.
                 </p>
               )}
-            </section>
+              </section>
+            </PainelAccordion>
 
-            <section className={styles.panel}>
+            <PainelAccordion title="Obras por secretaria">
+              <section className={styles.panel}>
               <div className={styles.panelHeading}>
                 <div>
                   <h2>
@@ -716,17 +712,21 @@ export default async function PrefeitoDashboard({
                   <p className={styles.empty}>Nenhuma obra cadastrada.</p>
                 )}
               </div>
-            </section>
+              </section>
+            </PainelAccordion>
 
-            <InvestimentoPainel
-              obras={obrasInvestimentoSerializadas}
-              eixos={todosEixos}
-              secretarias={todasSecretarias}
-              initialEixoId={filtroEixo}
-              initialSecretariaId={secretariaValida}
-            />
+            <PainelAccordion title="Investimentos">
+              <InvestimentoPainel
+                obras={obrasInvestimentoSerializadas}
+                eixos={todosEixos}
+                secretarias={todasSecretarias}
+                initialEixoId={filtroEixo}
+                initialSecretariaId={secretariaValida}
+              />
+            </PainelAccordion>
 
-            <section className={styles.panel}>
+            <PainelAccordion title="Obras por bairro e distrito">
+              <section className={styles.panel}>
               <div className={styles.panelHeading}>
                 <div>
                   <h2>
@@ -757,7 +757,8 @@ export default async function PrefeitoDashboard({
                   <p className={styles.empty}>Nenhum bairro cadastrado.</p>
                 )}
               </div>
-            </section>
+              </section>
+            </PainelAccordion>
           </div>
         </main>
       </div>

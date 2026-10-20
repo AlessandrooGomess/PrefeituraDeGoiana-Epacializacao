@@ -240,6 +240,18 @@
   box-shadow: 0 2px 7px rgb(34 66 102 / 3%);
 }
 
+.accordionPanel {
+  min-width: 0;
+}
+
+.accordionSummary {
+  display: none;
+}
+
+.accordionContent {
+  min-width: 0;
+}
+
 .panelHeading {
   display: flex;
   align-items: flex-start;
@@ -449,10 +461,53 @@
   .filterActions { width: 100%; }
   .mapShortcutButton { width: 100%; justify-content: center; }
   .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .metric:first-child { grid-column: 1 / -1; }
   .metric { min-height: 72px; gap: 8px; padding: 10px; }
   .metricIcon { width: 30px; height: 30px; flex-basis: 30px; }
   .metricIcon svg { width: 16px; }
   .metric strong { font-size: 20px; }
+  .panelHeading p { display: none; }
+  .accordionPanel {
+    border: 1px solid #e1e9f2;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 2px 7px rgb(34 66 102 / 3%);
+  }
+  .accordionSummary {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    color: #173e67;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    list-style: none;
+  }
+  .accordionSummary::-webkit-details-marker { display: none; }
+  .accordionSummary::after {
+    color: #6d849a;
+    content: "+";
+    font-size: 18px;
+    font-weight: 400;
+  }
+  .accordionPanel[open] > .accordionSummary::after { content: "−"; }
+  .accordionSummary b {
+    min-width: 22px;
+    padding: 3px 6px;
+    border-radius: 999px;
+    background: #f1f6fb;
+    color: #327ac1;
+    font-size: 11px;
+    text-align: center;
+  }
+  .accordionContent { padding: 0 8px 8px; }
+  .accordionContent > .panel {
+    border: 0;
+    box-shadow: none;
+    padding: 8px;
+  }
   .dashboardGrid { grid-template-columns: 1fr; }
 }
 
@@ -461,7 +516,8 @@
   .heading h1 { font-size: 23px; }
   .slogan { font-size: 12px; }
   .metric small { font-size: 12px; }
-  .metrics { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .metric:first-child { grid-column: 1 / -1; }
   .featuredRow { grid-template-columns: 7px minmax(90px, 1fr) auto 70px; gap: 6px; }
   .featuredRow .progress { grid-column: 2 / 4; padding-bottom: 7px; }
   .featuredRow .rowArrow { display: none; }
