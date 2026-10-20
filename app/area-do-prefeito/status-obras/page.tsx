@@ -7,6 +7,7 @@ import Sidebar from "@/components/sidebar/Sidebar";
 import { getHomeByRole } from "@/lib/auth/role-routes";
 import { prisma } from "@/lib/prisma";
 import styles from "@/app/area-do-servidor/prefeito-dashboard.module.css";
+import StatusObrasFiltros from "./StatusObrasFiltros";
 import pageStyles from "./status-obras.module.css";
 
 const statusLabels: Record<StatusObra, string> = {
@@ -216,53 +217,19 @@ export default async function StatusObrasPage({
             </div>
           </section>
 
-          <form className={pageStyles.filters} action="/area-do-prefeito/status-obras">
-            <label className={pageStyles.searchField}>
-              <span>Buscar obra</span>
-              <input
-                type="search"
-                name="q"
-                defaultValue={query.q}
-                placeholder="Título, bairro, endereço ou secretaria"
-              />
-            </label>
-            <label className={pageStyles.filterField}>
-              <span>Eixo temático</span>
-              <select name="eixo" defaultValue={selectedEixo}>
-                <option value="">Todos os eixos</option>
-                {eixos.map((eixo) => (
-                  <option key={eixo.id} value={eixo.id}>
-                    {eixo.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className={pageStyles.filterField}>
-              <span>Secretaria</span>
-              <select name="secretaria" defaultValue={selectedSecretaria}>
-                <option value="">
-                  {selectedEixo ? "Secretarias deste eixo" : "Todas as secretarias"}
-                </option>
-                {secretariasDoEixo.map((secretaria) => (
-                  <option key={secretaria.id} value={secretaria.id}>
-                    {secretaria.sigla} - {secretaria.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className={pageStyles.filterField}>
-              <span>Status</span>
-              <select name="status" defaultValue={selectedStatus}>
-                <option value="TODOS">Todos os status</option>
-                <option value="ATRASADA">Atrasadas / Paralisadas</option>
-                <option value="ALERTA">Em alerta (até {ALERTA_PRAZO_DIAS} dias)</option>
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>{statusLabels[status]}</option>
-                ))}
-              </select>
-            </label>
-            <button className={pageStyles.filterButton} type="submit">Aplicar filtros</button>
-          </form>
+          <StatusObrasFiltros
+            defaultQuery={query.q}
+            selectedEixo={selectedEixo}
+            selectedSecretaria={selectedSecretaria}
+            selectedStatus={selectedStatus ?? "TODOS"}
+            eixos={eixos}
+            secretarias={secretarias}
+            statusOptions={statusOptions.map((st) => ({
+              value: st,
+              label: statusLabels[st],
+            }))}
+            alertaPrazoDias={ALERTA_PRAZO_DIAS}
+          />
 
           <section className={pageStyles.workList} aria-label="Obras cadastradas">
             {obrasFiltradas.map((obra) => {
