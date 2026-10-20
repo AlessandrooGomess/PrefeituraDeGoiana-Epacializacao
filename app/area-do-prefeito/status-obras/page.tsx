@@ -218,6 +218,7 @@ export default async function StatusObrasPage({
           </section>
 
           <StatusObrasFiltros
+            key={`${selectedEixo}-${selectedSecretaria}-${selectedStatus ?? "TODOS"}`}
             defaultQuery={query.q}
             selectedEixo={selectedEixo}
             selectedSecretaria={selectedSecretaria}

@@ -39,18 +39,6 @@ export default function StatusObrasFiltros({
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    setEixo(selectedEixo);
-  }, [selectedEixo]);
-
-  useEffect(() => {
-    setSecretaria(selectedSecretaria);
-  }, [selectedSecretaria]);
-
-  useEffect(() => {
-    setStatus(selectedStatus);
-  }, [selectedStatus]);
-
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (formRef.current && !formRef.current.contains(event.target as Node)) {
         setOpenMenu(null);
