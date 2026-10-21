@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import sidebarStyles from "./Sidebar.module.css";
 import portalStyles from "@/app/portal.module.css";
+import { PORTAL_FOOTER_LINKS } from "@/components/portal/PortalFooter";
 import { getHomeByRole, SERVIDOR_HOME } from "@/lib/auth/role-routes";
 
 export type SidebarUser = {
@@ -36,9 +37,9 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
 
   return (
     <header className={portalStyles["portal-header"]}>
-      <Link href="/" aria-label="Goianapá" className="flex items-center">
+      <Link href="/" aria-label="Goianapá" className="flex shrink-0 items-center">
         <img
-          className="mt-1 w-[111px] h-[57px] ml-8 aspect-[1.93] object-cover max-[720px]:mt-0 max-[720px]:ml-0 max-[720px]:w-16 max-[720px]:h-[33px]"
+          className="mt-1 w-[111px] h-[57px] ml-8 aspect-[1.93] object-cover max-[720px]:mt-0 max-[720px]:ml-0 max-[720px]:w-20 max-[720px]:h-[41px]"
           alt="Logo Goianapá"
           src="/logo-goiana.png"
         />
@@ -71,6 +72,17 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
         <Link className={areaActive ? portalStyles.active : ""} href={areaHref} onClick={closeMenu}>
           {areaLabel}
         </Link>
+
+        <div className={portalStyles["mobile-menu-footer"]}>
+          <span className={portalStyles["mobile-menu-footer-title"]}>Institucional</span>
+          <div className={portalStyles["mobile-menu-footer-links"]}>
+            {PORTAL_FOOTER_LINKS.map(({ href, label }) => (
+              <a key={href} href={href} onClick={closeMenu}>
+                {label}
+              </a>
+            ))}
+          </div>
+        </div>
       </nav>
 
       <div className={portalStyles["portal-tools"]}>
