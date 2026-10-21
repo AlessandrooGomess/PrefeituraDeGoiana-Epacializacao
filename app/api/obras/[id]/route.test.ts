@@ -419,6 +419,49 @@ describe("PATCH /api/obras/[id]", () => {
     );
   });
 
+  it("impede administrador de secretaria de transferir obra para outra secretaria", async () => {
+    mocks.requireUser.mockResolvedValue({
+      user: {
+        id: "usuario-1",
+        role: "ADM_SECRETARIA",
+        secretariaId: "11111111-1111-4111-8111-111111111111",
+      },
+    });
+    mocks.canAccessSecretaria
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(false);
+    mocks.obraFindUnique.mockResolvedValue({
+      secretariaId: "11111111-1111-4111-8111-111111111111",
+      eixoId: null,
+      areaTematicaId: null,
+      engenheiroId: null,
+    });
+
+    const response = await PATCH(
+      new Request(
+        "http://localhost/api/obras/550e8400-e29b-41d4-a716-446655440000",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            secretariaId: "22222222-2222-4222-8222-222222222222",
+          }),
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      message: "Você não tem permissão para esta secretaria.",
+    });
+    expect(mocks.validateObraRelations).not.toHaveBeenCalled();
+    expect(mocks.obraUpdate).not.toHaveBeenCalled();
+  });
+
   it("retorna 400 quando as relações da obra são inválidas", async () => {
     mocks.obraFindUnique.mockResolvedValue({
       secretariaId: "11111111-1111-4111-8111-111111111111",

@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   eixoFindUnique: vi.fn(),
   areaTematicaFindUnique: vi.fn(),
   usuarioFindUnique: vi.fn(),
+  tipoObraFindUnique: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -20,6 +21,9 @@ vi.mock("@/lib/prisma", () => ({
     },
     usuario: {
       findUnique: mocks.usuarioFindUnique,
+    },
+    tipoObra: {
+      findUnique: mocks.tipoObraFindUnique,
     },
   },
 }));
@@ -45,6 +49,7 @@ describe("validateObraRelations", () => {
       id: "engenheiro-1",
       role: "ENGENHEIRO",
       ativo: true,
+      secretariaId: "secretaria-1",
     });
 
     const result = await validateObraRelations({
@@ -128,6 +133,7 @@ describe("validateObraRelations", () => {
       id: "usuario-1",
       role: "CIDADAO",
       ativo: false,
+      secretariaId: "secretaria-1",
     });
 
     const result = await validateObraRelations({
@@ -138,5 +144,40 @@ describe("validateObraRelations", () => {
     });
 
     expect(result).toEqual(["engenheiroId"]);
+  });
+
+  it("identifica engenheiro de outra secretaria", async () => {
+    mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
+    mocks.usuarioFindUnique.mockResolvedValue({
+      id: "engenheiro-1",
+      role: "ENGENHEIRO",
+      ativo: true,
+      secretariaId: "secretaria-2",
+    });
+
+    const result = await validateObraRelations({
+      secretariaId: "secretaria-1",
+      eixoId: null,
+      areaTematicaId: null,
+      engenheiroId: "engenheiro-1",
+      tipoObraId: null,
+    });
+
+    expect(result).toEqual(["engenheiroId"]);
+  });
+
+  it("identifica tipo de obra inexistente", async () => {
+    mocks.secretariaFindUnique.mockResolvedValue({ id: "secretaria-1" });
+    mocks.tipoObraFindUnique.mockResolvedValue(null);
+
+    const result = await validateObraRelations({
+      secretariaId: "secretaria-1",
+      eixoId: null,
+      areaTematicaId: null,
+      engenheiroId: null,
+      tipoObraId: "tipo-inexistente",
+    });
+
+    expect(result).toEqual(["tipoObraId"]);
   });
 });

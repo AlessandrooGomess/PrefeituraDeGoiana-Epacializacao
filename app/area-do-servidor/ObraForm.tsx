@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   Building2,
@@ -95,8 +95,40 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<"idle" | "saved" | "error" | "sending">("idle");
   const [message, setMessage] = useState("");
+  const [draftLoading, setDraftLoading] = useState(true);
+  const hasEditedRef = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+
+    fetch("/api/obras/rascunho")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Falha ao carregar rascunho.");
+        return response.json();
+      })
+      .then((data: { dados?: Partial<FormState> | null }) => {
+        if (!active || hasEditedRef.current || !data.dados) return;
+        setForm({ ...initialForm, ...data.dados });
+        setStatus("saved");
+        setMessage("Rascunho salvo carregado.");
+      })
+      .catch(() => {
+        if (active) {
+          setStatus("error");
+          setMessage("Não foi possível carregar o rascunho salvo.");
+        }
+      })
+      .finally(() => {
+        if (active) setDraftLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const update = (field: keyof FormState, value: string) => {
+    hasEditedRef.current = true;
     const nextForm = { ...form, [field]: value };
     setForm(nextForm);
     setStatus("idle");
@@ -136,6 +168,35 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
 
       return next;
     });
+  };
+
+  const handleSaveDraft = async () => {
+    if (draftLoading || isSubmittingRef.current) return;
+
+    isSubmittingRef.current = true;
+    setStatus("sending");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/obras/rascunho", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Não foi possível salvar o rascunho.");
+      }
+
+      setStatus("saved");
+      setMessage("Rascunho salvo com sucesso.");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Erro ao salvar o rascunho.");
+    } finally {
+      isSubmittingRef.current = false;
+    }
   };
 
   const validateClientForm = (): FieldErrors => {
@@ -202,7 +263,7 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (isSubmittingRef.current || status === "sending") {
+    if (isSubmittingRef.current || status === "sending" || draftLoading) {
       return;
     }
 
@@ -313,11 +374,8 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
               <button
                 className={styles.secondaryButton}
                 type="button"
-                disabled={status === "sending"}
-                onClick={() => {
-                  setStatus("saved");
-                  setMessage("Rascunho salvo localmente.");
-                }}
+                disabled={status === "sending" || draftLoading}
+                onClick={handleSaveDraft}
               >
                 <Save size={16} /> Salvar como Rascunho
               </button>
@@ -325,7 +383,7 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
                 className={styles.primaryButton}
                 type="submit"
                 form="obra-form"
-                disabled={status === "sending"}
+                  disabled={status === "sending" || draftLoading}
               >
                 {status === "sending" ? (
                   <>
@@ -573,7 +631,7 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
                 <button
                   className={styles.cancelButton}
                   type="button"
-                  disabled={status === "sending"}
+                  disabled={status === "sending" || draftLoading}
                   onClick={() => {
                     setForm(initialForm);
                     setFieldErrors({});
@@ -586,7 +644,7 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
                 <button
                   className={styles.primaryButton}
                   type="submit"
-                  disabled={status === "sending"}
+                  disabled={status === "sending" || draftLoading}
                 >
                   {status === "sending" ? (
                     <>
