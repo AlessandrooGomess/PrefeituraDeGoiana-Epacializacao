@@ -38,7 +38,7 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
     <header className={portalStyles["portal-header"]}>
       <Link href="/" aria-label="Goianapá" className="flex items-center">
         <img
-          className="mt-1 w-[111px] h-[57px] ml-8 aspect-[1.93] object-cover"
+          className="mt-1 w-[111px] h-[57px] ml-8 aspect-[1.93] object-cover max-[720px]:mt-0 max-[720px]:ml-0 max-[720px]:w-16 max-[720px]:h-[33px]"
           alt="Logo Goianapá"
           src="/logo-goiana.png"
         />

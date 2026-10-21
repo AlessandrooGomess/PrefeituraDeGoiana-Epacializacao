@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { TrendingUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, TrendingUp } from "lucide-react";
 import styles from "./prefeito-dashboard.module.css";
 
 const currency = new Intl.NumberFormat("pt-BR", {
@@ -57,6 +57,8 @@ export default function InvestimentoPainel({
   const [secretariaSelecionada, setSecretariaSelecionada] = useState(
     initialSecretariaId ?? "",
   );
+  const [openMenu, setOpenMenu] = useState<"eixo" | "secretaria" | null>(null);
+  const controlsRef = useRef<HTMLDivElement>(null);
 
   // Sincroniza caso o filtro global do topo mude via navegação
   const [prevInitial, setPrevInitial] = useState({
@@ -74,6 +76,19 @@ export default function InvestimentoPainel({
     setEixoSelecionado(initialEixoId ?? "");
     setSecretariaSelecionada(initialSecretariaId ?? "");
   }
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        controlsRef.current &&
+        !controlsRef.current.contains(event.target as Node)
+      ) {
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const secretariasDoEixo = eixoSelecionado
     ? secretarias.filter((s) => s.eixoId === eixoSelecionado)
@@ -162,16 +177,30 @@ export default function InvestimentoPainel({
 
   const maiorValor = Math.max(1, ...linhas.map((l) => l.valor));
 
+  const eixoAtualLabel =
+    eixos.find((eixo) => eixo.id === eixoSelecionado)?.nome || "Todos os Eixos";
+
+  const secretariaPadraoLabel = eixoSelecionado
+    ? "Todas as Secretarias do Eixo"
+    : "Selecione um Eixo";
+
+  const secAtual = secretariasDoEixo.find(
+    (sec) => sec.id === secretariaSelecionada,
+  );
+  const secretariaAtualLabel = secAtual
+    ? `${secAtual.sigla} - ${secAtual.nome}`
+    : secretariaPadraoLabel;
+
   return (
     <section className={styles.panel}>
-      <div className={styles.panelHeading} style={{ flexWrap: "wrap", gap: 10 }}>
+      <div className={`${styles.panelHeading} ${styles.investHeading}`}>
         <div>
           <h2>
             <TrendingUp size={16} /> Investimento por eixo e secretaria
           </h2>
           <p>{subtitulo}</p>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <div className={styles.investControls} ref={controlsRef}>
           <select
             aria-label="Filtrar investimento por eixo"
             value={eixoSelecionado}
@@ -179,7 +208,7 @@ export default function InvestimentoPainel({
               setEixoSelecionado(e.target.value);
               setSecretariaSelecionada("");
             }}
-            className={styles.filterSelect}
+            className={`${styles.filterSelect} ${styles.desktopSelect}`}
             style={{ minHeight: 30, fontSize: 11, padding: "0 24px 0 8px" }}
           >
             <option value="">Todos os Eixos</option>
@@ -195,20 +224,149 @@ export default function InvestimentoPainel({
             value={secretariaSelecionada}
             disabled={!eixoSelecionado}
             onChange={(e) => setSecretariaSelecionada(e.target.value)}
-            className={styles.filterSelect}
+            className={`${styles.filterSelect} ${styles.desktopSelect}`}
             style={{ minHeight: 30, fontSize: 11, padding: "0 24px 0 8px" }}
           >
-            <option value="">
-              {eixoSelecionado
-                ? "Todas as Secretarias do Eixo"
-                : "Selecione um Eixo"}
-            </option>
+            <option value="">{secretariaPadraoLabel}</option>
             {secretariasDoEixo.map((sec) => (
               <option key={sec.id} value={sec.id}>
                 {sec.sigla} - {sec.nome}
               </option>
             ))}
           </select>
+
+          <div className={styles.mobileDropdown}>
+            <button
+              type="button"
+              className={styles.mobileDropdownTrigger}
+              aria-expanded={openMenu === "eixo"}
+              onClick={() =>
+                setOpenMenu((prev) => (prev === "eixo" ? null : "eixo"))
+              }
+            >
+              <span className={styles.mobileDropdownLabel}>
+                {eixoAtualLabel}
+              </span>
+              <ChevronDown
+                size={15}
+                className={`${styles.mobileDropdownChevron} ${
+                  openMenu === "eixo" ? styles.mobileDropdownChevronOpen : ""
+                }`}
+                aria-hidden="true"
+              />
+            </button>
+            {openMenu === "eixo" && (
+              <ul className={styles.mobileDropdownMenu} role="listbox">
+                <li>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={!eixoSelecionado}
+                    className={`${styles.mobileDropdownOption} ${
+                      !eixoSelecionado ? styles.mobileDropdownOptionActive : ""
+                    }`}
+                    onClick={() => {
+                      setEixoSelecionado("");
+                      setSecretariaSelecionada("");
+                      setOpenMenu(null);
+                    }}
+                  >
+                    Todos os Eixos
+                  </button>
+                </li>
+                {eixos.map((eixo) => (
+                  <li key={eixo.id}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={eixoSelecionado === eixo.id}
+                      className={`${styles.mobileDropdownOption} ${
+                        eixoSelecionado === eixo.id
+                          ? styles.mobileDropdownOptionActive
+                          : ""
+                      }`}
+                      onClick={() => {
+                        setEixoSelecionado(eixo.id);
+                        setSecretariaSelecionada("");
+                        setOpenMenu(null);
+                      }}
+                    >
+                      {eixo.nome}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className={styles.mobileDropdown}>
+            <button
+              type="button"
+              className={styles.mobileDropdownTrigger}
+              disabled={!eixoSelecionado}
+              aria-expanded={openMenu === "secretaria"}
+              onClick={() =>
+                setOpenMenu((prev) =>
+                  prev === "secretaria" ? null : "secretaria",
+                )
+              }
+            >
+              <span className={styles.mobileDropdownLabel}>
+                {secretariaAtualLabel}
+              </span>
+              <ChevronDown
+                size={15}
+                className={`${styles.mobileDropdownChevron} ${
+                  openMenu === "secretaria"
+                    ? styles.mobileDropdownChevronOpen
+                    : ""
+                }`}
+                aria-hidden="true"
+              />
+            </button>
+            {openMenu === "secretaria" && eixoSelecionado && (
+              <ul className={styles.mobileDropdownMenu} role="listbox">
+                <li>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={!secretariaSelecionada}
+                    className={`${styles.mobileDropdownOption} ${
+                      !secretariaSelecionada
+                        ? styles.mobileDropdownOptionActive
+                        : ""
+                    }`}
+                    onClick={() => {
+                      setSecretariaSelecionada("");
+                      setOpenMenu(null);
+                    }}
+                  >
+                    {secretariaPadraoLabel}
+                  </button>
+                </li>
+                {secretariasDoEixo.map((sec) => (
+                  <li key={sec.id}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={secretariaSelecionada === sec.id}
+                      className={`${styles.mobileDropdownOption} ${
+                        secretariaSelecionada === sec.id
+                          ? styles.mobileDropdownOptionActive
+                          : ""
+                      }`}
+                      onClick={() => {
+                        setSecretariaSelecionada(sec.id);
+                        setOpenMenu(null);
+                      }}
+                    >
+                      <strong>{sec.sigla}</strong> - {sec.nome}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 
@@ -246,4 +404,3 @@ export default function InvestimentoPainel({
     </section>
   );
 }
-

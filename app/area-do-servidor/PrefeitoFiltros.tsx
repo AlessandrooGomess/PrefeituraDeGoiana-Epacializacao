@@ -1,9 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Filter, MapPinned, X } from "lucide-react";
+import { ChevronDown, Filter, MapPinned, X } from "lucide-react";
 import styles from "./prefeito-dashboard.module.css";
 
 interface PrefeitoFiltrosProps {
@@ -28,12 +28,43 @@ export default function PrefeitoFiltros({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [openMenu, setOpenMenu] = useState<"eixo" | "secretaria" | null>(null);
+  const controlsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        controlsRef.current &&
+        !controlsRef.current.contains(event.target as Node)
+      ) {
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const secretariasDisponiveis = filtroEixo
     ? secretarias.filter((sec) => sec.eixoId === filtroEixo)
     : secretarias;
 
+  const eixoAtualLabel =
+    eixos.find((eixo) => eixo.id === filtroEixo)?.nome ||
+    "Todos os Eixos Temáticos";
+
+  const secretariaPadraoLabel = filtroEixo
+    ? "Todas as Secretarias do Eixo"
+    : "Todas as Secretarias";
+
+  const secAtual = secretariasDisponiveis.find(
+    (sec) => sec.id === filtroSecretaria,
+  );
+  const secretariaAtualLabel = secAtual
+    ? `${secAtual.sigla} - ${secAtual.nome}`
+    : secretariaPadraoLabel;
+
   const handleEixoChange = (novoEixoId: string) => {
+    setOpenMenu(null);
     const params = new URLSearchParams(searchParams.toString());
     if (novoEixoId) {
       params.set("eixo", novoEixoId);
@@ -50,6 +81,7 @@ export default function PrefeitoFiltros({
   };
 
   const handleSecretariaChange = (novaSecretariaId: string) => {
+    setOpenMenu(null);
     const params = new URLSearchParams(searchParams.toString());
     if (novaSecretariaId) {
       params.set("secretaria", novaSecretariaId);
@@ -68,6 +100,7 @@ export default function PrefeitoFiltros({
   };
 
   const handleClear = () => {
+    setOpenMenu(null);
     startTransition(() => {
       router.push(pathname);
     });
@@ -77,7 +110,7 @@ export default function PrefeitoFiltros({
 
   return (
     <div className={styles.filterBar} aria-label="Filtros da gestão">
-      <div className={styles.filterControls}>
+      <div className={styles.filterControls} ref={controlsRef}>
         <div className={styles.filterGroup}>
           <span className={styles.filterIcon}>
             <Filter size={15} aria-hidden="true" />
@@ -87,7 +120,7 @@ export default function PrefeitoFiltros({
           </label>
           <select
             id="filtro-eixo"
-            className={styles.filterSelect}
+            className={`${styles.filterSelect} ${styles.desktopSelect}`}
             value={filtroEixo || ""}
             disabled={isPending}
             onChange={(e) => handleEixoChange(e.target.value)}
@@ -99,6 +132,64 @@ export default function PrefeitoFiltros({
               </option>
             ))}
           </select>
+
+          <div className={styles.mobileDropdown}>
+            <button
+              type="button"
+              className={styles.mobileDropdownTrigger}
+              disabled={isPending}
+              aria-expanded={openMenu === "eixo"}
+              onClick={() =>
+                setOpenMenu((prev) => (prev === "eixo" ? null : "eixo"))
+              }
+            >
+              <span className={styles.mobileDropdownTriggerContent}>
+                <Filter size={14} className={styles.mobileTriggerIcon} aria-hidden="true" />
+                <span className={styles.mobileDropdownLabel}>{eixoAtualLabel}</span>
+              </span>
+              <ChevronDown
+                size={15}
+                className={`${styles.mobileDropdownChevron} ${
+                  openMenu === "eixo" ? styles.mobileDropdownChevronOpen : ""
+                }`}
+                aria-hidden="true"
+              />
+            </button>
+            {openMenu === "eixo" && (
+              <ul className={styles.mobileDropdownMenu} role="listbox">
+                <li>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={!filtroEixo}
+                    className={`${styles.mobileDropdownOption} ${
+                      !filtroEixo ? styles.mobileDropdownOptionActive : ""
+                    }`}
+                    onClick={() => handleEixoChange("")}
+                  >
+                    Todos os Eixos Temáticos
+                  </button>
+                </li>
+                {eixos.map((eixo) => (
+                  <li key={eixo.id}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={filtroEixo === eixo.id}
+                      className={`${styles.mobileDropdownOption} ${
+                        filtroEixo === eixo.id
+                          ? styles.mobileDropdownOptionActive
+                          : ""
+                      }`}
+                      onClick={() => handleEixoChange(eixo.id)}
+                    >
+                      {eixo.nome}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         <div className={styles.filterGroup}>
@@ -107,22 +198,79 @@ export default function PrefeitoFiltros({
           </label>
           <select
             id="filtro-secretaria"
-            className={styles.filterSelect}
+            className={`${styles.filterSelect} ${styles.desktopSelect}`}
             value={filtroSecretaria || ""}
             disabled={isPending}
             onChange={(e) => handleSecretariaChange(e.target.value)}
           >
-            <option value="">
-              {filtroEixo
-                ? "Todas as Secretarias do Eixo"
-                : "Todas as Secretarias"}
-            </option>
+            <option value="">{secretariaPadraoLabel}</option>
             {secretariasDisponiveis.map((sec) => (
               <option key={sec.id} value={sec.id}>
                 {sec.sigla} - {sec.nome}
               </option>
             ))}
           </select>
+
+          <div className={styles.mobileDropdown}>
+            <button
+              type="button"
+              className={styles.mobileDropdownTrigger}
+              disabled={isPending}
+              aria-expanded={openMenu === "secretaria"}
+              onClick={() =>
+                setOpenMenu((prev) =>
+                  prev === "secretaria" ? null : "secretaria",
+                )
+              }
+            >
+              <span className={styles.mobileDropdownLabel}>
+                {secretariaAtualLabel}
+              </span>
+              <ChevronDown
+                size={15}
+                className={`${styles.mobileDropdownChevron} ${
+                  openMenu === "secretaria"
+                    ? styles.mobileDropdownChevronOpen
+                    : ""
+                }`}
+                aria-hidden="true"
+              />
+            </button>
+            {openMenu === "secretaria" && (
+              <ul className={styles.mobileDropdownMenu} role="listbox">
+                <li>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={!filtroSecretaria}
+                    className={`${styles.mobileDropdownOption} ${
+                      !filtroSecretaria ? styles.mobileDropdownOptionActive : ""
+                    }`}
+                    onClick={() => handleSecretariaChange("")}
+                  >
+                    {secretariaPadraoLabel}
+                  </button>
+                </li>
+                {secretariasDisponiveis.map((sec) => (
+                  <li key={sec.id}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={filtroSecretaria === sec.id}
+                      className={`${styles.mobileDropdownOption} ${
+                        filtroSecretaria === sec.id
+                          ? styles.mobileDropdownOptionActive
+                          : ""
+                      }`}
+                      onClick={() => handleSecretariaChange(sec.id)}
+                    >
+                      <strong>{sec.sigla}</strong> - {sec.nome}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {hasActiveFilters && (
@@ -149,4 +297,3 @@ export default function PrefeitoFiltros({
     </div>
   );
 }
-
