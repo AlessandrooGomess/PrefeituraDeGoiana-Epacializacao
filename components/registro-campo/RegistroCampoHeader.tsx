@@ -1,13 +1,14 @@
 "use client";
 
-import { MapPinned, X } from "lucide-react";
+import { LogOut, MapPinned, X } from "lucide-react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { EngenheiroMenuMobile } from "@/components/area-engenheiro/EngenheiroMenuMobile";
 
 interface RegistroCampoHeaderProps {
   titulo?: string;
   onClose?: () => void;
-  // Sem onClose nem backHref, o botão "fechar" não é exibido
+  // Sem onClose nem backHref, é exibido o botão "Sair" no topo direito
   backHref?: string;
 }
 
@@ -43,7 +44,18 @@ export function RegistroCampoHeader({
         >
           <X className="h-5 w-5" />
         </Link>
-      ) : null}
+      ) : (
+        <button
+          type="button"
+          onClick={() => void signOut({ callbackUrl: "/login" })}
+          className="inline-flex items-center gap-1.5 rounded-md border border-white/30 bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-white/20 hover:border-white/50 transition-colors cursor-pointer"
+          aria-label="Sair da conta"
+          title="Sair da conta"
+        >
+          <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>Sair</span>
+        </button>
+      )}
     </header>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, UserRound, X } from "lucide-react";
+import { LogOut, Menu, UserRound, X } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import sidebarStyles from "./Sidebar.module.css";
@@ -25,13 +26,20 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
   const pathname = usePathname();
   const closeMenu = () => setMenuOpen(false);
 
+  const handleLogout = () => {
+    closeMenu();
+    void signOut({ callbackUrl: "/login" });
+  };
+
   const areaHref = user?.role ? getHomeByRole(user.role) : SERVIDOR_HOME;
   const areaLabel =
     user?.role === "ENGENHEIRO"
       ? "Minha Área"
       : user?.role === "GESTAO"
         ? "Área do Prefeito"
-        : "Área do Servidor";
+        : user?.role === "SUPER_ADMIN"
+          ? "Painel Admin"
+          : "Área do Servidor";
   const areaActive =
     areaHref !== "/" && pathname.startsWith(areaHref);
 
@@ -73,6 +81,17 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
           {areaLabel}
         </Link>
 
+        {user && (
+          <button
+            type="button"
+            className={sidebarStyles.mobileLogoutButton}
+            onClick={handleLogout}
+          >
+            <LogOut size={16} aria-hidden="true" />
+            Sair da conta
+          </button>
+        )}
+
         <div className={portalStyles["mobile-menu-footer"]}>
           <span className={portalStyles["mobile-menu-footer-title"]}>Institucional</span>
           <div className={portalStyles["mobile-menu-footer-links"]}>
@@ -96,6 +115,16 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
             <span className={sidebarStyles.avatarFallback} aria-hidden="true">
               <UserRound size={17} />
             </span>
+            <button
+              type="button"
+              className={sidebarStyles.logoutButton}
+              onClick={handleLogout}
+              title="Sair da conta"
+              aria-label="Sair da conta"
+            >
+              <LogOut size={14} aria-hidden="true" />
+              <span>Sair</span>
+            </button>
           </div>
         )}
       </div>
