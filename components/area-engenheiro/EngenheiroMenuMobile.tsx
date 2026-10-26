@@ -109,7 +109,7 @@ export function EngenheiroMenuMobile() {
                 </button>
               </div>
 
-              <nav aria-label="Menu da área do engenheiro" className="flex-1 overflow-y-auto p-3">
+              <nav aria-label="Menu da área do engenheiro" className="flex flex-1 flex-col overflow-y-auto p-3">
                 <EngenheiroNavLinks onNavigate={fechar} />
               </nav>
             </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import Sidebar from "@/components/sidebar/Sidebar";
+import SidebarSettingsFooter from "@/components/sidebar/SidebarSettingsFooter";
 import { prisma } from "@/lib/prisma";
 import styles from "./area-do-servidor.module.css";
 import DeleteObraButton from "./DeleteObraButton";
@@ -92,14 +93,14 @@ export default async function AreaDoServidor() {
     console.error("Erro ao carregar dados da área do servidor:", error);
   }
 
+  const currentUser = {
+    name: session.user.name ?? session.user.email ?? "Usuário",
+    role: session.user.role,
+  };
+
   return (
     <div className={styles.shell}>
-      <Sidebar
-        user={{
-          name: session.user.name ?? session.user.email ?? "Usuário",
-          role: session.user.role,
-        }}
-      />
+      <Sidebar user={currentUser} />
       <div className={styles.body}>
         <aside className={styles.sidebar}>
           <div className={styles.profile}>
@@ -117,6 +118,7 @@ export default async function AreaDoServidor() {
               Cadastrar obra
             </Link>
           </div>
+          <SidebarSettingsFooter user={currentUser} />
         </aside>
         <main className={styles.main}>
           <div className={styles.pageHeading}>

@@ -6,14 +6,13 @@ import { FormEvent, useRef, useState } from "react";
 import {
   AlertCircle,
   Building2,
-  HelpCircle,
   Loader2,
   Save,
   Send,
-  Settings,
   Upload,
 } from "lucide-react";
 import Sidebar, { type SidebarUser } from "@/components/sidebar/Sidebar";
+import SidebarSettingsFooter from "@/components/sidebar/SidebarSettingsFooter";
 import { formatCurrencyBRL, parseCurrencyBRLToNumber } from "@/lib/utils/currency";
 import styles from "./area-do-servidor.module.css";
 
@@ -300,7 +299,7 @@ export default function ObraForm({ user, secretaria, engenheiros, tiposObra }: O
         <aside className={styles.sidebar}>
           <div className={styles.profile}><div className={styles.profileIcon}><Building2 size={21} /></div><div><strong>{secretaria.sigla}</strong><small>{secretaria.nome}</small></div></div>
           <div className={styles.navList}><Link className={styles.navItem} href="/area-do-servidor">Visão geral</Link><span className={`${styles.navItem} ${styles.navItemActive}`}>Cadastrar obra</span></div>
-          <div className={styles.sidebarBottom}><button className={styles.navItem} type="button"><Settings size={16} /> Configurações</button><button className={styles.navItem} type="button"><HelpCircle size={16} /> Ajuda e suporte</button></div>
+          <SidebarSettingsFooter user={user} />
         </aside>
         <main className={styles.main}>
           <div className={styles.pageHeading}>

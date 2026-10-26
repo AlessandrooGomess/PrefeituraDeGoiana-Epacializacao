@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChevronDown, LogOut, Menu, Settings, UserRound, X } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import sidebarStyles from "./Sidebar.module.css";
 import portalStyles from "@/app/portal.module.css";
 import { PORTAL_FOOTER_LINKS } from "@/components/portal/PortalFooter";
@@ -30,9 +30,7 @@ const ROLE_DISPLAY_LABEL: Record<string, string> = {
 
 export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
-  const settingsRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   const closeMenu = () => {
@@ -40,35 +38,7 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
     setMobileSettingsOpen(false);
   };
 
-  useEffect(() => {
-    if (!settingsOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (
-        settingsRef.current &&
-        event.target instanceof Node &&
-        !settingsRef.current.contains(event.target)
-      ) {
-        setSettingsOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setSettingsOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [settingsOpen]);
-
   const handleLogout = () => {
-    setSettingsOpen(false);
     closeMenu();
     void signOut({ callbackUrl: "/login" });
   };
@@ -180,55 +150,14 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
       <div className={portalStyles["portal-tools"]}>
         {toolsNode}
         {user && (
-          <div ref={settingsRef} className={sidebarStyles.userWrapper}>
-            <button
-              type="button"
-              className={sidebarStyles.user}
-              aria-label="Configurações da conta"
-              aria-expanded={settingsOpen}
-              aria-haspopup="menu"
-              onClick={() => setSettingsOpen((prev) => !prev)}
-            >
-              <div className={sidebarStyles.userText}>
-                <strong>{user.name}</strong>
-                {roleLabel && <small>{roleLabel}</small>}
-              </div>
-              <span className={sidebarStyles.avatarFallback} aria-hidden="true">
-                <UserRound size={17} />
-              </span>
-              <Settings
-                size={16}
-                aria-hidden="true"
-                className={`${sidebarStyles.settingsIcon} ${settingsOpen ? sidebarStyles.settingsIconOpen : ""}`}
-              />
-            </button>
-
-            {settingsOpen && (
-              <div
-                role="menu"
-                aria-label="Configurações da conta"
-                className={sidebarStyles.settingsDropdown}
-              >
-                <div className={sidebarStyles.settingsHeader}>
-                  <span className={sidebarStyles.settingsTitle}>Configurações da conta</span>
-                  <strong className={sidebarStyles.settingsUserName}>{user.name}</strong>
-                  {roleLabel && (
-                    <span className={sidebarStyles.settingsUserRole}>{roleLabel}</span>
-                  )}
-                </div>
-                <div className={sidebarStyles.settingsActions}>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={sidebarStyles.settingsLogoutButton}
-                    onClick={handleLogout}
-                  >
-                    <LogOut size={15} aria-hidden="true" />
-                    <span>Sair da conta</span>
-                  </button>
-                </div>
-              </div>
-            )}
+          <div className={sidebarStyles.user}>
+            <div className={sidebarStyles.userText}>
+              <strong>{user.name}</strong>
+              {roleLabel && <small>{roleLabel}</small>}
+            </div>
+            <span className={sidebarStyles.avatarFallback} aria-hidden="true">
+              <UserRound size={17} />
+            </span>
           </div>
         )}
       </div>

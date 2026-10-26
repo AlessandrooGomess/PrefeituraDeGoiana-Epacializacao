@@ -16,16 +16,17 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   if (!session?.user) redirect("/login");
   if (session.user.role !== "SUPER_ADMIN") redirect("/");
 
+  const sidebarUser = {
+    name: session.user.name ?? session.user.email ?? "Administrador",
+    email: session.user.email,
+    role: session.user.role,
+  };
+
   return (
     <div className={styles.shell}>
-      <Sidebar
-        user={{
-          name: session.user.name ?? session.user.email ?? "Administrador",
-          role: session.user.role,
-        }}
-      />
+      <Sidebar user={sidebarUser} />
       <div className={styles.body}>
-        <AdminInnerSidebar />
+        <AdminInnerSidebar user={sidebarUser} />
         {children}
       </div>
     </div>
