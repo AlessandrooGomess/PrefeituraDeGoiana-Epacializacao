@@ -9,7 +9,8 @@
 }
 
 .portal-header {
-  position: relative;
+  position: sticky;
+  top: 0;
   min-height: 56px;
   display: flex;
   align-items: center;
