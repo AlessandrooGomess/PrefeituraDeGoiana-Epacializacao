@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, UserRound, X } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Settings, UserRound, X } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import sidebarStyles from "./Sidebar.module.css";
@@ -20,10 +21,31 @@ type SidebarProps = {
   toolsNode?: React.ReactNode;
 };
 
+const ROLE_DISPLAY_LABEL: Record<string, string> = {
+  SUPER_ADMIN: "Administrador Geral",
+  GESTAO: "Gestão / Prefeito",
+  ADM_SECRETARIA: "Secretaria Municipal",
+  ENGENHEIRO: "Engenheiro Responsável",
+};
+
 export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
   const pathname = usePathname();
-  const closeMenu = () => setMenuOpen(false);
+
+  const closeMenu = () => {
+    setMenuOpen(false);
+    setMobileSettingsOpen(false);
+  };
+
+  const handleLogout = () => {
+    closeMenu();
+    void signOut({ callbackUrl: "/login" });
+  };
+
+  const roleLabel = user?.role
+    ? (ROLE_DISPLAY_LABEL[user.role] ?? user.role)
+    : null;
 
   const areaHref = user?.role ? getHomeByRole(user.role) : SERVIDOR_HOME;
   const areaLabel =
@@ -31,7 +53,9 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
       ? "Minha Área"
       : user?.role === "GESTAO"
         ? "Área do Prefeito"
-        : "Área do Servidor";
+        : user?.role === "SUPER_ADMIN"
+          ? "Painel Admin"
+          : "Área do Servidor";
   const areaActive =
     areaHref !== "/" && pathname.startsWith(areaHref);
 
@@ -73,6 +97,44 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
           {areaLabel}
         </Link>
 
+        {user && (
+          <div className={sidebarStyles.mobileSettingsSection}>
+            <button
+              type="button"
+              className={sidebarStyles.mobileSettingsTrigger}
+              aria-expanded={mobileSettingsOpen}
+              onClick={() => setMobileSettingsOpen((prev) => !prev)}
+            >
+              <span className={sidebarStyles.mobileSettingsTriggerLabel}>
+                <Settings size={16} aria-hidden="true" />
+                Configurações
+              </span>
+              <ChevronDown
+                size={15}
+                className={`transition-transform duration-150 ${mobileSettingsOpen ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {mobileSettingsOpen && (
+              <div className={sidebarStyles.mobileSettingsPanel}>
+                <div className={sidebarStyles.mobileSettingsUser}>
+                  <strong>{user.name}</strong>
+                  {roleLabel && <small>{roleLabel}</small>}
+                </div>
+                <button
+                  type="button"
+                  className={sidebarStyles.mobileLogoutButton}
+                  onClick={handleLogout}
+                >
+                  <LogOut size={15} aria-hidden="true" />
+                  Sair da conta
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className={portalStyles["mobile-menu-footer"]}>
           <span className={portalStyles["mobile-menu-footer-title"]}>Institucional</span>
           <div className={portalStyles["mobile-menu-footer-links"]}>
@@ -91,7 +153,7 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
           <div className={sidebarStyles.user}>
             <div className={sidebarStyles.userText}>
               <strong>{user.name}</strong>
-              {user.role && <small>{user.role}</small>}
+              {roleLabel && <small>{roleLabel}</small>}
             </div>
             <span className={sidebarStyles.avatarFallback} aria-hidden="true">
               <UserRound size={17} />

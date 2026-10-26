@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import Sidebar from "@/components/sidebar/Sidebar";
+import SidebarSettingsFooter from "@/components/sidebar/SidebarSettingsFooter";
 import PrefeitoFiltros from "./PrefeitoFiltros";
 import InvestimentoPainel, { type ObraInvestimentoItem } from "./InvestimentoPainel";
 import styles from "./prefeito-dashboard.module.css";
@@ -431,6 +432,10 @@ export default async function PrefeitoDashboard({
               Status de Obras
             </Link>
           </nav>
+          <SidebarSettingsFooter
+            user={{ name, role }}
+            className="max-[760px]:hidden"
+          />
         </aside>
 
         <main className={styles.dashboard}>

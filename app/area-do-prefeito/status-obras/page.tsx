@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import Sidebar from "@/components/sidebar/Sidebar";
+import SidebarSettingsFooter from "@/components/sidebar/SidebarSettingsFooter";
 import { getHomeByRole } from "@/lib/auth/role-routes";
 import { prisma } from "@/lib/prisma";
 import styles from "@/app/area-do-servidor/prefeito-dashboard.module.css";
@@ -165,10 +166,14 @@ export default async function StatusObrasPage({
 
   const lateCount = obrasFiltradas.filter((obra) => healthFor(obra, now).level === "late").length;
   const warningCount = obrasFiltradas.filter((obra) => healthFor(obra, now).level === "warning").length;
+  const currentUser = {
+    name: session.user.name ?? "Prefeito",
+    role: session.user.role,
+  };
 
   return (
     <div className={styles.shell}>
-      <Sidebar user={{ name: session.user.name ?? "Prefeito", role: session.user.role }} />
+      <Sidebar user={currentUser} />
       <div className={styles.body}>
         <aside className={styles.sidebar}>
           <div className={styles.profile}>
@@ -188,6 +193,10 @@ export default async function StatusObrasPage({
               Status de Obras
             </Link>
           </nav>
+          <SidebarSettingsFooter
+            user={currentUser}
+            className="max-[760px]:hidden"
+          />
         </aside>
 
         <main className={styles.dashboard}>

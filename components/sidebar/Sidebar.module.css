@@ -47,14 +47,29 @@
   color: white;
 }
 
+.userWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .user {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 34px;
-  padding-left: 20px;
+  min-height: 36px;
+  padding: 4px 10px 4px 18px;
+  border: 0;
   border-left: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 0 6px 6px 0;
+  background: transparent;
   color: white;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.user:hover {
+  background: rgb(255 255 255 / 12%);
 }
 
 .userText { display: grid; gap: 2px; text-align: right; line-height: 1.1; }
@@ -62,10 +77,110 @@
 .userText small { color: rgb(255 255 255 / 72%); font-size: 9px; }
 .avatar,
 .avatarFallback { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
-.avatarFallback { display: grid; place-items: center; background: rgb(255 255 255 / 18%); color: white; }
+.avatarFallback {
+  display: grid;
+  place-items: center;
+  background: rgb(255 255 255 / 18%);
+  color: white;
+  transition: background-color 0.15s ease;
+}
+
+.user:hover .avatarFallback {
+  background: rgb(255 255 255 / 28%);
+}
+
+.settingsIcon {
+  color: rgb(255 255 255 / 82%);
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+
+.user:hover .settingsIcon,
+.settingsIconOpen {
+  color: white;
+}
+
+.settingsIconOpen {
+  transform: rotate(45deg);
+}
+
+.settingsDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 70;
+  width: 230px;
+  padding: 6px;
+  border: 1px solid #dce4ef;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgb(15 39 72 / 18%);
+  color: #1e293b;
+}
+
+.settingsHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.settingsTitle {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.settingsUserName {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.settingsUserRole {
+  color: #475569;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.settingsActions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 6px;
+}
+
+.settingsLogoutButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #dc2626;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.settingsLogoutButton:hover {
+  background: #fef2f2;
+}
+
+.mobileSettingsSection {
+  display: none;
+}
+
 .menuButton { display: none; border: 0; background: transparent; color: white; cursor: pointer; }
 
-@media (max-width: 680px) {
+@media (max-width: 720px) {
   .inner { min-height: 56px; gap: 9px; padding: 0 16px; }
   .brand { font-size: 13px; }
   .navigation { position: absolute; top: 56px; right: 12px; left: 12px; display: none; height: auto; padding: 8px; border: 1px solid #dce4ef; border-radius: 6px; background: white; box-shadow: 0 8px 20px rgb(15 39 72 / 16%); }
@@ -73,11 +188,82 @@
   .navigation a { height: auto; padding: 11px 12px; border: 0; border-radius: 4px; color: #53627b; font-size: 12px; }
   .navigation a:hover, .navigation .active { background: #eef5ff; color: #126bcc; }
   .userText { display: none; }
-  .user { padding-left: 0; border-left: 0; }
+  .user { padding: 4px 6px; border-left: 0; border-radius: 6px; gap: 6px; }
+  .mobileSettingsSection {
+    display: flex;
+    flex-direction: column;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid #e2e8f0;
+  }
+  .mobileSettingsTrigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #334155;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+  .mobileSettingsTrigger:hover {
+    background: #eef6ff;
+    color: var(--cor-principal);
+  }
+  .mobileSettingsTriggerLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mobileSettingsPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 2px 8px 4px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+  }
+  .mobileSettingsUser {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .mobileSettingsUser strong {
+    color: #0f172a;
+    font-size: 0.8rem;
+  }
+  .mobileSettingsUser small {
+    color: #64748b;
+    font-size: 0.7rem;
+  }
+  .mobileLogoutButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 6px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #dc2626;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+  .mobileLogoutButton:hover {
+    background: #fef2f2;
+  }
   .user, .menuButton { margin-left: auto; }
   .user + .menuButton { margin-left: 4px; }
   .menuButton { display: inline-grid; place-items: center; }
 }
-
-
-

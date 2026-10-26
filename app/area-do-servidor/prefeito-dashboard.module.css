@@ -1,6 +1,6 @@
 .shell {
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   background: #f4f7fb;
   color: #18324d;
   font-size: 15px;
@@ -13,6 +13,11 @@
 }
 
 .sidebar {
+  position: sticky;
+  top: 61px;
+  align-self: flex-start;
+  height: calc(100dvh - 61px);
+  overflow-y: auto;
   width: 224px;
   flex: 0 0 224px;
   display: flex;
@@ -464,7 +469,7 @@
 
 @media (max-width: 760px) {
   .body { display: block; }
-  .sidebar { width: 100%; padding: 11px 14px; border-right: 0; border-bottom: 1px solid #e2e9f2; }
+  .sidebar { position: static; height: auto; overflow-y: visible; width: 100%; padding: 11px 14px; border-right: 0; border-bottom: 1px solid #e2e9f2; }
   .profile { display: none; }
   .navList { display: flex; gap: 6px; overflow-x: auto; padding: 0; }
   .navItem { flex: 0 0 auto; min-height: 36px; padding: 0 12px; border-radius: 6px; }
@@ -558,7 +563,7 @@
     padding: 4px;
     list-style: none;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: clip;
     border: 1px solid #dbe3ed;
     border-radius: 8px;
     background: #fff;

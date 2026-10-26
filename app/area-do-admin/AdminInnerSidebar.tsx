@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import SidebarSettingsFooter, {
+  type SidebarSettingsUser,
+} from "@/components/sidebar/SidebarSettingsFooter";
 import styles from "@/app/area-do-servidor/area-do-servidor.module.css";
 
 const navItems = [
@@ -13,7 +16,11 @@ const navItems = [
   { href: "/area-do-admin/relatorios", label: "Relatórios e Exportação" },
 ];
 
-export default function AdminInnerSidebar() {
+export default function AdminInnerSidebar({
+  user,
+}: {
+  user?: SidebarSettingsUser | null;
+}) {
   const pathname = usePathname();
 
   return (
@@ -38,6 +45,7 @@ export default function AdminInnerSidebar() {
           </Link>
         ))}
       </div>
+      <SidebarSettingsFooter user={user} />
     </aside>
   );
 }

@@ -1,6 +1,6 @@
 .shell {
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   background: #f8fafc;
   color: #334155;
   font-size: 14px;
@@ -84,6 +84,11 @@
 }
 
 .sidebar {
+  position: sticky;
+  top: 61px;
+  align-self: flex-start;
+  height: calc(100dvh - 61px);
+  overflow-y: auto;
   width: 254px;
   flex: 0 0 254px;
   display: flex;
@@ -361,7 +366,7 @@
   .topNav, .userSummary { display: none; }
   .menuButton { display: inline-grid; place-items: center; margin-left: auto; }
   .body { display: block; }
-  .sidebar { position: fixed; inset: 64px auto 0 0; z-index: 40; display: none; width: 280px; box-shadow: 4px 0 24px rgba(15, 23, 42, 0.15); }
+  .sidebar { position: fixed; inset: 64px auto 0 0; height: auto; z-index: 40; display: none; width: 280px; box-shadow: 4px 0 24px rgba(15, 23, 42, 0.15); }
   .sidebarOpen { display: flex; }
   .main { padding: 24px 16px 36px; }
   .pageHeading { display: block; }

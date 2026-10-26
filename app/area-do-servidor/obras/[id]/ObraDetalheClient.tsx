@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import Sidebar, { type SidebarUser } from "@/components/sidebar/Sidebar";
+import SidebarSettingsFooter from "@/components/sidebar/SidebarSettingsFooter";
 import { formatCurrencyBRL, parseCurrencyBRLToNumber } from "@/lib/utils/currency";
 import styles from "../../area-do-servidor.module.css";
 
@@ -463,6 +464,7 @@ export default function ObraDetalheClient({
               </>
             )}
           </nav>
+          <SidebarSettingsFooter user={user} />
         </aside>
 
         <main className={styles.main}>
