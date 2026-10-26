@@ -32,13 +32,13 @@ Por meio de um mapa interativo e painéis operacionais integrados, a ferramenta 
 - Mecanismo de busca textual e filtros dinâmicos por secretaria, status da obra e bairros/distritos.
 - Listagem pública de projetos em grade (`/projetos`) e página de detalhe da obra (`/projetos/[id]`) com linha do tempo de medições, dados contratuais e galeria de fotos com visualizador ampliado.
 - Módulo de vistoria e registro de campo para engenheiros (`/area-do-engenheiro/registro-campo`), desenvolvido para uso em dispositivos móveis, com apontamento de evolução física por etapas/subetapas, registro de intercorrências (chuvas, falta de material) e fotos de vistoria.
-- Painel executivo da gestão municipal (`/area-do-prefeito`) com indicadores consolidados de investimentos, taxa média de execução, distribuição de status e mini-mapa territorial.
+- Painel executivo da gestão municipal (`/area-do-prefeito` e `/area-do-prefeito/status-obras`) com indicadores consolidados de investimentos, detalhamento por eixo e secretaria, separação entre obras atrasadas e em alerta (até 60 dias) e mini-mapa territorial.
 - Painel setorial de secretarias (`/area-do-servidor`) com acompanhamento de obras da pasta e formulário assistido para cadastro de novas obras.
-- Painel administrativo geral (`/area-do-admin`) com controle de usuários, permissões, eixos estratégicos, áreas temáticas e relatórios.
+- Painel administrativo geral (`/area-do-admin`) com controle de usuários, permissões, eixos estratégicos, áreas temáticas e exportação de relatórios (CSV e JSON).
 - Autenticação e controle de acesso baseado em papéis (RBAC) com Auth.js, sessões via JWT e criptografia de senhas com bcryptjs (custo de salt 12).
 - Roteamento inteligente pós-login (`/pos-login`) com redirecionamento automático para a área correspondente ao perfil do usuário autenticado.
 - API REST documentada com validações rigorosas de entrada com Zod.
-- Suíte automatizada com 153 testes unitários e de integração utilizando Vitest.
+- Suíte automatizada com 157 testes unitários e de integração utilizando Vitest.
 
 ---
 
@@ -68,7 +68,7 @@ Por meio de um mapa interativo e painéis operacionais integrados, a ferramenta 
 - **Autenticação**: [Auth.js](https://authjs.dev/) (NextAuth v5 beta) com sessões JWT e guards de rotas
 - **Criptografia**: [bcryptjs](https://github.com/dcodeIO/bcrypt.js) para hashing de senhas
 - **Validação de Schemas**: [Zod](https://zod.dev/) para sanitização de entradas e APIs
-- **Testes Automatizados**: [Vitest 5](https://vitest.dev/) (153 testes unitários e de integração)
+- **Testes Automatizados**: [Vitest 5](https://vitest.dev/) (157 testes unitários e de integração)
 - **Iconografia**: [Lucide React](https://lucide.dev/)
 - **Gerenciador de Pacotes**: `pnpm`
 
@@ -93,8 +93,8 @@ Os papéis estão modelados no enum `Role` do banco de dados:
 | Papel | Rota Inicial | Atribuições |
 | --- | --- | --- |
 | `CIDADAO` | `/` e `/projetos` | Consulta pública das informações, mapa interativo e fichas técnicas. |
-| `GESTAO` | `/area-do-prefeito` | Acompanhamento executivo de métricas de investimento e status territorial. |
-| `ADM_SECRETARIA` | `/area-do-servidor` | Gestão de obras da própria secretaria e cadastro de novos projetos. |
+| `GESTAO` | `/area-do-prefeito` | Acompanhamento executivo (somente leitura) de investimentos, alertas e status territorial. |
+| `ADM_SECRETARIA` | `/area-do-servidor` | Gestão de obras exclusivamente da própria secretaria e cadastro de novos projetos. |
 | `ENGENHEIRO` | `/area-do-engenheiro` | Fiscalização operacional, diário de campo, controle de etapas e medições. |
 | `SUPER_ADMIN` | `/area-do-admin` | Configuração geral, gestão de eixos, secretarias, tipologias e usuários. |
 
@@ -112,9 +112,10 @@ Os papéis estão modelados no enum `Role` do banco de dados:
 | `/login` | Formulário de autenticação por e-mail e senha. | Público |
 | `/pos-login` | Rota de redirecionamento automático por perfil. | Autenticado |
 | `/area-do-prefeito` | Painel executivo da gestão municipal com indicadores e mapa. | `GESTAO`, `SUPER_ADMIN` |
+| `/area-do-prefeito/status-obras` | Acompanhamento detalhado do status, prazos e alertas da carteira de obras. | `GESTAO`, `SUPER_ADMIN` |
 | `/area-do-servidor` | Painel da secretaria municipal logada. | `ADM_SECRETARIA` |
 | `/area-do-servidor/nova-obra` | Formulário de cadastro de nova obra. | `ADM_SECRETARIA` |
-| `/area-do-servidor/obras/[id]` | Edição e manutenção dos dados da obra. | `ADM_SECRETARIA` |
+| `/area-do-servidor/obras/[id]` | Visualização e manutenção dos dados da obra (edição restrita à secretaria dona e ao Admin Geral). | `ADM_SECRETARIA`, `SUPER_ADMIN`, `GESTAO` (leitura) |
 | `/area-do-engenheiro` | Painel do engenheiro com obras sob sua responsabilidade. | `ENGENHEIRO` |
 | `/area-do-engenheiro/registro-campo` | Interface móvel para diário de obras e vistoria em campo. | `ENGENHEIRO` |
 | `/area-do-admin` | Painel geral de administração da plataforma. | `SUPER_ADMIN` |
@@ -131,14 +132,18 @@ Os papéis estão modelados no enum `Role` do banco de dados:
 | `/api/obras` | `GET` | Lista obras cadastradas com suporte a paginação e filtros. | Público |
 | `/api/obras` | `POST` | Valida e cadastra uma nova obra. | `ADM_SECRETARIA`, `SUPER_ADMIN` |
 | `/api/obras/[id]` | `GET` | Retorna os detalhes completos da obra (etapas, medições, fotos). | Público |
-| `/api/obras/[id]` | `PATCH` | Atualiza parcialmente os dados de uma obra existente. | Autorizado |
-| `/api/obras/[id]` | `DELETE` | Realiza exclusão lógica da obra (`deletedAt`). | `SUPER_ADMIN`, `GESTAO` |
+| `/api/obras/[id]` | `PATCH` | Atualiza parcialmente os dados de uma obra existente. | `ADM_SECRETARIA` (própria pasta), `SUPER_ADMIN` |
+| `/api/obras/[id]` | `DELETE` | Realiza exclusão lógica da obra (`deletedAt`). | `ADM_SECRETARIA` (própria pasta), `SUPER_ADMIN` |
 | `/api/obras/[id]/medicoes` | `GET` | Retorna o histórico de medições da obra. | Público |
 | `/api/obras/[id]/medicoes` | `POST` | Registra uma nova medição técnica. | Engenheiro autorizado |
 | `/api/obras/[id]/fotos` | `GET` | Retorna as fotos vinculadas à obra. | Público |
-| `/api/obras/[id]/fotos` | `POST` | Cadastra nova referência fotográfica para a obra. | Autorizado |
+| `/api/obras/[id]/fotos` | `POST` | Cadastra nova referência fotográfica para a obra. | `ADM_SECRETARIA` (própria pasta), `ENGENHEIRO`, `SUPER_ADMIN` |
 | `/api/obras/[id]/registros-campo` | `GET`, `POST` | Consulta e envio do diário de vistoria de campo. | `ENGENHEIRO` |
-| `/api/obras/[id]/etapas` | `GET`, `POST` | Consulta e atualização do avanço das etapas da obra. | Autorizado |
+| `/api/obras/[id]/etapas` | `GET`, `POST` | Consulta e inicialização das etapas da obra. | `ADM_SECRETARIA` (própria pasta), `SUPER_ADMIN` |
+| `/api/admin/eixos` | `GET`, `POST` | Listagem e criação de eixos estratégicos (`PATCH`/`DELETE` em `/[id]`). | `SUPER_ADMIN` |
+| `/api/admin/areas-tematicas` | `POST` | Criação de áreas temáticas vinculadas aos eixos (`PATCH`/`DELETE` em `/[id]`). | `SUPER_ADMIN` |
+| `/api/admin/secretarias` | `GET`, `POST` | Listagem e criação de secretarias municipais (`PATCH`/`DELETE` em `/[id]`). | `SUPER_ADMIN` |
+| `/api/admin/usuarios` | `GET`, `POST` | Listagem e criação de usuários e perfis (`PATCH` em `/[id]`). | `SUPER_ADMIN` |
 | `/api/filtros` | `GET` | Retorna opções agregadas para filtros (secretarias, status, bairros). | Público |
 | `/api/tipos-obra` | `GET`, `POST` | Gerenciamento de tipos de obras e modelos de etapas. | `SUPER_ADMIN` |
 | `/api/auth/[...nextauth]` | `GET`, `POST` | Handlers de autenticação e sessão do Auth.js. | Público |
@@ -187,7 +192,6 @@ AUTH_SECRET="gere-um-segredo-forte-e-mantenha-fora-do-git"
 SEED_SENHA_ADMIN="12345678"
 SEED_SENHA_PREFEITO="12345678"
 SEED_SENHA_GESTOR_SEDUO="12345678"
-SEED_SENHA_ENG_SEDUO="12345678"
 ```
 
 Observação para Supabase: utilize a porta `6543` no parâmetro `DATABASE_URL` (Transaction Pooler) para a execução da aplicação e a porta `5432` no parâmetro `DIRECT_URL` para comandos de migração do Prisma.
@@ -236,7 +240,7 @@ $env:ADMIN_EMAIL="usuario@goiana.pe.gov.br"; $env:ADMIN_PASSWORD="NovaSenha123";
 | `pnpm build` | Gera a compilação de produção e valida tipos TypeScript. |
 | `pnpm start` | Inicia o servidor com a compilação de produção. |
 | `pnpm lint` | Executa a verificação estática de código com ESLint. |
-| `pnpm test` | Executa a suíte de 153 testes automatizados com Vitest. |
+| `pnpm test` | Executa a suíte de 157 testes automatizados com Vitest. |
 | `pnpm test:watch` | Executa os testes no modo contínuo de observação. |
 | `pnpm auth:set-password` | Atualiza o hash de senha de um usuário no banco de dados. |
 | `pnpm prisma migrate dev` | Cria e aplica migrações no banco de desenvolvimento. |
@@ -251,6 +255,7 @@ $env:ADMIN_EMAIL="usuario@goiana.pe.gov.br"; $env:ADMIN_PASSWORD="NovaSenha123";
 espacializacao-obras/
 ├── app/
 │   ├── api/                           # Rotas da API REST
+│   │   ├── admin/                     # Rotas administrativas (eixos, áreas, secretarias e usuários)
 │   │   ├── auth/[...nextauth]/        # Handlers de autenticação do Auth.js
 │   │   ├── filtros/                   # Rota de agregação de filtros
 │   │   ├── obras/                     # CRUD de obras, medições, fotos e etapas
@@ -260,10 +265,11 @@ espacializacao-obras/
 │   │   ├── obras/                     # Gestão global de obras
 │   │   ├── secretarias/               # Gestão de secretarias municipais
 │   │   ├── usuarios/                  # Gestão de usuários e permissões
-│   │   └── relatorios/                # Relatórios consolidados
+│   │   └── relatorios/                # Relatórios consolidados e exportação (CSV/JSON)
 │   ├── area-do-engenheiro/            # Painel do Engenheiro Fiscal
 │   │   └── registro-campo/            # Interface móvel de vistoria e diário de obras
 │   ├── area-do-prefeito/              # Painel Executivo do Prefeito e Gestão
+│   │   └── status-obras/              # Acompanhamento detalhado do status e prazos das obras
 │   ├── area-do-servidor/              # Painel das Secretarias Municipais
 │   │   ├── nova-obra/                 # Formulário e confirmação de nova obra
 │   │   └── obras/[id]/                # Gerenciamento de obra da pasta
@@ -318,7 +324,7 @@ espacializacao-obras/
 - [x] Painel setorial de secretarias municipais com cadastro de obras (`/area-do-servidor`)
 - [x] Painel administrativo geral para gestão de usuários, secretarias e eixos (`/area-do-admin`)
 - [x] Registro de medições e avanço de etapas por engenheiros autorizados
-- [x] Suíte de testes automatizados com cobertura de regras e APIs (153 testes)
+- [x] Suíte de testes automatizados com cobertura de regras e APIs (157 testes)
+- [x] Módulo de exportação de relatórios em formato de planilhas (CSV) e JSON
 - [ ] Integração com serviço de Cloud Storage (S3 / Supabase Storage) para upload físico de fotos
-- [ ] Módulo de exportação de relatórios em formato PDF e planilhas
 - [ ] Suporte a operação offline progressiva para vistorias em áreas rurais sem sinal de dados
