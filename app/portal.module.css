@@ -448,6 +448,8 @@
     overflow: visible;
   }
 
+  .is-expanded {}
+
   .filter-panel.is-expanded {
     position: absolute;
     inset: 0;
