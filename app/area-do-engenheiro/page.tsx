@@ -54,8 +54,14 @@ export default async function AreaDoEngenheiro() {
     ? `Você é responsável por ${obras.length} ${obras.length === 1 ? "obra" : "obras"}:`
     : `${obras.length} ${obras.length === 1 ? "obra disponível" : "obras disponíveis"} para registro:`;
 
+  const currentUser = {
+    name: session.user.name ?? session.user.email ?? "Engenheiro",
+    email: session.user.email,
+    role: session.user.role,
+  };
+
   return (
-    <EngenheiroShell titulo="Área do Engenheiro">
+    <EngenheiroShell titulo="Área do Engenheiro" user={currentUser}>
       <div className="space-y-0.5 md:space-y-1">
         <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">
           Olá{primeiroNome ? `, ${primeiroNome}` : ""}! Veio fazer o registro do dia?

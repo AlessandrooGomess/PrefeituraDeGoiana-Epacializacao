@@ -1,36 +1,50 @@
 import type { ReactNode } from "react";
-import { BottomNav, type BottomNavTab } from "@/components/registro-campo/BottomNav";
-import { RegistroCampoHeader } from "@/components/registro-campo/RegistroCampoHeader";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import Sidebar, { type SidebarUser } from "@/components/sidebar/Sidebar";
+import type { SidebarSettingsUser } from "@/components/sidebar/SidebarSettingsFooter";
 import { EngenheiroSidebar } from "./EngenheiroSidebar";
 
+export type EngenheiroUser = SidebarUser & SidebarSettingsUser;
+
 interface EngenheiroShellProps {
-  titulo: string;
-  // Destino do botão "fechar" do cabeçalho; sem ele, o botão não é exibido
+  titulo?: string;
+  user?: EngenheiroUser | null;
+  // Destino do link de retorno (ex.: voltar do registro de campo para o início)
   fecharHref?: string;
-  abaAtiva?: BottomNavTab;
   children: ReactNode;
 }
 
 // Moldura compartilhada pelas telas da área do engenheiro:
-// cabeçalho, menu lateral (tablet/desktop), gaveta (mobile) e barra inferior
-export function EngenheiroShell({ titulo, fecharHref, abaAtiva, children }: EngenheiroShellProps) {
+// cabeçalho padronizado do portal e menu lateral (desktop)
+export function EngenheiroShell({
+  user = null,
+  fecharHref,
+  children,
+}: EngenheiroShellProps) {
   return (
-    <div className="min-h-screen bg-slate-100 flex justify-center text-slate-800 antialiased">
-      {/* Moldura mobile-first: coluna de celular no mobile, largura total a partir do tablet */}
-      <div className="w-full max-w-md md:max-w-none min-h-screen bg-slate-50 flex flex-col shadow-xl md:shadow-none pb-24 relative border-x border-slate-200 md:border-x-0">
-        <RegistroCampoHeader titulo={titulo} backHref={fecharHref} />
+    <div className="min-h-screen overflow-x-clip bg-[#f8fafc] flex flex-col text-slate-800 antialiased">
+      <Sidebar user={user} />
 
-        <div className="flex flex-1">
-          {/* Menu Lateral (a partir do tablet) */}
-          <EngenheiroSidebar />
+      <div className="flex flex-1">
+        {/* Menu Lateral (a partir de 721px, sincronizado com o cabeçalho do portal) */}
+        <EngenheiroSidebar user={user} />
 
-          <main className="flex-1 min-w-0 w-full max-w-6xl mx-auto px-4 pt-4 pb-6 md:px-8 md:pt-8 space-y-3.5 md:space-y-5">
-            {children}
-          </main>
-        </div>
+        <main className="flex-1 min-w-0 w-full max-w-md min-[721px]:max-w-6xl mx-auto px-4 pt-4 pb-8 min-[721px]:px-8 min-[721px]:pt-8 min-[721px]:pb-12 space-y-3.5 min-[721px]:space-y-5">
+          {fecharHref && (
+            <div>
+              <Link
+                href={fecharHref}
+                className="inline-flex items-center gap-1.5 text-xs md:text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Voltar para início
+              </Link>
+            </div>
+          )}
 
-        {/* Barra de Navegação Inferior Fixa */}
-        <BottomNav activeTab={abaAtiva} />
+          {children}
+        </main>
       </div>
     </div>
   );
