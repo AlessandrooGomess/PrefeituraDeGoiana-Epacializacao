@@ -41,8 +41,18 @@ export default async function RegistroCampoPage({ searchParams }: RegistroCampoP
   const { obra: obraParam } = await searchParams;
   const obraInicialId = obras.find((obra) => obra.id === obraParam)?.id;
 
+  const currentUser = {
+    name: session.user.name ?? session.user.email ?? "Engenheiro",
+    email: session.user.email,
+    role: session.user.role,
+  };
+
   return (
-    <EngenheiroShell titulo="Novo Registro" fecharHref="/area-do-engenheiro" abaAtiva="diario">
+    <EngenheiroShell
+      titulo="Novo Registro"
+      user={currentUser}
+      fecharHref="/area-do-engenheiro"
+    >
       {/* Título e Subtítulo */}
       <div className="space-y-0.5 md:space-y-1">
         <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">
