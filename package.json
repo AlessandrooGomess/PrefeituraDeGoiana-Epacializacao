@@ -9,6 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
     "auth:set-password": "tsx scripts/set-user-password.ts",
     "postinstall": "prisma generate"
   },
@@ -28,6 +30,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cypress": "^16.2.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
     "prisma": "6.19.3",
