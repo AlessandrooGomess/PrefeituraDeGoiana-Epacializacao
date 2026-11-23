@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-sans: var(--font-poppins), sans-serif;
 
   --cor-header-footer: #4387e5;
   --cor-principal: #1170d6;

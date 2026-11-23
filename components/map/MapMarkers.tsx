@@ -1,10 +1,8 @@
 import * as maplibregl from "maplibre-gl";
 import type { ObraItem } from "@/types/obra";
-import { createWorkPopupContent } from "./WorkPopup";
 
 export interface WorkMarker {
   marker: maplibregl.Marker;
-  popup: maplibregl.Popup;
   obra: ObraItem;
 }
 
@@ -45,20 +43,11 @@ export function syncWorkMarkers({ map, markers, obras, visibleObraIds, selectedO
     element.setAttribute("aria-label", `Ver obra: ${obra.titulo}`);
     element.innerHTML = "<span>⌂</span>";
 
-    const popup = new maplibregl.Popup({
-      offset: 24,
-      closeButton: false,
-      closeOnClick: true,
-      maxWidth: "282px",
-      className: "obra-maplibre-popup",
-    }).setDOMContent(createWorkPopupContent(obra));
-
     const marker = new maplibregl.Marker({ element, anchor: "bottom" })
       .setLngLat([obra.longitude, obra.latitude])
-      .setPopup(popup)
       .addTo(map);
 
     element.addEventListener("click", () => onSelectObra?.(obra));
-    markers.set(obra.id, { marker, popup, obra });
+    markers.set(obra.id, { marker, obra });
   });
 }
