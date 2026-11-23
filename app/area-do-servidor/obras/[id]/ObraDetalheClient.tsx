@@ -5,8 +5,6 @@ import {
   ArrowLeft,
   Building2,
   CalendarDays,
-  Check,
-  CheckCircle2,
   ClipboardList,
   ExternalLink,
   ImagePlus,
@@ -226,9 +224,6 @@ export default function ObraDetalheClient({
   // Estados para gerenciamento de Etapas
   const [etapasLoading, setEtapasLoading] = useState(false);
   const [etapaMensagem, setEtapaMensagem] = useState<{ tipo: "sucesso" | "erro"; texto: string } | null>(null);
-  const [etapaEditandoId, setEtapaEditandoId] = useState<string | null>(null);
-  const [etapaStatusDraft, setEtapaStatusDraft] = useState<string>("PENDENTE");
-  const [etapaPercentualDraft, setEtapaPercentualDraft] = useState<number>(0);
 
   // Estados para gerenciamento de Fotos
   const [mostrandoFormFoto, setMostrandoFormFoto] = useState(false);
@@ -347,36 +342,6 @@ export default function ObraDetalheClient({
       setEtapaMensagem({
         tipo: "erro",
         texto: err instanceof Error ? err.message : "Erro ao inicializar etapas.",
-      });
-    } finally {
-      setEtapasLoading(false);
-    }
-  }
-
-  // Atualizar etapa individual via PATCH /api/obras/[id]/etapas/[etapaId]
-  async function handleSalvarEdicaoEtapa(etapaId: string) {
-    setEtapasLoading(true);
-    setEtapaMensagem(null);
-    try {
-      const res = await fetch(`/api/obras/${obra.id}/etapas/${etapaId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: etapaStatusDraft,
-          percentualConcluido: Number(etapaPercentualDraft),
-        }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(data?.message || "Erro ao atualizar etapa.");
-      }
-      setEtapaEditandoId(null);
-      setEtapaMensagem({ tipo: "sucesso", texto: "Etapa atualizada com sucesso!" });
-      await carregarObra();
-    } catch (err: unknown) {
-      setEtapaMensagem({
-        tipo: "erro",
-        texto: err instanceof Error ? err.message : "Erro ao atualizar etapa.",
       });
     } finally {
       setEtapasLoading(false);
