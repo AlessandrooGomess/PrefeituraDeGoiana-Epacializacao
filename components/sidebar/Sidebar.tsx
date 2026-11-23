@@ -59,10 +59,14 @@ export default function Sidebar({ user = null, toolsNode }: SidebarProps) {
 
   return (
     <header className={portalStyles["portal-header"]}>
-      <Link href="/" aria-label="Goianapá" className="flex shrink-0 items-center">
+      <Link
+        href="/"
+        aria-label="Portal de Infraestrutura — Prefeitura de Goiana"
+        className="flex shrink-0 items-center"
+      >
         <img
           className="mt-1 w-[111px] h-[57px] ml-8 aspect-[1.93] object-cover max-[720px]:mt-0 max-[720px]:ml-0 max-[720px]:w-20 max-[720px]:h-[41px]"
-          alt="Logo Goianapá"
+          alt="Logo Prefeitura de Goiana"
           src="/logo-goiana.png"
         />
       </Link>
