@@ -58,18 +58,8 @@ export function RegistroCampoForm({
   const [selectedObraId, setSelectedObraId] = useState<string>(
     obraInicialId ?? obras[0]?.id ?? "",
   );
-  const [fotos, setFotos] = useState<FotoItem[]>([
-    {
-      id: "foto-demo-1",
-      url: "/fotos/obra-escola-angelo.jpg",
-      coordenadasFormatadas: "-23.5505, -46.6333",
-      latitude: -23.5505,
-      longitude: -46.6333,
-    },
-  ]);
-  const [intercorrencias, setIntercorrencias] = useState<string[]>([
-    "ATRASO_MATERIAL",
-  ]);
+  const [fotos, setFotos] = useState<FotoItem[]>([]);
+  const [intercorrencias, setIntercorrencias] = useState<string[]>([]);
   const [observacoes, setObservacoes] = useState<string>("");
   const [fotoErro, setFotoErro] = useState<string | null>(null);
   const [observacoesErro, setObservacoesErro] = useState<string | null>(null);
@@ -241,6 +231,7 @@ export function RegistroCampoForm({
       );
 
       if (status === "ENVIADO") {
+        setFotos([]);
         setIntercorrencias([]);
         setObservacoes("");
       }
@@ -276,8 +267,8 @@ export function RegistroCampoForm({
         obras={obras}
         selectedObraId={selectedObraId}
         onSelectObra={setSelectedObraId}
-        tituloFallback="Escola Municipal Centro"
-        subtituloFallback="Lote 03 - Fase de Estrutura"
+        tituloFallback="Nenhuma obra selecionada"
+        subtituloFallback="Selecione uma obra acima para iniciar a vistoria"
       />
 
       {etapasCarregadas && (

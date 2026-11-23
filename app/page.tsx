@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import { PortalFooter } from "@/components/portal/PortalFooter";
@@ -50,7 +49,6 @@ export default function Home() {
   const [selected, setSelected] = useState<ObraItem | null>(null);
   const [nearMeRequest, setNearMeRequest] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedEixoIds, setSelectedEixoIds] = useState<string[]>([]);
   const [expandedEixoIds, setExpandedEixoIds] = useState<string[]>([]);
@@ -103,7 +101,11 @@ export default function Home() {
             userLocation,
             [obra.latitude, obra.longitude],
           ) <= 10) &&
-          (!selectedEixoIds.length || (obra.secretaria?.id ? selectedEixoIds.includes(eixoBySecretariaId.get(obra.secretaria.id) ?? "") : false))
+          (!selectedEixoIds.length ||
+            selectedEixoIds.includes(
+              obra.eixo?.id ??
+                (obra.secretaria?.id ? (eixoBySecretariaId.get(obra.secretaria.id) ?? "") : ""),
+            ))
         );
       }),
     [obras, eixoBySecretariaId, query, secretarias, statuses, selectedEixoIds, userLocation],
@@ -120,8 +122,6 @@ export default function Home() {
 
   const toggleExpandedEixo = (eixoId: string) =>
     toggle(eixoId, expandedEixoIds, setExpandedEixoIds);
-
-  const closeMenu = () => setMenuOpen(false);
 
   useEffect(() => {
     if (!filtersOpen) return;
