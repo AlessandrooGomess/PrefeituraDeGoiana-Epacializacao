@@ -31,7 +31,7 @@ async function main() {
         create: [
           { nome: "Infraestrutura Urbana" },
           { nome: "Direito à Cidade" },
-          { nome: "Resiliencia Urbana" },
+          { nome: "Resiliência Urbana" },
           { nome: "Assistência Social" },
           { nome: "Saúde" },
           { nome: "Esporte e Lazer" },
@@ -126,7 +126,7 @@ async function main() {
         eixoId: eixoSocial.id,
       },
       {
-        nome: "Autarquia de Ensino Superior de Ensino",
+        nome: "Autarquia Municipal do Ensino Superior de Goiana",
         sigla: "AMESG",
         eixoId: eixoSocial.id,
       },
